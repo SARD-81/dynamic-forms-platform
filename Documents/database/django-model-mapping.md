@@ -60,3 +60,36 @@ Correct sequence:
 5. only then execute the first project `migrate`.
 
 No project migration is to be applied incrementally app-by-app before the complete initial graph exists.
+
+
+## ProcessRun respondent deletion policy clarification
+
+The Gate 2D implementation uses:
+
+```python
+respondent = models.ForeignKey(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.PROTECT,
+    null=True,
+    blank=True,
+    related_name="process_runs",
+)
+```
+
+This is intentional.
+
+For an authenticated ProcessRun, the frozen identity invariant is:
+
+- `respondent_id IS NOT NULL`
+- `resume_token_hash IS NULL`
+
+Using `SET_NULL` for `respondent` would turn an authenticated historical run into:
+
+- `respondent_id IS NULL`
+- `resume_token_hash IS NULL`
+
+which violates the frozen XOR identity constraint. PostgreSQL would therefore reject such a delete anyway.
+
+`PROTECT` makes that policy explicit at the ORM boundary and preserves historical identity integrity.
+
+This note is a documentation clarification of the implementation rationale. It does not introduce a new entity, field, relationship, or baseline semantic change.
