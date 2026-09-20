@@ -24,8 +24,8 @@ Target baseline: `BL-FOUNDATION-001`
 
 Subgates:
 
-- 2A — Repository & Governance Bootstrap — IN PROGRESS
-- 2B — Python / Django / ASGI Bootstrap — NOT STARTED
+- 2A — Repository & Governance Bootstrap — CLOSED
+- 2B — Python / Django / ASGI Bootstrap — IN PROGRESS
 - 2C — Settings & Environment Foundation — NOT STARTED
 - 2D — Frozen Data Models & Migration Foundation — NOT STARTED
 - 2E — Database Constraint Verification — NOT STARTED
@@ -34,3 +34,9 @@ Subgates:
 - 2H — Docker Development Foundation — NOT STARTED
 - 2I — Developer Workflow, README & Foundation Verification — NOT STARTED
 - 2J — BL-FOUNDATION-001 Freeze — NOT STARTED
+
+## Merge governance note
+
+The GATE 2A merge was an explicit owner-approved exception documented at merge time.
+
+From subsequent Pull Requests onward, peer approval before merge is the normal team rule once collaborator invitations are accepted.

@@ -4,15 +4,12 @@ A private team project for building and managing dynamic forms, multi-step workf
 
 ## Project status
 
-- GATE 0 — Scope & Architecture: **CLOSED**
-  - BL-ARCH-001 — **FROZEN**
-- GATE 1 — Domain & Data Architecture: **CLOSED**
-  - BL-DATA-001 — superseded
-  - CHG-0001 — **APPROVED / APPLIED**
-  - BL-DATA-002 — **FROZEN / AUTHORITATIVE**
-- GATE 2 — Repository & Engineering Foundation: **OPEN**
-  - current subgate: **2A — Repository & Governance Bootstrap**
-  - target: **BL-FOUNDATION-001**
+- GATE 0 — **CLOSED** — BL-ARCH-001 FROZEN
+- GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
+- GATE 2 — **OPEN**
+  - 2A — **CLOSED**
+  - 2B — **IN PROGRESS**
+  - target — BL-FOUNDATION-001
 
 ## Team
 
@@ -20,74 +17,95 @@ A private team project for building and managing dynamic forms, multi-step workf
 - Mahsa-Alipour — Developer
 - amirrezaparvaneh — Developer
 
-External observers are not part of project ownership, workload, or required review rules.
+External observers are outside project ownership and workload.
 
-## Frozen architecture
+## Runtime baseline
 
-The project uses a modular monolith:
-
-- Django
+- Python 3.12
+- Django 5.2 LTS
 - Django REST Framework
-- Django Channels
-- Celery / Celery Beat
-- PostgreSQL
-- Redis
-- Django Templates + Vanilla JavaScript
-- Nginx
-- Docker Compose
-- OpenAPI / Swagger
-- GitHub Actions
+- Django Channels + Daphne
+- Psycopg 3 / PostgreSQL
 
-Code flow is intentionally simple and explicit:
-
-- API / presentation → Service → ORM
-- API / presentation → Selector → ORM
-- transaction boundaries in Service functions
-- side effects scheduled with `transaction.on_commit(...)`
-
-## Development workflow
+## Application layout
 
 ```text
-Issue
-  ↓
-Short-lived branch
-  ↓
-Implementation + tests
-  ↓
-Pull Request
-  ↓
-CI
-  ↓
-Peer review
-  ↓
-Merge to main
+src/
+├── manage.py
+├── config/
+│   ├── settings/
+│   ├── asgi.py
+│   ├── wsgi.py
+│   └── urls.py
+└── apps/
+    ├── accounts/
+    ├── core/
+    ├── forms/
+    ├── processes/
+    └── reports/
 ```
 
-No normal development is performed directly on `main`.
+The Custom User is defined before the first project migration.
 
-## Gate 2 plan
+## Local bootstrap
 
-- 2A — Repository & Governance Bootstrap
-- 2B — Python / Django / ASGI Bootstrap
-- 2C — Settings & Environment Foundation
-- 2D — Frozen Data Models & Migration Foundation
-- 2E — Database Constraint Verification
-- 2F — Quality & Test Foundation
-- 2G — CI & Repository Protection
-- 2H — Docker Development Foundation
-- 2I — Developer Workflow, README & Foundation Verification
-- 2J — BL-FOUNDATION-001 Freeze
+Python 3.12 is required.
+
+Windows PowerShell:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements/base.txt
+```
+
+Linux/macOS:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements/base.txt
+```
+
+Fish:
+
+```fish
+python3.12 -m venv .venv
+source .venv/bin/activate.fish
+python -m pip install --upgrade pip
+python -m pip install -r requirements/base.txt
+```
+
+No SQLite configuration is used. PostgreSQL must be available before database commands such as `migrate`.
+
+Basic check:
+
+```bash
+python src/manage.py check
+```
+
+Development server:
+
+```bash
+python src/manage.py runserver
+```
+
+Daphne is first in `INSTALLED_APPS`, so the development server uses its ASGI integration.
+
+## Workflow
+
+Issue → short-lived branch → implementation/tests → PR → CI → peer review → merge.
+
+The GATE 2A merge was an explicit owner exception. Subsequent work returns to peer approval before merge once collaborator invitations are accepted.
 
 ## Cross-platform policy
 
-The repository may include a Makefile for convenience, but development never depends on `make`. The official README commands must remain directly usable on Windows and Linux through tools such as `docker compose`, Python, and Git.
+Make may later be provided only as an optional convenience. Official commands cannot depend on Make or WSL.
 
 ## Documentation
 
-Frozen architecture and data decisions live under `Documents/`.
+The authoritative ERD source is `Documents/database/erd.nomnoml`.
 
-The authoritative ERD source is:
-
-`Documents/database/erd.nomnoml`
-
-Do not change a frozen baseline silently. Structural changes require a `CHG-XXXX` record and, when approved, a superseding baseline.
+Frozen baselines are never edited silently; approved structural changes require Change Records and superseding baselines when needed.
