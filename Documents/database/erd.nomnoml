@@ -1,0 +1,221 @@
+#direction: right
+#spacing: 45
+#padding: 12
+#fontSize: 11
+#leading: 1.25
+#edges: hard
+#fill: white
+#stroke: black
+
+[<table>User|
+id PK
+username
+email UNIQUE
+password
+first_name
+last_name
+is_active
+is_staff
+date_joined
+]
+
+[<table>OTPChallenge|
+id PK
+user_id FK
+purpose
+code_hash
+expires_at
+attempt_count
+created_at
+verified_at NULL
+|
+CHECK attempt_count >= 0
+]
+
+[<table>core.Category|
+id PK
+owner_id FK
+name
+created_at
+updated_at
+|
+UNIQUE(owner_id, name)
+]
+
+[<table>Form|
+id PK
+public_id UUID UNIQUE
+owner_id FK
+category_id FK NULL
+title
+description
+visibility
+access_password_hash NULL
+status
+view_count
+created_at
+updated_at
+|
+CHECK PUBLIC/PRIVATE password consistency
+]
+
+[<table>Question|
+id PK
+form_id FK
+text
+question_type
+is_required
+order
+max_length NULL
+min_value Decimal(18,6) NULL
+max_value Decimal(18,6) NULL
+created_at
+updated_at
+|
+UNIQUE(form_id, order)
+CHECK order >= 1
+CHECK min_value <= max_value when both set
+]
+
+[<table>QuestionOption|
+id PK
+question_id FK
+label
+order
+|
+UNIQUE(question_id, order)
+UNIQUE(question_id, label)
+CHECK order >= 1
+]
+
+[<table>FormSubmission|
+id PK
+public_id UUID UNIQUE
+form_id FK
+respondent_id FK NULL
+submitted_at
+]
+
+[<table>Answer|
+id PK
+submission_id FK
+question_id FK
+text_value NULL
+number_value Decimal(18,6) NULL
+|
+UNIQUE(submission_id, question_id)
+]
+
+[<table>AnswerOption|
+id PK
+answer_id FK
+option_id FK
+|
+UNIQUE(answer_id, option_id)
+]
+
+[<table>Process|
+id PK
+public_id UUID UNIQUE
+owner_id FK
+category_id FK NULL
+title
+description
+process_type
+visibility
+access_password_hash NULL
+status
+view_count
+created_at
+updated_at
+|
+CHECK PUBLIC/PRIVATE password consistency
+]
+
+[<table>ProcessStep|
+id PK
+process_id FK
+form_id FK
+order
+|
+UNIQUE(process_id, order)
+UNIQUE(process_id, form_id)
+CHECK order >= 1
+]
+
+[<table>ProcessRun|
+id PK
+public_id UUID UNIQUE
+process_id FK
+respondent_id FK NULL
+resume_token_hash NULL
+status
+started_at
+completed_at NULL
+|
+CHECK exactly one identity: respondent XOR resume_token_hash
+UNIQUE resume_token_hash WHERE NOT NULL
+CHECK status/completed_at consistency
+]
+
+[<table>ProcessStepRun|
+id PK
+process_run_id FK
+process_step_id FK
+submission_id FK NULL UNIQUE
+status
+completed_at NULL
+|
+UNIQUE(process_run_id, process_step_id)
+CHECK COMPLETED => submission + completed_at present
+CHECK LOCKED/AVAILABLE => submission + completed_at NULL
+]
+
+[<table>ReportSubscription|
+id PK
+created_by_id FK
+frequency
+delivery_method
+email NULL
+endpoint_url NULL
+is_active
+last_sent_at NULL
+created_at
+updated_at
+|
+CHECK EMAIL/API destination consistency
+]
+
+[<note>ERD Constraints Legend|
+Inline UNIQUE/CHECK = row-local DB constraint/index.
+Cross-table invariants are Service-only and listed in constraint-matrix.md.
+ProcessStepRun owns submission_id.
+No FK from FormSubmission to Process/ProcessRun/ProcessStep.
+]
+
+[User] 1 -> * [OTPChallenge]
+[User] 1 -> * [core.Category]
+[User] 1 -> * [Form]
+[User] 1 -> * [Process]
+[User] 1 -> * [FormSubmission]
+[User] 1 -> * [ProcessRun]
+[User] 1 -> * [ReportSubscription]
+
+[core.Category] 1 -> * [Form]
+[core.Category] 1 -> * [Process]
+
+[Form] 1 -> * [Question]
+[Question] 1 -> * [QuestionOption]
+[Form] 1 -> * [FormSubmission]
+[FormSubmission] 1 -> * [Answer]
+[Question] 1 -> * [Answer]
+[Answer] 1 -> * [AnswerOption]
+[QuestionOption] 1 -> * [AnswerOption]
+
+[Process] 1 -> * [ProcessStep]
+[Form] 1 -> * [ProcessStep]
+[Process] 1 -> * [ProcessRun]
+[ProcessRun] 1 -> * [ProcessStepRun]
+[ProcessStep] 1 -> * [ProcessStepRun]
+
+[ProcessStepRun] 0..1 -> 0..1 [FormSubmission]
