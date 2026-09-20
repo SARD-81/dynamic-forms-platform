@@ -1,13 +1,11 @@
-import os
 from pathlib import Path
+
+from config.env import required_env
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-SECRET_KEY = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-bootstrap-only-change-in-gate-2c",
-)
+SECRET_KEY = required_env("DJANGO_SECRET_KEY")
 
 DEBUG = False
 
@@ -63,15 +61,22 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "dynamic_forms"),
-        "USER": os.getenv("POSTGRES_USER", "dynamic_forms"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "dynamic_forms"),
-        "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": required_env("POSTGRES_DB"),
+        "USER": required_env("POSTGRES_USER"),
+        "PASSWORD": required_env("POSTGRES_PASSWORD"),
+        "HOST": required_env("POSTGRES_HOST"),
+        "PORT": required_env("POSTGRES_PORT"),
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 8,
+        },
+    },
+]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -83,3 +88,9 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
+
+CELERY_BROKER_URL = required_env("CELERY_BROKER_URL")
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
