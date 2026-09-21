@@ -32,8 +32,8 @@ Subgates:
 - 2D — Frozen Data Models & Migration Foundation — CLOSED
 - 2E — Database Constraint Verification — CLOSED
 - 2F — Quality & Test Foundation — CLOSED
-- 2G — CI & Repository Governance — IN PROGRESS
-- 2H — Docker Development Foundation — NOT STARTED
+- 2G — CI & Repository Governance — CLOSED
+- 2H — Docker Development Foundation — IN PROGRESS
 - 2I — Developer Workflow, README & Foundation Verification — NOT STARTED
 - 2J — BL-FOUNDATION-001 Freeze — NOT STARTED
 
@@ -45,5 +45,6 @@ Subgates:
 - GATE 2D / PR #8: merged by repository owner while collaborator invitations were still pending. Frozen model/migration review and migration-drift verification completed before merge.
 - GATE 2E / PR #10: merged by repository owner while collaborator invitations were still pending. PostgreSQL migration and 23 database-constraint tests passed before merge.
 - GATE 2F / PR #12: merged by repository owner while collaborator invitations were still pending. Ruff, pytest, coverage execution, and migration-drift verification passed before merge.
+- GATE 2G / PR #14: merged by repository owner while collaborator invitations were still pending. Final GitHub Actions run passed lint, test, and migration-check before merge; native branch protection was unavailable on the current private-repository plan and was explicitly waived through CHG-0002.
 
 These are explicit owner-approved exceptions, not a replacement for the peer-review policy.
