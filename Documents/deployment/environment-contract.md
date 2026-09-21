@@ -8,7 +8,8 @@
 
 Only the settings/configuration layer may read host environment variables.
 
-Business logic, Services, Selectors, API views, models, and domain code must not call `os.getenv()` or otherwise derive host configuration directly.
+Business logic, Services, Selectors, API views, models, and domain code must not call
+`os.getenv()` or otherwise derive host configuration directly.
 
 ## Local .env behavior
 
@@ -19,11 +20,11 @@ This means:
 1. real shell/container environment variables take precedence;
 2. `.env` is a local-development convenience;
 3. `.env` is ignored by Git;
-4. `.env.example` documents the required contract and contains no real secret.
+4. `.env.example` documents the contract and contains no real secret.
 
 ## Required base variables
 
-The application refuses to start when any of these are missing or empty:
+Base settings refuse to start when any of these are missing or empty:
 
 - `DJANGO_SECRET_KEY`
 - `POSTGRES_DB`
@@ -41,7 +42,7 @@ Development and production use:
 
 - `DJANGO_ALLOWED_HOSTS`
 
-Optional in development, required in production where documented:
+Optional in development and required in production where documented:
 
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
 
@@ -57,7 +58,34 @@ The architecture reserves separate Redis logical databases/URLs:
 - `CELERY_BROKER_URL` — Celery broker
 - `CHANNEL_LAYER_URL` — Channels layer
 
-Gate 2C actively consumes only the Celery broker setting. Cache and Channels Redis wiring are implemented in their relevant subgates without changing this contract silently.
+The current settings layer actively consumes `CELERY_BROKER_URL`.
+
+`REDIS_CACHE_URL` and `CHANNEL_LAYER_URL` are already present in the environment contract and
+Docker/CI runtime, but Django cache and Channels Redis wiring remain future implementation work in
+their relevant feature/deployment gates.
+
+## Docker development behavior
+
+Compose reads repository-root `.env` values for interpolation.
+
+Inside the Docker network, the web service overrides infrastructure locations:
+
+- `POSTGRES_HOST=postgres`
+- `POSTGRES_PORT=5432`
+- `REDIS_CACHE_URL=redis://redis:6379/0`
+- `CELERY_BROKER_URL=redis://redis:6379/1`
+- `CHANNEL_LAYER_URL=redis://redis:6379/2`
+- `PYTEST_ADDOPTS=-p no:cacheprovider` for Docker-only pytest cache hygiene
+
+The web service does **not** export `DJANGO_SETTINGS_MODULE`.
+
+Therefore:
+
+- `python src/manage.py ...` uses the development default from `manage.py`;
+- Daphne-backed `runserver` uses development settings;
+- `pytest` is free to use `config.settings.test` from `pyproject.toml`.
+
+This prevents Docker development configuration from accidentally overriding the test runner.
 
 ## Test settings
 
@@ -65,19 +93,21 @@ Gate 2C actively consumes only the Celery broker setting. Cache and Channels Red
 
 - still uses PostgreSQL;
 - never falls back to SQLite;
-- uses a test-only Django secret;
-- uses Celery's in-memory broker and eager execution;
+- forces a deterministic test-only Django secret after base settings import;
+- forces `CELERY_BROKER_URL = "memory://"` even when CI/Docker inject a development broker URL;
+- uses Celery eager execution;
 - uses Django's local-memory email backend;
-- may use a faster password hasher.
+- uses a faster password hasher.
 
-PostgreSQL connection variables still come from the environment.
+PostgreSQL connection variables still come from the environment so pytest can use the correct local,
+Docker, or CI PostgreSQL service.
 
 ## Secret generation
 
-A cross-platform way to generate a local Django secret is:
+A Docker-only cross-platform option is:
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(50))"
+docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
 Never commit the generated value.
