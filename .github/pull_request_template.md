@@ -11,14 +11,19 @@ Closes #
 - Gate:
 - Subgate:
 
+## Branch target
+
+- [ ] Normal work targets `dev`, or this PR is an explicitly documented `dev → main` milestone promotion.
+
 ## Verification
 
 - [ ] Change is within the linked Issue scope.
 - [ ] Tests added/updated where needed.
 - [ ] Migrations included for model changes.
-- [ ] `ruff` checks pass when available.
-- [ ] Test suite passes when available.
-- [ ] Migration drift check passes when available.
+- [ ] `ruff check .` passes.
+- [ ] `ruff format --check .` passes.
+- [ ] Test suite passes.
+- [ ] Migration drift check passes.
 - [ ] No secrets or local-only configuration committed.
 - [ ] Frozen baselines were not changed silently.
 - [ ] DB constraints are implemented as real constraints where required.

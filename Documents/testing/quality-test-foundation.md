@@ -1,7 +1,7 @@
 # Quality and Test Foundation
 
 **Gate:** 2F — Quality & Test Foundation  
-**Status:** IN PROGRESS  
+**Status:** COMPLETED / PASSED  
 **Target baseline:** BL-FOUNDATION-001
 
 ## Standard commands
@@ -12,15 +12,10 @@ Install runtime + development dependencies:
 python -m pip install -r requirements/dev.txt
 ```
 
-Run lint:
+Run lint and format checks:
 
 ```bash
 ruff check .
-```
-
-Check formatting:
-
-```bash
 ruff format --check .
 ```
 
@@ -66,22 +61,40 @@ pytest-django uses:
 - `pythonpath = ["src"]`
 - `testpaths = ["src/apps", "tests"]`
 
-Existing Django `TestCase` tests are intentionally not rewritten. pytest runs them as-is.
+Existing Django `TestCase` constraint tests run unchanged under pytest.
+
+A foundation settings-contract test also verifies that pytest sees:
+
+- `DEBUG=False`;
+- Celery in-memory broker;
+- local-memory email backend.
+
+## Docker test isolation
+
+The Docker web service intentionally does not export `DJANGO_SETTINGS_MODULE`.
+
+That keeps this command correct:
+
+```bash
+docker compose exec web pytest
+```
+
+pytest therefore resolves `config.settings.test` from `pyproject.toml` rather than inheriting the
+development settings module from the running web service.
 
 ## Shared fixtures
 
-Repository-root `conftest.py` provides only small, reusable domain fixtures:
+Repository-root `conftest.py` provides small, reusable domain fixtures:
 
 - `user`
 - `published_form`
 - `linear_process`
 
-Fixtures should stay composable and small. Gate-specific business scenarios belong with their
-own app/service tests rather than growing a global fixture hierarchy.
+Fixtures should stay composable and small.
 
 ## Coverage policy
 
-Coverage tooling is available from Gate 2F, but no arbitrary numeric coverage threshold is frozen yet.
+Coverage tooling is available, but no arbitrary numeric threshold is frozen yet.
 
-A meaningful threshold should be selected after service/API implementation exists; setting a high
-percentage now would reward shallow tests against a mostly structural foundation.
+An early foundation run observed 83% coverage. That number is evidence, not a required threshold.
+A meaningful threshold should be selected after service/API implementation exists.

@@ -1,6 +1,6 @@
 import os
 
-# Test-only deterministic values are configuration, not business logic.
+# Bootstrap values let base settings import even when a caller has no development .env.
 os.environ.setdefault(
     "DJANGO_SECRET_KEY",
     "test-only-secret-key-not-for-development-or-production",
@@ -8,6 +8,10 @@ os.environ.setdefault(
 os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 
 from .base import *  # noqa: E402,F403,I001
+
+# Test settings are deterministic even when development/CI container variables are present.
+SECRET_KEY = "test-only-secret-key-not-for-development-or-production"
+CELERY_BROKER_URL = "memory://"
 
 DEBUG = False
 
