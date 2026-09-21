@@ -8,8 +8,7 @@ reporting, scheduled delivery, and real-time report updates with Django.
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **OPEN**
-  - 2A–2H — **CLOSED**
-  - 2I — **IN PROGRESS**
+  - 2A–2I — **CLOSED**
   - next — 2J / BL-FOUNDATION-001 Freeze
 
 ## Runtime baseline
