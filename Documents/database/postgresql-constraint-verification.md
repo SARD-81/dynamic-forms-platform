@@ -1,43 +1,52 @@
 # PostgreSQL Constraint Verification
 
 **Gate:** 2E — Database Constraint Verification  
-**Status:** IN PROGRESS  
+**Status:** COMPLETED / PASSED  
 **Source baseline:** BL-DATA-002
 
 ## Purpose
 
 Gate 2D proved that Django models and generated migrations represent the frozen schema.
 
-Gate 2E proves that PostgreSQL actually enforces the frozen database rules.
+Gate 2E proved that PostgreSQL actually enforces the frozen database rules.
 
-SQLite is not permitted for this verification.
+SQLite was not used.
 
-## Test runner boundary
+## Runtime evidence
 
-Gate 2F owns the formal pytest/Ruff foundation.
+Verified against PostgreSQL 16.15 with a dedicated local project role/database:
 
-Gate 2E therefore uses Django's built-in test runner and `django.test.TestCase`. These tests remain compatible with later pytest-django adoption.
+```text
+python src/manage.py check
+→ System check identified no issues
 
-Expected database violations assert `django.db.IntegrityError` inside an inner `transaction.atomic()` block.
-
-`TransactionManagementError` is not the expected constraint result; it normally indicates code continued using a transaction after a database error without an appropriate rollback boundary.
-
-## First PostgreSQL application sequence
-
-After a dedicated local PostgreSQL database and role are configured:
-
-```bash
 python src/manage.py migrate
-python src/manage.py showmigrations
-env DJANGO_SETTINGS_MODULE=config.settings.test python src/manage.py test apps
+→ complete initial migration graph applied successfully
+
+python src/manage.py showmigrations accounts core forms processes reports
+→ all project 0001_initial migrations applied
+
+DJANGO_SETTINGS_MODULE=config.settings.test python src/manage.py test apps
+→ Found 23 test(s)
+→ Ran 23 tests
+→ OK
+
 python src/manage.py makemigrations --check --dry-run
+→ No changes detected
 ```
 
-The first `migrate` is allowed only because the complete initial migration graph was merged in Gate 2D.
+Django successfully created and destroyed an isolated PostgreSQL test database.
+
+## Test transaction pattern
+
+Expected database violations assert `django.db.IntegrityError` inside an inner
+`transaction.atomic()` block.
+
+`TransactionManagementError` is not treated as a successful constraint assertion.
 
 ## Constraint coverage
 
-The Gate 2E suite covers critical and custom frozen DB constraints across:
+The Gate 2E suite verifies frozen database rejection/uniqueness rules across:
 
 - User / OTPChallenge
 - Category
@@ -45,41 +54,39 @@ The Gate 2E suite covers critical and custom frozen DB constraints across:
 - Answer / AnswerOption
 - Process / ProcessStep
 - ProcessRun identity, token uniqueness, and state
-- ProcessStepRun identity/state/OneToOne ownership
-- ReportSubscription delivery target consistency
+- ProcessStepRun pair uniqueness, state consistency, and submission OneToOne ownership
+- ReportSubscription delivery-target consistency
 
 Cross-table Service-only invariants remain intentionally outside this database suite.
 
-## Local PostgreSQL values
+## Explicit verification boundaries
 
-Use a dedicated local development role/database. Do not use a superuser account from Django.
+This gate does **not** claim behavioral verification of Django deletion policies such as
+`PROTECT`, `SET_NULL`, or lifecycle-specific deletion rules. Those belong to the relevant
+domain/service gates where deletion behavior and history preservation are exercised in context.
 
-Suggested local values:
+Indexes such as `report_active_freq_idx` are schema/query-performance artifacts, not rejection
+constraints. Their usefulness is verified with real reporting/query workloads and query plans in
+the reporting/query-optimization work.
 
-```text
-POSTGRES_DB=dynamic_forms
-POSTGRES_USER=dynamic_forms
-POSTGRES_HOST=127.0.0.1
-POSTGRES_PORT=5432
-```
+## Test discovery
 
-The password is local-only and belongs in `.env`, never in Git.
-
-
-## Test discovery note
-
-Because the repository uses a `src/` layout, running:
-
-```bash
-python src/manage.py test
-```
-
-from the repository root may report `Found 0 test(s)` because default unittest discovery starts from the current working directory and does not automatically treat `src/` as a package discovery root.
-
-Use the explicit project package label instead:
+Because the repository uses a `src/` layout, Django's built-in runner required an explicit
+`apps` label during Gate 2E:
 
 ```bash
 DJANGO_SETTINGS_MODULE=config.settings.test python src/manage.py test apps
 ```
 
-This is a discovery-path correction only; it does not indicate that migrations or database constraints failed.
+Gate 2F introduces pytest with `pythonpath = ["src"]` and explicit test paths, so ordinary
+`pytest` becomes the standard test command.
+
+## Local PostgreSQL contract
+
+The development role:
+
+- owns the local `dynamic_forms` database;
+- is not a PostgreSQL superuser;
+- has local `CREATEDB` permission so test runners can create an isolated database.
+
+Database passwords stay in the ignored local `.env` file.
