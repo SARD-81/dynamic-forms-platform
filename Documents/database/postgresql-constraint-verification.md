@@ -29,7 +29,7 @@ After a dedicated local PostgreSQL database and role are configured:
 ```bash
 python src/manage.py migrate
 python src/manage.py showmigrations
-python src/manage.py test
+env DJANGO_SETTINGS_MODULE=config.settings.test python src/manage.py test apps
 python src/manage.py makemigrations --check --dry-run
 ```
 
@@ -64,3 +64,22 @@ POSTGRES_PORT=5432
 ```
 
 The password is local-only and belongs in `.env`, never in Git.
+
+
+## Test discovery note
+
+Because the repository uses a `src/` layout, running:
+
+```bash
+python src/manage.py test
+```
+
+from the repository root may report `Found 0 test(s)` because default unittest discovery starts from the current working directory and does not automatically treat `src/` as a package discovery root.
+
+Use the explicit project package label instead:
+
+```bash
+DJANGO_SETTINGS_MODULE=config.settings.test python src/manage.py test apps
+```
+
+This is a discovery-path correction only; it does not indicate that migrations or database constraints failed.
