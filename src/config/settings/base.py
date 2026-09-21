@@ -2,7 +2,6 @@ from pathlib import Path
 
 from config.env import required_env
 
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 SECRET_KEY = required_env("DJANGO_SECRET_KEY")

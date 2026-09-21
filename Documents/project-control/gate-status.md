@@ -28,8 +28,8 @@ Subgates:
 - 2B — Python / Django / ASGI Bootstrap — CLOSED
 - 2C — Settings & Environment Foundation — CLOSED
 - 2D — Frozen Data Models & Migration Foundation — CLOSED
-- 2E — Database Constraint Verification — IN PROGRESS
-- 2F — Quality & Test Foundation — NOT STARTED
+- 2E — Database Constraint Verification — CLOSED
+- 2F — Quality & Test Foundation — IN PROGRESS
 - 2G — CI & Repository Protection — NOT STARTED
 - 2H — Docker Development Foundation — NOT STARTED
 - 2I — Developer Workflow, README & Foundation Verification — NOT STARTED
@@ -41,5 +41,6 @@ Subgates:
 - GATE 2B / PR #4: merged by repository owner because collaborator invitations were still pending. Runtime verification was completed successfully before merge.
 - GATE 2C / PR #6: merged by repository owner while collaborator access was still pending. Development and test settings checks passed before merge.
 - GATE 2D / PR #8: merged by repository owner while collaborator invitations were still pending. Frozen model/migration review and migration-drift verification completed before merge.
+- GATE 2E / PR #10: merged by repository owner while collaborator invitations were still pending. PostgreSQL migration and 23 database-constraint tests passed before merge.
 
 These are explicit owner-approved exceptions, not a replacement for the peer-review policy. Once a project collaborator accepts access, subsequent normal Pull Requests require peer approval before merge.

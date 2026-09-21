@@ -1,6 +1,5 @@
 import os
 
-
 # Test-only deterministic values are configuration, not business logic.
 os.environ.setdefault(
     "DJANGO_SECRET_KEY",
@@ -8,8 +7,7 @@ os.environ.setdefault(
 )
 os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 
-from .base import *  # noqa: E402,F403
-
+from .base import *  # noqa: E402,F403,I001
 
 DEBUG = False
 
