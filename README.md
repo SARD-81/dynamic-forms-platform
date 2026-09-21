@@ -1,15 +1,15 @@
 # Dynamic Forms Platform
 
-A private team project for building and managing dynamic forms, multi-step workflows, submissions, reporting, scheduled delivery, and real-time report updates with Django.
+A private team project for building and managing dynamic forms, multi-step workflows, submissions,
+reporting, scheduled delivery, and real-time report updates with Django.
 
 ## Project status
 
-- GATE 0 — **CLOSED** — BL-ARCH-001 FROZEN
+- GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **OPEN**
-  - 2A — **CLOSED**
-  - 2B — **CLOSED**
-  - 2C — **IN PROGRESS**
+  - 2A–2G — **CLOSED**
+  - 2H — **IN PROGRESS**
   - target — BL-FOUNDATION-001
 
 ## Runtime baseline
@@ -18,9 +18,13 @@ A private team project for building and managing dynamic forms, multi-step workf
 - Django 5.2 LTS
 - Django REST Framework
 - Django Channels + Daphne
-- Psycopg 3 / PostgreSQL
-- Celery 5.6
-- python-dotenv
+- PostgreSQL
+- Redis
+- Celery
+- Ruff
+- pytest
+- GitHub Actions
+- Docker Compose development foundation
 
 ## Application layout
 
@@ -46,17 +50,17 @@ src/
     └── reports/
 ```
 
-## Local setup
+## Local environment
 
-Python 3.12 is required.
+Python 3.12 is required for non-Docker development.
 
-Create/activate the virtual environment as documented previously, then:
+Install development dependencies:
 
 ```bash
-python -m pip install -r requirements/base.txt
+python -m pip install -r requirements/dev.txt
 ```
 
-Create the local environment file:
+Create the local environment file.
 
 Linux/macOS/Fish:
 
@@ -76,9 +80,54 @@ Generate a local Django secret:
 python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
-Put that value in `.env` and replace the PostgreSQL password placeholder with the real local PostgreSQL credential.
+Put it in `.env` and replace the PostgreSQL password placeholder.
 
-No database credential has a settings fallback.
+## Docker development
+
+The development topology contains exactly:
+
+- web
+- postgres
+- redis
+
+Start it with direct Docker Compose commands:
+
+```bash
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:8000
+```
+
+The web container waits for healthy PostgreSQL and Redis, applies migrations, and runs the
+Daphne-backed Django ASGI development server. The repository is bind-mounted for development
+autoreload.
+
+Useful commands:
+
+```bash
+docker compose ps
+docker compose logs -f web
+docker compose exec web python src/manage.py check
+docker compose exec web pytest
+docker compose down
+```
+
+See `Documents/deployment/docker-development.md` for the complete development-container workflow.
+
+## Non-Docker verification
+
+With a valid local `.env`:
+
+```bash
+ruff check .
+ruff format --check .
+pytest
+python src/manage.py makemigrations --check --dry-run
+```
 
 ## Settings modules
 
@@ -100,16 +149,6 @@ Production:
 config.settings.production
 ```
 
-## Verification
-
-With a valid local `.env`:
-
-```bash
-python src/manage.py check
-```
-
-Do not run project migrations until Gate 2D implements the frozen BL-DATA-002 model set.
-
 ## Configuration boundary
 
 Only settings/configuration may read environment variables.
@@ -120,12 +159,23 @@ See `Documents/deployment/environment-contract.md`.
 
 ## Workflow
 
-Issue → short-lived branch → implementation/tests → PR → CI → peer review → merge.
+Normal development:
 
-The 2A and 2B owner merges are recorded exceptions while collaborator invitations remained pending; they do not replace the peer-review rule.
+```text
+Issue → branch from dev → implementation/tests → PR to dev → CI → review → merge to dev
+```
+
+Milestone promotion:
+
+```text
+dev → PR to main → CI → review → merge to main
+```
+
+See BL-ARCH-002 and `CONTRIBUTING.md`.
 
 ## Documentation
 
 The authoritative ERD source is `Documents/database/erd.nomnoml`.
 
-Frozen baselines are never edited silently; approved structural changes require Change Records and superseding baselines when needed.
+Frozen baselines are never edited silently; approved structural changes require Change Records and
+superseding baselines when needed.

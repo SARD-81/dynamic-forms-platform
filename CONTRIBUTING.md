@@ -2,24 +2,53 @@
 
 ## Branch policy
 
-`main` is the only long-lived branch.
+The authoritative branch model is defined by BL-ARCH-002.
 
-Use short-lived branches named from an Issue, for example:
+Long-lived branches:
 
-- `chore/1-repository-governance-bootstrap`
-- `feat/12-form-submission`
+- `main` — stable milestone/release/baseline branch
+- `dev` — integration branch for normal ongoing development
+
+Use short-lived Issue-linked branches created from current `dev`, for example:
+
+- `chore/15-docker-development-foundation`
+- `feat/22-form-submission`
 - `fix/27-process-step-validation`
 
-## Required flow
+## Required normal flow
 
 1. Create or select an Issue.
-2. Create a branch from current `main`.
-3. Implement one coherent concern.
-4. Add or update tests.
-5. Open a Pull Request.
-6. Wait for required CI checks.
-7. Obtain at least one peer approval once repository protection is enabled.
-8. Merge only after all requirements pass.
+2. Update local `dev`.
+3. Create a short-lived branch from `dev`.
+4. Implement one coherent concern.
+5. Add or update tests.
+6. Open a Pull Request targeting `dev`.
+7. Wait for CI checks.
+8. Obtain peer review when a collaborator is available.
+9. Merge only after requirements pass.
+
+## Milestone promotion
+
+`main` is not the target for ordinary feature work.
+
+At an approved milestone:
+
+1. ensure `dev` is green;
+2. open a `dev → main` Pull Request;
+3. run CI;
+4. review the milestone delta;
+5. merge into `main`.
+
+## Required CI checks
+
+Stable check names:
+
+- `lint`
+- `test`
+- `migration-check`
+
+Native GitHub branch protection is currently unavailable for this private repository under the active
+plan. That platform limitation does not waive this documented workflow.
 
 ## Review rules
 
@@ -40,11 +69,13 @@ Reviewers must verify:
 
 Settings/configuration may read environment variables.
 
-Business, domain, Service, Selector, and API code must not call `os.getenv()` or otherwise derive configuration directly from the host environment.
+Business, domain, Service, Selector, and API code must not call `os.getenv()` or otherwise derive
+configuration directly from the host environment.
 
 ## Cross-platform commands
 
-Makefile targets are optional conveniences only. Documentation must also show direct commands that work without Make/WSL.
+Makefile targets are optional conveniences only. Documentation must also show direct commands that
+work without Make/WSL.
 
 ## Frozen baseline changes
 

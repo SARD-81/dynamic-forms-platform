@@ -156,3 +156,6 @@ jobs:
 
       - name: Check migration drift
         run: python src/manage.py makemigrations --check --dry-run
+
+      - name: Validate Docker Compose development config
+        run: docker compose --env-file .env.example config --quiet
