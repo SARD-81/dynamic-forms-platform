@@ -111,6 +111,10 @@ docker compose down
 
 pytest must report `settings: config.settings.test`.
 
+Inside the Docker web service, pytest's cache provider is disabled through
+`PYTEST_ADDOPTS=-p no:cacheprovider`. This prevents the root-running development container from
+creating root-owned `.pytest_cache` files in the host bind mount. Host pytest is unaffected.
+
 ## Destructive local reset
 
 ```bash

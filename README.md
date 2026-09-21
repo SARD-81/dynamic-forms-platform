@@ -100,7 +100,8 @@ pytest must report:
 settings: config.settings.test
 ```
 
-and the suite must pass.
+and the suite must pass. Docker disables pytest's cache provider so the root-running container does
+not leave root-owned `.pytest_cache` files in the host checkout.
 
 Stop the stack:
 

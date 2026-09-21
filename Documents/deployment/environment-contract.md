@@ -75,6 +75,7 @@ Inside the Docker network, the web service overrides infrastructure locations:
 - `REDIS_CACHE_URL=redis://redis:6379/0`
 - `CELERY_BROKER_URL=redis://redis:6379/1`
 - `CHANNEL_LAYER_URL=redis://redis:6379/2`
+- `PYTEST_ADDOPTS=-p no:cacheprovider` for Docker-only pytest cache hygiene
 
 The web service does **not** export `DJANGO_SETTINGS_MODULE`.
 

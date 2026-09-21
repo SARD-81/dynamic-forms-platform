@@ -18,6 +18,7 @@ services:
       REDIS_CACHE_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CHANNEL_LAYER_URL: redis://redis:6379/2
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
     ports:
       - "8000:8000"
     volumes:
