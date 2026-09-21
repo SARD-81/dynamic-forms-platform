@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from django.utils import timezone
 
 from apps.accounts.models import OTPChallenge, User
 
@@ -28,6 +31,6 @@ class AccountDatabaseConstraintTests(TestCase):
                     user=self.user,
                     purpose=OTPChallenge.Purpose.LOGIN,
                     code_hash="hash",
-                    expires_at="2030-01-01T00:00:00Z",
+                    expires_at=timezone.now() + timedelta(minutes=5),
                     attempt_count=-1,
                 )
