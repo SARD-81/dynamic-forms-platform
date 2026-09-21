@@ -1,106 +1,100 @@
 # Foundation Bootstrap Verification
 
 **Gate:** 2I — Developer Workflow, README & Foundation Verification  
-**Status:** VERIFIED WITH FOLLOW-UP HYGIENE FIX  
+**Status:** COMPLETED / PASSED  
 **Target baseline:** BL-FOUNDATION-001
 
 ## Purpose
 
-Prove that the Gate 2 foundation is usable by a developer starting from a fresh repository clone,
-without relying on undocumented local state.
+Prove that the Gate 2 foundation is usable from a fresh clone without relying on hidden local state.
 
-## Clean-start assumptions
+## Verified environment
 
-The verification directory began with:
-
-- a fresh clone;
-- no project `.env`;
-- no project virtual environment;
-- no existing Docker Compose project/volume for that clone.
-
-Docker Engine and Docker Compose v2 were already installed.
-
-## Verification run — 2026-09-21
-
-Environment:
-
+- Date: 2026-09-21
 - OS: Ubuntu 24.04
 - Docker: 29.1.3
 - Docker Compose: 2.40.3
-- source branch used before merge: `docs/17-developer-workflow-verification`
-- clean clone directory: `dynamic-forms-platform-cleancheck`
+- Verification branch before merge: `docs/17-developer-workflow-verification`
 
-Observed path:
+## Clean bootstrap result
 
-1. cloned the repository;
-2. checked out the Gate 2I branch;
-3. copied `.env.example` to `.env`;
-4. generated fresh local-only Django/database secrets;
-5. `docker compose --env-file .env config --quiet` passed;
-6. `docker compose up --build -d` succeeded;
-7. PostgreSQL became healthy;
-8. Redis became healthy;
-9. web started on port 8000;
-10. Django system check passed;
-11. pytest reported `config.settings.test`;
-12. 24/24 tests passed;
-13. `HEAD /admin/login/` returned HTTP 200;
-14. response server reported Daphne;
-15. `git status --short` was empty.
+A fresh clone with no project `.env` or virtual environment successfully completed the documented Docker-first path:
 
-Observed wall-clock bootstrap from clone start to completed verification was approximately three
-minutes on the verification machine. Docker layer/image cache was available; the Gate 2 target
-explicitly excludes image-download/network time.
+```text
+Compose config validation     PASSED
+Docker build/start            PASSED
+PostgreSQL                    healthy
+Redis                         healthy
+web                           running
+Django system check           PASSED
+pytest settings               config.settings.test
+pytest                        24/24 PASSED
+HEAD /admin/login/            HTTP 200
+ASGI server                   Daphne
+git status --short            clean
+```
 
-## Discovered cleanup hygiene issue
+The observed bootstrap completed comfortably below the 15-minute target, excluding network/image-download time.
 
-The first clean verification exposed one onboarding hygiene issue after all functional checks had
-already passed.
+## Findings resolved during Gate 2I
 
-Because the development web container runs as root and the repository is bind-mounted, pytest's
-default cache provider created `.pytest_cache` on the host with root ownership. The ignored cache
-did not dirty Git, but it prevented an ordinary host user from deleting the temporary clone.
+### Docker pytest settings isolation
 
-This did not affect application/runtime correctness, but it is a valid developer-experience defect.
+The Docker web service originally exported `DJANGO_SETTINGS_MODULE=config.settings.development`, which caused container pytest to inherit development settings.
 
-## Applied fix
+Gate 2I removed that override. Django management commands still default to development through `manage.py`, while pytest now resolves `config.settings.test` from `pyproject.toml`.
 
-The Docker `web` service now sets:
+A settings-contract test protects this behavior.
+
+### Root-owned pytest cache
+
+The root-running development container initially created `.pytest_cache` on the host bind mount.
+
+The Docker web service now sets:
 
 ```text
 PYTEST_ADDOPTS=-p no:cacheprovider
 ```
 
-This disables only pytest's cache provider inside the Docker development service, preventing
-container-root cache files from being written into the host bind mount.
+Focused verification after the fix proved:
 
-Host/non-Docker pytest keeps its normal cache behavior.
+```text
+docker compose exec web pytest
+→ 24 passed
+→ settings: config.settings.test
 
-## Final hygiene verification required
+test ! -e .pytest_cache
+→ passed
 
-After the fix, one focused check remains:
+git status --short
+→ clean
+```
 
-1. run Docker pytest from a clean checkout;
-2. confirm `.pytest_cache` is not created by the container;
-3. stop/remove the Compose stack and volume;
-4. remove the clean-check directory as the normal host user, without `sudo`.
+No container-created pytest cache remained on the host.
 
-No repetition of the already-passed functional acceptance checks is required beyond confirming the
-test suite still passes.
+### Reused PostgreSQL volume after password change
+
+A reused development PostgreSQL volume retained credentials initialized with an older password, while the recreated local `.env` used a new `POSTGRES_PASSWORD`.
+
+PostgreSQL reported healthy, but the web service correctly failed authentication. Resetting the disposable development volume resolved the mismatch:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+After recreation, all health, Django, pytest, HTTP, and cache-hygiene checks passed.
+
+This reset procedure is for disposable development data only.
 
 ## Independent developer status
 
-Collaborator repository access was still inactive during Gate 2I, so an independent teammate
-verification could not be assigned through GitHub.
+Collaborator repository access remained inactive during Gate 2I, so an independent teammate verification could not be assigned through GitHub.
 
-An owner-run fresh-clone verification is accepted for Gate 2I. A teammate may repeat this checklist
-later as an onboarding exercise without changing BL-FOUNDATION-001.
+The owner-run fresh-clone verification is accepted for this gate. A teammate may repeat the same README workflow later as an onboarding exercise.
 
-## Gate exit
+## Gate result
 
-Gate 2I closes when:
+GATE 2I: **COMPLETED / PASSED**.
 
-- CI is green on the cleanup-hygiene fix;
-- Docker pytest still passes;
-- no container-created `.pytest_cache` appears on the host;
-- the temporary clean clone can be deleted without elevated privileges.
+The documented developer bootstrap is reproducible, uses the correct Django test settings, and no known foundation documentation/runtime mismatch remains.
