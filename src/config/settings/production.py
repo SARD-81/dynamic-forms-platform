@@ -2,7 +2,6 @@ from config.env import env_bool, env_list
 
 from .base import *  # noqa: F403
 
-
 DEBUG = False
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", required=True)

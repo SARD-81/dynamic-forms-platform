@@ -4,7 +4,6 @@ from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Local convenience only. Existing shell/container environment variables win.
@@ -15,9 +14,7 @@ def required_env(name: str) -> str:
     value = os.getenv(name)
 
     if value is None or not value.strip():
-        raise ImproperlyConfigured(
-            f"Required environment variable {name!r} is missing or empty."
-        )
+        raise ImproperlyConfigured(f"Required environment variable {name!r} is missing or empty.")
 
     return value
 
@@ -49,6 +46,4 @@ def env_bool(name: str, *, default: bool = False) -> bool:
     if normalized in {"0", "false", "no", "off"}:
         return False
 
-    raise ImproperlyConfigured(
-        f"Environment variable {name!r} must be a boolean value."
-    )
+    raise ImproperlyConfigured(f"Environment variable {name!r} must be a boolean value.")
