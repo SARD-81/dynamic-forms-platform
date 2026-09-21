@@ -6,7 +6,9 @@ Updated: 2026-09-21
 
 Status: **CLOSED**
 
-- BL-ARCH-001 — FROZEN
+- BL-ARCH-001 — SUPERSEDED
+- CHG-0002 — APPROVED / APPLIED
+- BL-ARCH-002 — FROZEN / AUTHORITATIVE
 
 ## GATE 1 — Domain & Data Architecture
 
@@ -30,7 +32,7 @@ Subgates:
 - 2D — Frozen Data Models & Migration Foundation — CLOSED
 - 2E — Database Constraint Verification — CLOSED
 - 2F — Quality & Test Foundation — CLOSED
-- 2G — CI & Repository Protection — IN PROGRESS
+- 2G — CI & Repository Governance — IN PROGRESS
 - 2H — Docker Development Foundation — NOT STARTED
 - 2I — Developer Workflow, README & Foundation Verification — NOT STARTED
 - 2J — BL-FOUNDATION-001 Freeze — NOT STARTED
@@ -44,4 +46,4 @@ Subgates:
 - GATE 2E / PR #10: merged by repository owner while collaborator invitations were still pending. PostgreSQL migration and 23 database-constraint tests passed before merge.
 - GATE 2F / PR #12: merged by repository owner while collaborator invitations were still pending. Ruff, pytest, coverage execution, and migration-drift verification passed before merge.
 
-These are explicit owner-approved exceptions, not a replacement for the peer-review policy. Once a project collaborator accepts access, subsequent normal Pull Requests require peer approval before merge.
+These are explicit owner-approved exceptions, not a replacement for the peer-review policy.
