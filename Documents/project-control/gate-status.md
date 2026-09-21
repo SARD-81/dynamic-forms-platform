@@ -1,6 +1,6 @@
 # Project Gate Status
 
-Updated: 2026-09-20
+Updated: 2026-09-21
 
 ## GATE 0 — Scope & Architecture
 
@@ -27,8 +27,8 @@ Subgates:
 - 2A — Repository & Governance Bootstrap — CLOSED
 - 2B — Python / Django / ASGI Bootstrap — CLOSED
 - 2C — Settings & Environment Foundation — CLOSED
-- 2D — Frozen Data Models & Migration Foundation — IN PROGRESS
-- 2E — Database Constraint Verification — NOT STARTED
+- 2D — Frozen Data Models & Migration Foundation — CLOSED
+- 2E — Database Constraint Verification — IN PROGRESS
 - 2F — Quality & Test Foundation — NOT STARTED
 - 2G — CI & Repository Protection — NOT STARTED
 - 2H — Docker Development Foundation — NOT STARTED
@@ -40,5 +40,6 @@ Subgates:
 - GATE 2A / PR #2: merged by repository owner as an explicitly documented bootstrap exception while collaborator invitations were pending.
 - GATE 2B / PR #4: merged by repository owner because collaborator invitations were still pending. Runtime verification was completed successfully before merge.
 - GATE 2C / PR #6: merged by repository owner while collaborator access was still pending. Development and test settings checks passed before merge.
+- GATE 2D / PR #8: merged by repository owner while collaborator invitations were still pending. Frozen model/migration review and migration-drift verification completed before merge.
 
 These are explicit owner-approved exceptions, not a replacement for the peer-review policy. Once a project collaborator accepts access, subsequent normal Pull Requests require peer approval before merge.
