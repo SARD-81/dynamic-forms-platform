@@ -7,9 +7,7 @@ reporting, scheduled delivery, and real-time report updates with Django.
 
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
-- GATE 2 — **OPEN**
-  - 2A–2I — **CLOSED**
-  - next — 2J / BL-FOUNDATION-001 Freeze
+- GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / AUTHORITATIVE
 
 ## Runtime baseline
 
@@ -180,6 +178,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [BL-ARCH-002](Documents/project-control/baselines/BL-ARCH-002.md).
 
 ## Foundation documentation
+
+- [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen repository & engineering foundation
 
 - [Environment contract](Documents/deployment/environment-contract.md)
 - [Docker development](Documents/deployment/docker-development.md)

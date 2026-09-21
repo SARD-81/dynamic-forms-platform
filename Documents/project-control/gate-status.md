@@ -20,9 +20,9 @@ Status: **CLOSED**
 
 ## GATE 2 — Repository & Engineering Foundation
 
-Status: **OPEN**
+Status: **CLOSED**
 
-Target baseline: `BL-FOUNDATION-001`
+Baseline: `BL-FOUNDATION-001` — **FROZEN / AUTHORITATIVE**
 
 Subgates:
 
@@ -35,7 +35,7 @@ Subgates:
 - 2G — CI & Repository Governance — CLOSED
 - 2H — Docker Development Foundation — CLOSED
 - 2I — Developer Workflow, README & Foundation Verification — CLOSED
-- 2J — BL-FOUNDATION-001 Freeze — NOT STARTED
+- 2J — BL-FOUNDATION-001 Freeze — CLOSED
 
 ## Merge governance audit trail
 
@@ -47,5 +47,7 @@ Subgates:
 - GATE 2F / PR #12: merged by repository owner while collaborator invitations were still pending. Ruff, pytest, coverage execution, and migration-drift verification passed before merge.
 - GATE 2G / PR #14: merged by repository owner while collaborator invitations were still pending. Final GitHub Actions run passed lint, test, and migration-check before merge; native branch protection was unavailable on the current private-repository plan and was explicitly waived through CHG-0002.
 - GATE 2H / PR #16: merged by repository owner into `dev` as the first merge under BL-ARCH-002. Docker build/runtime, PostgreSQL/Redis health, migrations, Django checks, 23 tests, HTTP/Daphne response, autoreload, and CI all passed before merge.
+
+- GATE 2I / PR #18: merged by repository owner into `dev` after clean-bootstrap verification. Docker settings isolation, 24 tests, HTTP/Daphne, pytest cache hygiene, working-tree cleanliness, and final CI all passed before merge.
 
 These are explicit owner-approved exceptions, not a replacement for the peer-review policy.
