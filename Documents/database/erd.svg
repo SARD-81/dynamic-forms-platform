@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <defs>
+    <style>
+      .box{fill:#fff;stroke:#111;stroke-width:1.4}
+      .title{font:700 15px sans-serif;fill:#111}
+      .text{font:12px monospace;fill:#111}
+      .small{font:11px sans-serif;fill:#333}
+      .rel{stroke:#444;stroke-width:1.2;fill:none;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#444"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="980" fill="white"/>
+  <text x="30" y="30" class="title">Dynamic Forms Platform — BL-DATA-002 ERD</text>
+  <text x="30" y="50" class="small">Rendered companion only. Authoritative editable source: erd.nomnoml</text>
+
+  <g transform="translate(30 300)"><rect class="box" width="180" height="210"/><text class="title" x="10" y="22">User</text><text class="text" x="10" y="46">id PK</text><text class="text" x="10" y="64">username</text><text class="text" x="10" y="82">email UNIQUE</text><text class="text" x="10" y="100">password</text><text class="text" x="10" y="118">first_name</text><text class="text" x="10" y="136">last_name</text><text class="text" x="10" y="154">is_active</text><text class="text" x="10" y="172">is_staff</text><text class="text" x="10" y="190">date_joined</text></g>
+
+  <g transform="translate(280 70)"><rect class="box" width="220" height="190"/><text class="title" x="10" y="22">OTPChallenge</text><text class="text" x="10" y="46">user_id FK</text><text class="text" x="10" y="64">purpose / code_hash</text><text class="text" x="10" y="82">expires_at</text><text class="text" x="10" y="100">attempt_count</text><text class="text" x="10" y="118">verified_at NULL</text><text class="small" x="10" y="146">CHECK attempt_count &gt;= 0</text></g>
+  <g transform="translate(280 300)"><rect class="box" width="220" height="150"/><text class="title" x="10" y="22">core.Category</text><text class="text" x="10" y="46">owner_id FK</text><text class="text" x="10" y="64">name</text><text class="small" x="10" y="92">UNIQUE(owner_id, name)</text></g>
+  <g transform="translate(280 540)"><rect class="box" width="220" height="170"/><text class="title" x="10" y="22">ReportSubscription</text><text class="text" x="10" y="46">created_by_id FK</text><text class="text" x="10" y="64">frequency</text><text class="text" x="10" y="82">delivery_method</text><text class="text" x="10" y="100">email / endpoint_url NULL</text><text class="small" x="10" y="128">CHECK delivery destination</text></g>
+
+  <g transform="translate(570 90)"><rect class="box" width="240" height="240"/><text class="title" x="10" y="22">Form</text><text class="text" x="10" y="46">public_id UUID UNIQUE</text><text class="text" x="10" y="64">owner_id FK</text><text class="text" x="10" y="82">category_id FK NULL</text><text class="text" x="10" y="100">title / description</text><text class="text" x="10" y="118">visibility / status</text><text class="text" x="10" y="136">access_password_hash NULL</text><text class="text" x="10" y="154">view_count</text><text class="small" x="10" y="184">CHECK visibility/password</text></g>
+  <g transform="translate(570 430)"><rect class="box" width="240" height="230"/><text class="title" x="10" y="22">Process</text><text class="text" x="10" y="46">public_id UUID UNIQUE</text><text class="text" x="10" y="64">owner_id FK</text><text class="text" x="10" y="82">category_id FK NULL</text><text class="text" x="10" y="100">process_type</text><text class="text" x="10" y="118">visibility / status</text><text class="text" x="10" y="136">access_password_hash NULL</text><text class="text" x="10" y="154">view_count</text><text class="small" x="10" y="184">CHECK visibility/password</text></g>
+
+  <g transform="translate(880 40)"><rect class="box" width="260" height="230"/><text class="title" x="10" y="22">Question</text><text class="text" x="10" y="46">form_id FK</text><text class="text" x="10" y="64">text / question_type</text><text class="text" x="10" y="82">is_required / order</text><text class="text" x="10" y="100">max_length NULL</text><text class="text" x="10" y="118">min/max Decimal NULL</text><text class="small" x="10" y="148">UNIQUE(form_id, order)</text><text class="small" x="10" y="166">CHECK order &gt;= 1</text><text class="small" x="10" y="184">CHECK numeric bounds</text></g>
+  <g transform="translate(880 320)"><rect class="box" width="260" height="170"/><text class="title" x="10" y="22">FormSubmission</text><text class="text" x="10" y="46">public_id UUID UNIQUE</text><text class="text" x="10" y="64">form_id FK</text><text class="text" x="10" y="82">respondent_id FK NULL</text><text class="text" x="10" y="100">submitted_at</text></g>
+  <g transform="translate(880 540)"><rect class="box" width="260" height="170"/><text class="title" x="10" y="22">ProcessStep</text><text class="text" x="10" y="46">process_id FK</text><text class="text" x="10" y="64">form_id FK</text><text class="text" x="10" y="82">order</text><text class="small" x="10" y="110">UNIQUE(process_id, order)</text><text class="small" x="10" y="128">UNIQUE(process_id, form_id)</text><text class="small" x="10" y="146">CHECK order &gt;= 1</text></g>
+  <g transform="translate(880 760)"><rect class="box" width="260" height="180"/><text class="title" x="10" y="22">ProcessRun</text><text class="text" x="10" y="46">process_id FK</text><text class="text" x="10" y="64">respondent_id FK NULL</text><text class="text" x="10" y="82">resume_token_hash NULL</text><text class="text" x="10" y="100">status / completed_at</text><text class="small" x="10" y="128">CHECK identity XOR</text><text class="small" x="10" y="146">UNIQUE non-null token</text></g>
+
+  <g transform="translate(1210 60)"><rect class="box" width="260" height="170"/><text class="title" x="10" y="22">QuestionOption</text><text class="text" x="10" y="46">question_id FK</text><text class="text" x="10" y="64">label / order</text><text class="small" x="10" y="92">UNIQUE(question_id, order)</text><text class="small" x="10" y="110">UNIQUE(question_id, label)</text><text class="small" x="10" y="128">CHECK order &gt;= 1</text></g>
+  <g transform="translate(1210 300)"><rect class="box" width="260" height="170"/><text class="title" x="10" y="22">Answer</text><text class="text" x="10" y="46">submission_id FK</text><text class="text" x="10" y="64">question_id FK</text><text class="text" x="10" y="82">text_value NULL</text><text class="text" x="10" y="100">number_value NULL</text><text class="small" x="10" y="128">UNIQUE(submission, question)</text></g>
+  <g transform="translate(1210 560)"><rect class="box" width="260" height="210"/><text class="title" x="10" y="22">ProcessStepRun</text><text class="text" x="10" y="46">process_run_id FK</text><text class="text" x="10" y="64">process_step_id FK</text><text class="text" x="10" y="82">submission_id FK NULL UNIQUE</text><text class="text" x="10" y="100">status / completed_at NULL</text><text class="small" x="10" y="130">UNIQUE(run, step)</text><text class="small" x="10" y="148">CHECK state/data consistency</text></g>
+  <g transform="translate(1490 300)"><rect class="box" width="100" height="150"/><text class="title" x="8" y="22">AnswerOption</text><text class="text" x="8" y="48">answer_id FK</text><text class="text" x="8" y="66">option_id FK</text><text class="small" x="8" y="96">UNIQUE pair</text></g>
+
+  <path class="rel" d="M210 350 L280 165"/><path class="rel" d="M210 390 L280 370"/><path class="rel" d="M210 420 L570 200"/><path class="rel" d="M210 450 L570 540"/><path class="rel" d="M210 470 L880 390"/><path class="rel" d="M210 490 L880 830"/><path class="rel" d="M210 500 L280 625"/>
+  <path class="rel" d="M500 350 L570 230"/><path class="rel" d="M500 390 L570 550"/>
+  <path class="rel" d="M810 180 L880 150"/><path class="rel" d="M810 250 L880 390"/><path class="rel" d="M810 290 L880 625"/>
+  <path class="rel" d="M1140 150 L1210 145"/><path class="rel" d="M1140 390 L1210 385"/><path class="rel" d="M1140 180 L1210 350"/>
+  <path class="rel" d="M1470 385 L1490 375"/><path class="rel" d="M1470 145 L1490 330"/>
+  <path class="rel" d="M810 550 L880 625"/><path class="rel" d="M810 570 L880 830"/>
+  <path class="rel" d="M1140 625 L1210 650"/><path class="rel" d="M1140 830 L1210 700"/><path class="rel" d="M1210 720 L1140 430"/>
+  <text x="30" y="960" class="small">Cross-table service-only invariants remain documented in constraint-matrix.md.</text>
+</svg>

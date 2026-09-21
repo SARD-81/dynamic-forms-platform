@@ -1,7 +1,7 @@
 # CI and Branch Governance
 
 **Gate:** 2G — CI & Repository Governance  
-**Status:** IN PROGRESS  
+**Status:** COMPLETED / PASSED  
 **Target baseline:** BL-FOUNDATION-001  
 **Architecture baseline:** BL-ARCH-002
 
@@ -30,12 +30,8 @@ CI runs on:
 - Redis 7 Alpine service container
 - runtime + dev dependencies from `requirements/dev.txt`
 
-## Environment contract
-
-GATE 2C intentionally made runtime configuration strict. CI satisfies that contract with disposable
-workflow-only values.
-
-No developer or production secret is required.
+CI satisfies the strict environment contract with disposable workflow-only values. No developer or
+production secret is required.
 
 ## Job responsibilities
 
@@ -57,11 +53,12 @@ pytest
 ```bash
 python src/manage.py check
 python src/manage.py makemigrations --check --dry-run
+docker compose --env-file .env.example config --quiet
 ```
 
-## First runtime verification
+## Runtime verification
 
-The first CI run on PR #14 completed successfully:
+The final GATE 2G workflow head passed all three jobs.
 
 ```text
 lint             success
@@ -74,13 +71,13 @@ PostgreSQL and Redis service containers initialized successfully.
 
 ## Branch governance
 
-Normal work uses:
+Normal work:
 
 ```text
 Issue → branch from dev → PR to dev → review → CI → merge to dev
 ```
 
-Milestone promotion uses:
+Milestone promotion:
 
 ```text
 dev → PR to main → review → CI → merge to main
@@ -88,13 +85,10 @@ dev → PR to main → review → CI → merge to main
 
 ## Native branch protection
 
-An attempt to enable GitHub branch protection on the private repository returned HTTP 403 because
-the current GitHub plan does not provide that feature for this repository.
+GitHub returned HTTP 403 for branch protection on the current private repository because the active
+plan does not provide that feature.
 
-The project owner explicitly chose to keep the repository private and continue without native branch
-protection.
+The repository remains private and native branch protection is explicitly not a Gate 2 exit
+requirement under CHG-0002 / BL-ARCH-002.
 
-This is a platform-plan limitation, not a CI failure. Project governance still prohibits normal
-direct development on `main` and `dev`.
-
-See CHG-0002 and BL-ARCH-002.
+This platform limitation does not waive the documented PR/review/CI workflow.
