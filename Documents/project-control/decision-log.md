@@ -20,3 +20,18 @@ Using `SET_NULL` on an authenticated run would produce both identity fields as N
 The currently committed BL-DATA-002 artifacts do not state a conflicting `SET_NULL` rule for this relation. Therefore this entry does not supersede BL-DATA-002 and does not require a CHG record.
 
 If a future authoritative frozen baseline explicitly changes this policy, that change must use the normal CHG process.
+
+## 2026-09-21 — Development integration branch and branch-protection availability
+
+**Context:** GATE 2G CI and repository governance.
+
+**Decision:** Normal ongoing development moves to a long-lived `dev` integration branch after
+GATE 2G. `main` remains the stable milestone/release/baseline branch.
+
+**Reason:** The project owner explicitly approved a `dev` integration workflow. Native GitHub branch
+protection is unavailable for the current private repository under the active plan (HTTP 403), and
+the repository will remain private.
+
+**Change-control classification:** Structural governance change.
+
+Tracked by CHG-0002 and frozen in BL-ARCH-002.
