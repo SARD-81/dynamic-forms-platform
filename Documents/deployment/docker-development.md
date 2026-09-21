@@ -145,3 +145,25 @@ Verified on Ubuntu 24.04:
 Documentation uses direct `docker compose` commands.
 
 Make/WSL wrappers may exist only as optional conveniences.
+
+
+## Troubleshooting
+
+### Web exits with PostgreSQL password authentication failure
+
+If `postgres` is healthy but `web` exits with a PostgreSQL password authentication error, check whether `POSTGRES_PASSWORD` changed while an older Docker PostgreSQL volume still exists.
+
+The PostgreSQL image initializes the database user password when the data directory is first created. Changing the Compose environment variable later does not rewrite credentials already stored in that volume.
+
+For disposable development data only:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+This deletes the local Docker PostgreSQL development volume and all data inside it.
+
+### Bake/buildx warning
+
+A warning that Docker Compose is configured to build using Bake while buildx is unavailable is non-blocking when the ordinary Docker builder completes successfully. Gate 2 does not require buildx.
