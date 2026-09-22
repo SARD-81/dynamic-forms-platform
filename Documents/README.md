@@ -6,10 +6,15 @@ This directory is the version-controlled engineering record for the project.
 
 - `architecture/` — ADRs and architecture rationale
 - `database/` — ERD source/render, data dictionary, model mapping, and constraint verification
-- `project-control/` — gate status, frozen baselines, decision log, and change records
+- `project-control/` — gate status, execution plans, frozen baselines, decision log, and change records
 - `deployment/` — environment, Docker, CI, bootstrap, and deployment records
 - `testing/` — quality/test foundation
-- `api/` — API documentation placeholder; concrete OpenAPI/API contracts arrive with API feature gates
+- `api/` — versioned API contracts and OpenAPI documentation
+
+## Current execution
+
+- [GATE 3 Application Execution Plan](project-control/gate3-execution-plan.md)
+- [Project Gate Status](project-control/gate-status.md)
 
 ## Primary foundation documents
 
