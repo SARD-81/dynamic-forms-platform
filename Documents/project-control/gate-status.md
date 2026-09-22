@@ -43,6 +43,9 @@ GATE 2 was promoted from `dev` to `main` through milestone PR #22.
 
 Status: **IN PROGRESS**
 
+Execution tracker: GitHub Issue #25  
+Execution plan: `Documents/project-control/gate3-execution-plan.md`
+
 Entry conditions are satisfied:
 
 - GATE 0 is closed under BL-ARCH-002.
@@ -60,7 +63,12 @@ Current implementation scope follows the approved project requirements and froze
 - linear and free processes and process runs
 - reporting
 - REST API / OpenAPI work
-- scheduled delivery and real-time reporting in their relevant implementation stages
+- scheduled delivery
+- caching
+
+Bonus/stretch scope:
+
+- real-time reporting through Channels/WebSockets
 
 No GATE 3 baseline is frozen yet. GATE 3 work must extend the existing frozen baselines rather than
 silently changing them.
@@ -112,5 +120,4 @@ Completed on 2026-09-22:
 - Issue #15 closed as completed; implementation was delivered by PR #16.
 - Issue #17 closed as completed; implementation was delivered by PR #18.
 - Issue #19 closed as completed; implementation was delivered by PR #20.
-
-Repository status documentation is synchronized through Issue #23.
+- Issue #23 closed as completed; status synchronization was delivered by PR #24.
