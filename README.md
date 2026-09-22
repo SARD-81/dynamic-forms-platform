@@ -8,6 +8,10 @@ reporting, scheduled delivery, and real-time report updates with Django.
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / AUTHORITATIVE
+- GATE 3 — **IN PROGRESS** — application feature implementation; no GATE 3 baseline is frozen yet
+
+Normal GATE 3 development starts from `dev` and follows the Issue → branch → PR → CI → peer review
+workflow defined by BL-ARCH-002.
 
 ## Runtime baseline
 
@@ -180,7 +184,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and
 ## Foundation documentation
 
 - [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen repository & engineering foundation
-
+- [Project gate status](Documents/project-control/gate-status.md) — current gate execution status
 - [Environment contract](Documents/deployment/environment-contract.md)
 - [Docker development](Documents/deployment/docker-development.md)
 - [Quality & test foundation](Documents/testing/quality-test-foundation.md)
