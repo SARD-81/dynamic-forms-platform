@@ -1,6 +1,6 @@
 # Project Gate Status
 
-Updated: 2026-09-21
+Updated: 2026-09-22
 
 ## GATE 0 — Scope & Architecture
 
@@ -37,6 +37,56 @@ Subgates:
 - 2I — Developer Workflow, README & Foundation Verification — CLOSED
 - 2J — BL-FOUNDATION-001 Freeze — CLOSED
 
+GATE 2 was promoted from `dev` to `main` through milestone PR #22.
+
+## GATE 3 — Application Feature Implementation
+
+Status: **IN PROGRESS**
+
+Entry conditions are satisfied:
+
+- GATE 0 is closed under BL-ARCH-002.
+- GATE 1 is closed under BL-DATA-002.
+- GATE 2 is closed under BL-FOUNDATION-001.
+- the completed GATE 2 foundation has been promoted to `main`.
+- normal feature development continues from `dev`.
+
+Current implementation scope follows the approved project requirements and frozen architecture:
+
+- accounts, authentication, and OTP flows
+- categories
+- dynamic forms, questions, and options
+- submissions and answers
+- linear and free processes and process runs
+- reporting
+- REST API / OpenAPI work
+- scheduled delivery and real-time reporting in their relevant implementation stages
+
+No GATE 3 baseline is frozen yet. GATE 3 work must extend the existing frozen baselines rather than
+silently changing them.
+
+Normal GATE 3 workflow:
+
+```text
+Issue
+→ short-lived branch from dev
+→ implementation + tests
+→ Pull Request to dev
+→ CI
+→ peer review
+→ merge to dev
+```
+
+Milestone promotion remains:
+
+```text
+dev
+→ Pull Request to main
+→ CI
+→ peer review
+→ merge to main
+```
+
 ## Merge governance audit trail
 
 - GATE 2A / PR #2: merged by repository owner as an explicitly documented bootstrap exception while collaborator invitations were pending.
@@ -47,7 +97,20 @@ Subgates:
 - GATE 2F / PR #12: merged by repository owner while collaborator invitations were still pending. Ruff, pytest, coverage execution, and migration-drift verification passed before merge.
 - GATE 2G / PR #14: merged by repository owner while collaborator invitations were still pending. Final GitHub Actions run passed lint, test, and migration-check before merge; native branch protection was unavailable on the current private-repository plan and was explicitly waived through CHG-0002.
 - GATE 2H / PR #16: merged by repository owner into `dev` as the first merge under BL-ARCH-002. Docker build/runtime, PostgreSQL/Redis health, migrations, Django checks, 23 tests, HTTP/Daphne response, autoreload, and CI all passed before merge.
-
 - GATE 2I / PR #18: merged by repository owner into `dev` after clean-bootstrap verification. Docker settings isolation, 24 tests, HTTP/Daphne, pytest cache hygiene, working-tree cleanliness, and final CI all passed before merge.
+- GATE 2J / PR #20: merged into `dev` as the documentation-only BL-FOUNDATION-001 freeze and GATE 2 closure step.
+- GATE 2 milestone / PR #22: merged `dev` into `main`, promoting the completed foundation and synchronizing both long-lived branches at the GATE 2 milestone.
 
-These are explicit owner-approved exceptions, not a replacement for the peer-review policy.
+The GATE 2 owner merges above were explicit bootstrap/access exceptions, not a replacement for the
+peer-review policy. Collaborator write access is now available, so normal GATE 3 Pull Requests are
+expected to receive peer review.
+
+## Repository housekeeping
+
+Completed on 2026-09-22:
+
+- Issue #15 closed as completed; implementation was delivered by PR #16.
+- Issue #17 closed as completed; implementation was delivered by PR #18.
+- Issue #19 closed as completed; implementation was delivered by PR #20.
+
+Repository status documentation is synchronized through Issue #23.
