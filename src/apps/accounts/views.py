@@ -38,8 +38,7 @@ def _add_validation_errors(form, exc):
 
 def _verification_context(*, verification_form=None, resend_form=None):
     return {
-        "verification_form": verification_form
-        or OTPVerificationForm(prefix="verify"),
+        "verification_form": verification_form or OTPVerificationForm(prefix="verify"),
         "resend_form": resend_form or OTPResendForm(prefix="resend"),
     }
 
@@ -161,10 +160,7 @@ def resend_view(request):
     except OTPEmailDeliveryError:
         messages.warning(
             request,
-            (
-                "A new code was created, but the email could not be delivered. "
-                "Try again later."
-            ),
+            ("A new code was created, but the email could not be delivered. Try again later."),
         )
     except AccountServiceError as exc:
         messages.error(request, str(exc))
