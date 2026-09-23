@@ -129,15 +129,23 @@ def resend_registration_otp(*, email):
             user=user,
             purpose=OTPChallenge.Purpose.REGISTER,
         )
-        latest = challenges.order_by("-created_at").first()
+        if challenges.filter(verified_at__isnull=False).exists():
+            raise OTPUnavailableError
 
-        if latest is not None:
-            cooldown_end = latest.created_at + timedelta(
-                seconds=settings.ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS
-            )
-            if cooldown_end > now:
-                retry_after = math.ceil((cooldown_end - now).total_seconds())
-                raise OTPCooldownError(retry_after)
+        latest = (
+            challenges.filter(verified_at__isnull=True)
+            .order_by("-created_at")
+            .first()
+        )
+        if latest is None:
+            raise OTPUnavailableError
+
+        cooldown_end = latest.created_at + timedelta(
+            seconds=settings.ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS
+        )
+        if cooldown_end > now:
+            retry_after = math.ceil((cooldown_end - now).total_seconds())
+            raise OTPCooldownError(retry_after)
 
         window_start = now - timedelta(seconds=settings.ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS)
         recent = challenges.filter(created_at__gte=window_start)
@@ -175,13 +183,15 @@ def verify_registration_otp(*, email, code):
         if user.is_active:
             raise OTPAlreadyVerifiedError
 
+        registration_challenges = OTPChallenge.objects.select_for_update().filter(
+            user=user,
+            purpose=OTPChallenge.Purpose.REGISTER,
+        )
+        if registration_challenges.filter(verified_at__isnull=False).exists():
+            raise OTPUnavailableError
+
         challenge = (
-            OTPChallenge.objects.select_for_update()
-            .filter(
-                user=user,
-                purpose=OTPChallenge.Purpose.REGISTER,
-                verified_at__isnull=True,
-            )
+            registration_challenges.filter(verified_at__isnull=True)
             .order_by("-created_at")
             .first()
         )
