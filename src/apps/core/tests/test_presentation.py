@@ -1,3 +1,4 @@
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -63,19 +64,46 @@ def test_base_and_public_templates_render_without_missing_context():
     assert "Form or process" in public_html
 
 
-def test_shared_form_field_renders_label_and_validation_error():
+def test_shared_form_field_escapes_help_text_and_matches_django_description_ids():
     class SampleForm(forms.Form):
-        name = forms.CharField(label="Display name", required=True)
+        name = forms.CharField(
+            label="Display name",
+            required=True,
+            help_text='<img src=x onerror="alert(1)">',
+        )
 
     form = SampleForm(data={"name": ""})
     assert form.is_valid() is False
 
-    html = render_to_string("includes/_form_field.html", {"field": form["name"]})
+    field = form["name"]
+    html = render_to_string("includes/_form_field.html", {"field": field})
 
     assert 'for="id_name"' in html
     assert "Display name" in html
     assert "This field is required." in html
     assert 'role="alert"' in html
+
+    assert "<img" not in html
+    assert "&lt;img" in html
+    assert "onerror=&quot;alert(1)&quot;" in html
+
+    assert field.aria_describedby == "id_name_helptext id_name_error"
+    assert f'aria-describedby="{field.aria_describedby}"' in html
+    for description_id in field.aria_describedby.split():
+        assert f'id="{description_id}"' in html
+
+
+def test_shared_css_preserves_checkbox_and_radio_sizing():
+    css_path = Path(__file__).parents[1] / "static" / "core" / "app.css"
+    css = css_path.read_text(encoding="utf-8")
+
+    assert '.form-field input[type="checkbox"],' in css
+    assert '.form-field input[type="radio"] {' in css
+    assert "width: 1rem;" in css
+    assert "height: 1rem;" in css
+
+    broad_text_input_selector = ".form-field input,\n.form-field select,"
+    assert broad_text_input_selector not in css
 
 
 def test_404_handler_uses_shared_error_presentation(client):
