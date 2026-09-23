@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Access denied · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+    {% include "includes/_state_error.html" with state_title="Access denied" state_message="You do not have permission to access this page." state_action_url="/" state_action_label="Return home" %}
+{% endblock %}

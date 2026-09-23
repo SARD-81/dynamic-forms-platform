@@ -4,7 +4,7 @@ This directory is the version-controlled engineering record for the project.
 
 ## Structure
 
-- `architecture/` — ADRs and architecture rationale
+- `architecture/` — ADRs, architecture rationale, and shared presentation contracts
 - `database/` — ERD source/render, data dictionary, model mapping, and constraint verification
 - `project-control/` — gate status, execution plans, frozen baselines, decision log, and change records
 - `deployment/` — environment, Docker, CI, bootstrap, and deployment records
@@ -23,6 +23,7 @@ This directory is the version-controlled engineering record for the project.
 - [CI and branch governance](deployment/ci-and-branch-governance.md)
 - [Foundation bootstrap verification](deployment/foundation-bootstrap-verification.md)
 - [Quality and test foundation](testing/quality-test-foundation.md)
+- [Shared presentation template contract](architecture/presentation-template-contract.md)
 - [Rendered ERD](database/erd.svg)
 - [Authoritative ERD source](database/erd.nomnoml)
 

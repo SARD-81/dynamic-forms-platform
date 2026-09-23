@@ -1,0 +1,66 @@
+{% url 'core:home' as home_url %}
+{% url 'core:dashboard' as dashboard_url %}
+{% url 'accounts:login' as login_url %}
+{% url 'accounts:register' as register_url %}
+{% url 'accounts:logout' as logout_url %}
+
+<header class="site-header">
+    <div class="container nav-shell">
+        <a class="brand" href="{{ home_url }}" aria-label="Dynamic Forms Platform home">
+            <span class="brand__mark" aria-hidden="true">DF</span>
+            <span class="brand__text">Dynamic Forms</span>
+        </a>
+
+        <button
+            class="nav-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="primary-navigation"
+            data-nav-toggle
+        >
+            <span class="sr-only">Toggle navigation</span>
+            <span aria-hidden="true">Menu</span>
+        </button>
+
+        <nav
+            id="primary-navigation"
+            class="nav-menu"
+            aria-label="Primary navigation"
+            data-nav-menu
+            data-open="false"
+        >
+            <div class="nav-links">
+                <a href="{{ home_url }}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{{ dashboard_url }}">Dashboard</a>
+                {% endif %}
+            </div>
+
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                    <span class="user-chip" title="{{ user.get_username }}">
+                        Signed in as {{ user.get_username }}
+                    </span>
+                    <form
+                        class="inline-form"
+                        method="post"
+                        action="{{ logout_url|default:'/accounts/logout/' }}"
+                    >
+                        {% csrf_token %}
+                        <button class="button button--ghost" type="submit">Sign out</button>
+                    </form>
+                {% else %}
+                    <a class="button button--ghost" href="{{ login_url|default:'/accounts/login/' }}">
+                        Sign in
+                    </a>
+                    <a
+                        class="button button--primary"
+                        href="{{ register_url|default:'/accounts/register/' }}"
+                    >
+                        Create account
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    </div>
+</header>

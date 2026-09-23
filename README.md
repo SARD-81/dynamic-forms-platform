@@ -85,6 +85,12 @@ Expected state:
 Open:
 
 ```text
+http://localhost:8000/
+```
+
+The Django admin remains available at:
+
+```text
 http://localhost:8000/admin/login/
 ```
 
@@ -128,13 +134,23 @@ src/
 │   ├── asgi.py
 │   ├── wsgi.py
 │   └── urls.py
+├── templates/
+│   ├── base.html
+│   ├── dashboard/
+│   ├── includes/
+│   └── public/
 └── apps/
     ├── accounts/
     ├── core/
+    │   └── static/core/
     ├── forms/
     ├── processes/
     └── reports/
 ```
+
+The shared Django Template shell, partials, static-asset conventions, and integration rules are
+documented in
+[Shared presentation template contract](Documents/architecture/presentation-template-contract.md).
 
 ## Non-Docker development
 
@@ -190,6 +206,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and
 - [Quality & test foundation](Documents/testing/quality-test-foundation.md)
 - [CI & branch governance](Documents/deployment/ci-and-branch-governance.md)
 - [Foundation bootstrap verification](Documents/deployment/foundation-bootstrap-verification.md)
+- [Shared presentation template contract](Documents/architecture/presentation-template-contract.md)
 - [PostgreSQL constraint verification](Documents/database/postgresql-constraint-verification.md)
 - [Rendered ERD](Documents/database/erd.svg)
 - [Authoritative ERD source](Documents/database/erd.nomnoml)
