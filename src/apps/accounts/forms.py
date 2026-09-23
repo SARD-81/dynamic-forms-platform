@@ -47,9 +47,7 @@ class OTPVerificationForm(forms.Form):
         max_length=settings.ACCOUNT_OTP_LENGTH,
         min_length=settings.ACCOUNT_OTP_LENGTH,
         error_messages={
-            "invalid": (
-                f"Enter the {settings.ACCOUNT_OTP_LENGTH}-digit verification code."
-            )
+            "invalid": (f"Enter the {settings.ACCOUNT_OTP_LENGTH}-digit verification code.")
         },
         widget=forms.TextInput(
             attrs={
