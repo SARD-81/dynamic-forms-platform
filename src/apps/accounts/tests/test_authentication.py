@@ -159,7 +159,13 @@ def test_verified_otp_is_one_time_use():
 
 
 @override_settings(ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS=0)
-def test_resend_expires_previous_code_and_creates_new_challenge():
+def test_resend_expires_previous_code_and_creates_new_challenge(monkeypatch):
+    generated_codes = iter([111111, 222222])
+    monkeypatch.setattr(
+        "apps.accounts.services.secrets.randbelow",
+        lambda upper_bound: next(generated_codes),
+    )
+
     user, old_code = _register_pending()
     previous = OTPChallenge.objects.get(user=user)
 
@@ -169,6 +175,8 @@ def test_resend_expires_previous_code_and_creates_new_challenge():
     previous.refresh_from_db()
     latest = OTPChallenge.objects.filter(user=user).order_by("-created_at").first()
 
+    assert old_code == "111111"
+    assert new_code == "222222"
     assert latest.pk != previous.pk
     assert previous.expires_at <= timezone.now()
     assert previous.verified_at is None
