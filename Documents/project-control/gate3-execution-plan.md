@@ -88,7 +88,7 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
 
 ### Wave 3 — Participant execution
 
-- #32 — shared participant access/cache — after #30 and #34
+- #32 — shared participant access/cache — after #30, #34, and approved #39 for cache wiring
 - #33 — Form submission engine — after #31 and integration foundations
 - #35 — Process execution — after #33, #34, and #32
 
@@ -121,6 +121,8 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
 #34 → #32 → #35 → #37 ───┘
       ↑
  #30 ┘
+      ↑
+    #39 (cache authorization)
 
 #26 ─┐
 #27 ─┼→ shared application integration
@@ -177,6 +179,7 @@ Gate 3 may close only when:
 - all frozen Service-only invariants have tests;
 - scheduled Email/API reporting works;
 - Docker development bootstrap remains valid;
+- applied CHG-0003 foundation changes are captured in a superseding foundation baseline;
 - full regression suite and CI are green;
 - application documentation is synchronized;
 - `BL-APPLICATION-001` is reviewed/frozen;
