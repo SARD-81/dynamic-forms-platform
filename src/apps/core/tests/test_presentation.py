@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs, urlparse
+
 import pytest
 from django import forms
 from django.core.exceptions import PermissionDenied
@@ -45,9 +47,10 @@ def test_authenticated_navigation_state(client, user):
 def test_dashboard_requires_login(client):
     response = client.get(reverse("core:dashboard"))
 
+    redirect = urlparse(response.url)
     assert response.status_code == 302
-    assert response.url.startswith("/accounts/login/")
-    assert "next=%2Fdashboard%2F" in response.url
+    assert redirect.path == "/accounts/login/"
+    assert parse_qs(redirect.query) == {"next": ["/dashboard/"]}
 
 
 def test_base_and_public_templates_render_without_missing_context():
