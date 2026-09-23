@@ -62,3 +62,24 @@ boundary without misrepresenting the current repository state.
 **Change-control classification:** Structural engineering-foundation extension.
 
 Tracked by CHG-0003. BL-FOUNDATION-001 is not edited in place.
+
+## 2026-09-24 — Production email settings authorization boundary
+
+**Context:** Issue #47 / CHG-0004, discovered during peer review of Issue #26.
+
+**Decision:** Production SMTP configuration requires a dedicated settings/environment Change Record
+before Issue #26 may add new mail transport variables.
+
+CHG-0004 authorizes a vendor-neutral Django SMTP settings contract for #26 and later #40 while
+keeping BL-FOUNDATION-001 immutable.
+
+A BL-FOUNDATION-002 is not frozen by Issue #47. The already-required superseding foundation baseline
+at Gate 3 closure must capture the actually applied email configuration.
+
+**Reason:** BL-FOUNDATION-001 freezes the environment contract and CHG-0003 explicitly did not
+authorize new production secrets. Adding SMTP host/user/password variables directly in #26 would
+silently change the foundation contract.
+
+**Change-control classification:** Structural settings/environment extension.
+
+Tracked by CHG-0004.
