@@ -138,8 +138,14 @@ The partial provides:
 
 - a real `label` bound to the widget id;
 - required-field indication;
-- help text;
-- field-level validation errors.
+- plain-text help text rendered with normal Django auto-escaping;
+- field-level validation errors;
+- Django 5.2-compatible `*_helptext` and `*_error` IDs so the widget's generated
+  `aria-describedby` references resolve correctly.
+
+The shared partial intentionally does not use the `safe` filter for help text. A domain that truly
+requires trusted HTML help content must define an explicit sanitization/trust boundary and a
+specialized presentation path instead of weakening the shared default.
 
 Domain forms remain responsible for validation and widget attributes specific to their behavior.
 
