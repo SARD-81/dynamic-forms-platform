@@ -35,3 +35,30 @@ the repository will remain private.
 **Change-control classification:** Structural governance change.
 
 Tracked by CHG-0002 and frozen in BL-ARCH-002.
+
+## 2026-09-23 — Gate 3 runtime-extension baseline handling
+
+**Context:** Issue #39 / CHG-0003.
+
+**Decision:** Authorize bounded Gate 3 runtime extensions through CHG-0003 while keeping
+BL-FOUNDATION-001 immutable as historical evidence.
+
+A BL-FOUNDATION-002 is not frozen in Issue #39 because the runtime changes are not implemented or
+verified by the change-control PR itself.
+
+The superseding foundation baseline becomes required after the authorized mandatory runtime changes
+are actually applied and verified, and before Gate 3 closes.
+
+**Authorized implementation boundaries:**
+
+- #32 may activate Django Redis cache through logical DB 0;
+- #40 may add development Celery worker + Beat services using logical DB 1;
+- #41 may add `channels-redis>=4.3.0,<4.4` and logical DB 2 only if the bonus feature is implemented.
+
+**Reason:** Freezing a new foundation baseline before the implementation exists would turn a baseline
+from verified evidence into a target-state specification. CHG-0003 provides the required approval
+boundary without misrepresenting the current repository state.
+
+**Change-control classification:** Structural engineering-foundation extension.
+
+Tracked by CHG-0003. BL-FOUNDATION-001 is not edited in place.
