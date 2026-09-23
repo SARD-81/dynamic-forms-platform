@@ -11,6 +11,8 @@ from rest_framework.test import APIClient
 
 from apps.accounts.exceptions import (
     AccountValidationError,
+    AuthenticationFailedError,
+    InactiveAccountError,
     OTPAlreadyVerifiedError,
     OTPAttemptsExceededError,
     OTPCooldownError,
@@ -392,7 +394,7 @@ def test_api_login_requires_csrf_when_checks_are_enforced():
     assert accepted.status_code == 200
 
 
-def test_login_service_rejects_inactive_user(rf):
+def test_login_service_rejects_inactive_user_after_validating_password(rf):
     User.objects.create_user(
         username="service-inactive",
         email="service-inactive@example.com",
@@ -402,11 +404,27 @@ def test_login_service_rejects_inactive_user(rf):
 
     request = rf.post("/accounts/login/")
 
-    from apps.accounts.exceptions import InactiveAccountError
-
     with pytest.raises(InactiveAccountError):
         login_user(
             request,
             username="service-inactive",
             password=PASSWORD,
+        )
+
+
+def test_login_service_does_not_disclose_inactive_status_for_wrong_password(rf):
+    User.objects.create_user(
+        username="private-inactive",
+        email="private-inactive@example.com",
+        password=PASSWORD,
+        is_active=False,
+    )
+
+    request = rf.post("/accounts/login/")
+
+    with pytest.raises(AuthenticationFailedError):
+        login_user(
+            request,
+            username="private-inactive",
+            password="wrong-password",
         )
