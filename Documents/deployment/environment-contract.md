@@ -3,6 +3,7 @@
 **Gate:** 2C — Settings & Environment Foundation  
 **Status:** ACTIVE FOUNDATION RECORD  
 **Target baseline:** BL-FOUNDATION-001
+**Applied extension:** CHG-0004 via Issue #26; superseding BL-FOUNDATION-002 remains pending Gate 3 closure
 
 ## Rule
 
@@ -50,6 +51,21 @@ Production security:
 
 - `DJANGO_SECURE_SSL_REDIRECT`
 
+Production email delivery (authorized by CHG-0004 and applied by Issue #26):
+
+- `DJANGO_EMAIL_HOST` — required SMTP hostname
+- `DJANGO_EMAIL_PORT` — required positive integer
+- `DJANGO_EMAIL_HOST_USER` — required SMTP username
+- `DJANGO_EMAIL_HOST_PASSWORD` — required SMTP secret
+- `DJANGO_EMAIL_USE_TLS` — optional boolean, defaults to `true`
+- `DJANGO_EMAIL_TIMEOUT` — required positive finite integer in seconds
+- `DJANGO_DEFAULT_FROM_EMAIL` — required sender identity
+
+Production maps these values through Django's built-in SMTP backend. `EMAIL_TIMEOUT` must always be
+finite; the production contract does not permit Django's unlimited/`None` SMTP timeout.
+
+The SMTP password remains a host secret. `.env.example` contains placeholders only.
+
 ## Redis logical separation
 
 The architecture reserves separate Redis logical databases/URLs:
@@ -86,6 +102,17 @@ Therefore:
 - `pytest` is free to use `config.settings.test` from `pyproject.toml`.
 
 This prevents Docker development configuration from accidentally overriding the test runner.
+
+## Email backend behavior
+
+The environment-specific email behavior is:
+
+- development → Django console email backend;
+- test → Django local-memory email backend;
+- production → Django SMTP email backend configured only through the settings/environment boundary.
+
+Application Services and later Celery tasks use Django's email abstraction and do not read SMTP
+environment variables directly.
 
 ## Test settings
 
