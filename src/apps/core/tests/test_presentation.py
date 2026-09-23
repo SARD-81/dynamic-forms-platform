@@ -1,12 +1,20 @@
 import pytest
 from django import forms
-from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.template.loader import render_to_string
-from django.test import RequestFactory
-from django.urls import reverse
+from django.test import override_settings
+from django.urls import path, reverse
 
-from apps.core.views import permission_denied
+
+def forbidden_view(request):
+    raise PermissionDenied
+
+
+urlpatterns = [
+    path("forbidden/", forbidden_view),
+]
+
+handler403 = "apps.core.views.permission_denied"
 
 
 def test_anonymous_navigation_state(client):
@@ -75,11 +83,9 @@ def test_404_handler_uses_shared_error_presentation(client):
     assert "Return home" in response.content.decode()
 
 
-def test_403_handler_uses_shared_error_presentation():
-    request = RequestFactory().get("/forbidden/")
-    request.user = AnonymousUser()
-
-    response = permission_denied(request, PermissionDenied())
+@override_settings(ROOT_URLCONF=__name__)
+def test_403_handler_uses_shared_error_presentation(client):
+    response = client.get("/forbidden/")
 
     assert response.status_code == 403
     assert "Access denied" in response.content.decode()
