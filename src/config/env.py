@@ -47,3 +47,19 @@ def env_bool(name: str, *, default: bool = False) -> bool:
         return False
 
     raise ImproperlyConfigured(f"Environment variable {name!r} must be a boolean value.")
+
+
+def required_positive_int_env(name: str) -> int:
+    raw_value = required_env(name)
+
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ImproperlyConfigured(
+            f"Environment variable {name!r} must be a positive integer."
+        ) from exc
+
+    if value <= 0:
+        raise ImproperlyConfigured(f"Environment variable {name!r} must be a positive integer.")
+
+    return value

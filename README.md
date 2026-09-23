@@ -152,6 +152,10 @@ The shared Django Template shell, partials, static-asset conventions, and integr
 documented in
 [Shared presentation template contract](Documents/architecture/presentation-template-contract.md).
 
+Gate 3 account registration uses an inactive User plus email OTP activation, followed by normal
+Django password/session login. The complete flow and route contract are documented in
+[Authentication and email OTP contract](Documents/architecture/authentication-otp-contract.md).
+
 ## Non-Docker development
 
 Python 3.12 and a PostgreSQL development role/database are required.
@@ -207,6 +211,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and
 - [CI & branch governance](Documents/deployment/ci-and-branch-governance.md)
 - [Foundation bootstrap verification](Documents/deployment/foundation-bootstrap-verification.md)
 - [Shared presentation template contract](Documents/architecture/presentation-template-contract.md)
+- [Authentication and email OTP contract](Documents/architecture/authentication-otp-contract.md)
 - [PostgreSQL constraint verification](Documents/database/postgresql-constraint-verification.md)
 - [Rendered ERD](Documents/database/erd.svg)
 - [Authoritative ERD source](Documents/database/erd.nomnoml)

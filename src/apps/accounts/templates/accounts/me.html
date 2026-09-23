@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}My account · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<section class="auth-card account-summary" aria-labelledby="account-title">
+    <p class="eyebrow">Account</p>
+    <h1 id="account-title">My account</h1>
+
+    <dl class="account-details">
+        <div>
+            <dt>Username</dt>
+            <dd>{{ user.get_username }}</dd>
+        </div>
+        <div>
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
+        </div>
+        <div>
+            <dt>Status</dt>
+            <dd>Verified</dd>
+        </div>
+    </dl>
+
+    <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'core:dashboard' %}">
+            Back to dashboard
+        </a>
+    </div>
+</section>
+{% endblock %}
