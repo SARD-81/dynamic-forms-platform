@@ -52,8 +52,7 @@ def _send_registration_otp_email(email, code):
         sent = send_mail(
             subject="Your Dynamic Forms verification code",
             message=(
-                f"Your verification code is {code}. "
-                f"It expires in {lifetime_minutes} minutes."
+                f"Your verification code is {code}. It expires in {lifetime_minutes} minutes."
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
@@ -85,9 +84,7 @@ def register_user(*, username, email, password):
     try:
         with transaction.atomic():
             if User.objects.filter(email__iexact=email).exists():
-                raise AccountValidationError(
-                    {"email": ["A user with this email already exists."]}
-                )
+                raise AccountValidationError({"email": ["A user with this email already exists."]})
 
             user = User(
                 username=username,
@@ -124,11 +121,7 @@ def resend_registration_otp(*, email):
     now = timezone.now()
 
     with transaction.atomic():
-        user = (
-            User.objects.select_for_update()
-            .filter(email__iexact=email)
-            .first()
-        )
+        user = User.objects.select_for_update().filter(email__iexact=email).first()
         if user is None or user.is_active:
             raise OTPUnavailableError
 
@@ -146,9 +139,7 @@ def resend_registration_otp(*, email):
                 retry_after = math.ceil((cooldown_end - now).total_seconds())
                 raise OTPCooldownError(retry_after)
 
-        window_start = now - timedelta(
-            seconds=settings.ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS
-        )
+        window_start = now - timedelta(seconds=settings.ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS)
         recent = challenges.filter(created_at__gte=window_start)
         if recent.count() >= settings.ACCOUNT_OTP_RATE_LIMIT_COUNT:
             oldest = recent.order_by("created_at").first()
@@ -178,11 +169,7 @@ def verify_registration_otp(*, email, code):
     verified_user = None
 
     with transaction.atomic():
-        user = (
-            User.objects.select_for_update()
-            .filter(email__iexact=email)
-            .first()
-        )
+        user = User.objects.select_for_update().filter(email__iexact=email).first()
         if user is None:
             raise OTPUnavailableError
         if user.is_active:
