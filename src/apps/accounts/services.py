@@ -215,7 +215,10 @@ def verify_registration_otp(*, email, code):
 def login_user(request, *, username, password):
     username = username.strip()
     candidate = get_user_by_username(username)
+
     if candidate is not None and not candidate.is_active:
+        if not candidate.check_password(password):
+            raise AuthenticationFailedError
         raise InactiveAccountError
 
     user = authenticate(request=request, username=username, password=password)
