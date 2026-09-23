@@ -20,6 +20,7 @@ from apps.accounts.exceptions import (
     OTPExpiredError,
     OTPInvalidCodeError,
     OTPRateLimitError,
+    OTPUnavailableError,
 )
 from apps.accounts.models import OTPChallenge, User
 from apps.accounts.services import (
@@ -191,6 +192,43 @@ def test_resend_cooldown_blocks_immediate_repeat():
         resend_registration_otp(email=user.email)
 
     assert error.value.retry_after > 0
+
+
+def test_resend_requires_existing_pending_registration_challenge():
+    user = User.objects.create_user(
+        username="inactive-without-registration",
+        email="inactive-without-registration@example.com",
+        password=PASSWORD,
+        is_active=False,
+    )
+
+    with pytest.raises(OTPUnavailableError):
+        resend_registration_otp(email=user.email)
+
+    assert OTPChallenge.objects.filter(user=user).count() == 0
+
+
+@override_settings(ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS=0)
+def test_verified_deactivated_user_cannot_restart_registration_otp_flow():
+    user, code = _register_pending(
+        username="verified-then-deactivated",
+        email="verified-then-deactivated@example.com",
+    )
+    verify_registration_otp(email=user.email, code=code)
+
+    user.is_active = False
+    user.save(update_fields=["is_active"])
+    challenge_count = OTPChallenge.objects.filter(user=user).count()
+
+    with pytest.raises(OTPUnavailableError):
+        resend_registration_otp(email=user.email)
+
+    with pytest.raises(OTPUnavailableError):
+        verify_registration_otp(email=user.email, code=code)
+
+    user.refresh_from_db()
+    assert user.is_active is False
+    assert OTPChallenge.objects.filter(user=user).count() == challenge_count
 
 
 @override_settings(ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS=0)
