@@ -107,9 +107,7 @@ def test_registration_rejects_duplicate_email_and_weak_password():
 
 def test_expired_otp_cannot_activate_account():
     user, code = _register_pending()
-    OTPChallenge.objects.filter(user=user).update(
-        expires_at=timezone.now() - timedelta(seconds=1)
-    )
+    OTPChallenge.objects.filter(user=user).update(expires_at=timezone.now() - timedelta(seconds=1))
 
     with pytest.raises(OTPExpiredError):
         verify_registration_otp(email=user.email, code=code)
