@@ -60,8 +60,6 @@ def required_positive_int_env(name: str) -> int:
         ) from exc
 
     if value <= 0:
-        raise ImproperlyConfigured(
-            f"Environment variable {name!r} must be a positive integer."
-        )
+        raise ImproperlyConfigured(f"Environment variable {name!r} must be a positive integer.")
 
     return value
