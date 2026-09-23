@@ -81,7 +81,7 @@ def test_production_email_settings_map_authorized_contract():
 )
 def test_production_email_settings_fail_fast_when_required_value_is_missing(missing_name):
     env = _production_env()
-    env.pop(missing_name)
+    env[missing_name] = ""
 
     result = _run_settings(
         "from config.settings import production",
@@ -144,7 +144,7 @@ def test_development_email_backend_does_not_require_production_smtp_variables():
         "DJANGO_EMAIL_TIMEOUT",
         "DJANGO_DEFAULT_FROM_EMAIL",
     ):
-        env.pop(name)
+        env[name] = ""
 
     result = _run_settings(
         "from config.settings import development as s; print(s.EMAIL_BACKEND)",
