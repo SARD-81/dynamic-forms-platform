@@ -48,6 +48,7 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
 | #39 | CHG-0003 runtime-extension governance |
 | #41 | BONUS real-time reporting |
 | #42 | Final integration, baseline, Gate closure and milestone promotion |
+| #47 | CHG-0004 production email settings governance |
 
 ### Mahsa-Alipour — Forms / Data-heavy domain
 
@@ -74,11 +75,12 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
 
 ### Wave 1 — Foundations that can start immediately
 
-- #26 — Auth/OTP — SARD-81
+- #26 — Auth/OTP — SARD-81; final production email configuration waits for approved #47
 - #27 — shared template shell — SARD-81
 - #28 — API/OpenAPI foundation — amirrezaparvaneh
 - #29 — Categories — Mahsa-Alipour
 - #39 — CHG-0003 — SARD-81
+- #47 — CHG-0004 production email settings — SARD-81
 
 ### Wave 2 — Authoring domains
 
@@ -97,7 +99,7 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
 - #36 — Form reports — after #33/#32
 - #37 — Process reports — after #35/#32
 - #38 — periodic report subscription/payload — after reporting selectors exist
-- #40 — Celery/Beat delivery — after #38 and approved #39
+- #40 — Celery/Beat delivery — after #38, approved #39, and approved #47 for production email configuration
 
 ### Bonus
 
@@ -124,12 +126,15 @@ Real-time reporting is treated as a bonus/stretch item and is not a mandatory Ga
       ↑
     #39 (cache authorization)
 
-#26 ─┐
-#27 ─┼→ shared application integration
-#28 ─┘
+#27 ─┐
+#28 ─┼→ shared application integration
+#26 ─┘
+ ↑
+#47 (production email configuration authorization)
 
 #39 ─→ #40
-  └──→ #41 (BONUS)
+#47 ─→ #40
+#39 ─→ #41 (BONUS)
 
 Mandatory work → #42 → GATE 3 CLOSED → dev → main
 ```
@@ -179,7 +184,7 @@ Gate 3 may close only when:
 - all frozen Service-only invariants have tests;
 - scheduled Email/API reporting works;
 - Docker development bootstrap remains valid;
-- applied CHG-0003 foundation changes are captured in a superseding foundation baseline;
+- applied CHG-0003 and CHG-0004 foundation changes are captured in a superseding foundation baseline;
 - full regression suite and CI are green;
 - application documentation is synchronized;
 - `BL-APPLICATION-001` is reviewed/frozen;
