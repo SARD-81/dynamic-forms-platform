@@ -89,6 +89,24 @@ actually consumed successfully.
 
 The new challenge is then created and emailed after commit.
 
+## Production email transport
+
+Production delivery is governed by approved CHG-0004.
+
+The production settings contract requires:
+
+- SMTP host;
+- positive SMTP port;
+- SMTP username/password;
+- TLS boolean with a default of enabled;
+- a positive finite SMTP timeout in seconds;
+- default sender identity.
+
+The timeout is configuration-owned and maps to Django's `EMAIL_TIMEOUT`. It is not hard-coded in the
+account Service. An unlimited/`None` production SMTP timeout is not permitted.
+
+Development keeps the console backend and tests keep the local-memory backend.
+
 ## Email failure semantics
 
 Email is a post-commit side effect.
@@ -193,7 +211,11 @@ Issue #26 regression tests cover:
 - HTML current-user permission;
 - complete REST register/verify/login/me/logout flow;
 - REST permission behavior;
-- enforced CSRF behavior for API login.
+- enforced CSRF behavior for API login;
+- production SMTP fail-fast behavior for missing configuration;
+- positive integer validation for SMTP port and timeout;
+- production SMTP mapping, TLS default, and finite `EMAIL_TIMEOUT`;
+- unchanged development console and test local-memory email backends.
 
 Normal repository checks remain required:
 
