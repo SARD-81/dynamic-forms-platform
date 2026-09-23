@@ -449,7 +449,17 @@ a {
     color: var(--danger);
 }
 
-.form-field input,
+.form-field input:not([type]),
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="password"],
+.form-field input[type="number"],
+.form-field input[type="url"],
+.form-field input[type="search"],
+.form-field input[type="tel"],
+.form-field input[type="date"],
+.form-field input[type="datetime-local"],
+.form-field input[type="time"],
 .form-field select,
 .form-field textarea {
     width: 100%;
@@ -461,19 +471,49 @@ a {
     color: var(--text);
 }
 
+.form-field input[type="checkbox"],
+.form-field input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    min-height: 0;
+    margin: 0.15rem 0 0;
+    padding: 0;
+    accent-color: var(--primary);
+}
+
 .form-field textarea {
     min-height: 7rem;
     resize: vertical;
 }
 
-.form-field input:focus,
+.form-field input:not([type]):focus,
+.form-field input[type="text"]:focus,
+.form-field input[type="email"]:focus,
+.form-field input[type="password"]:focus,
+.form-field input[type="number"]:focus,
+.form-field input[type="url"]:focus,
+.form-field input[type="search"]:focus,
+.form-field input[type="tel"]:focus,
+.form-field input[type="date"]:focus,
+.form-field input[type="datetime-local"]:focus,
+.form-field input[type="time"]:focus,
 .form-field select:focus,
 .form-field textarea:focus {
     border-color: var(--primary);
     outline: 3px solid rgba(36, 87, 214, 0.12);
 }
 
-.form-field--error input,
+.form-field--error input:not([type]),
+.form-field--error input[type="text"],
+.form-field--error input[type="email"],
+.form-field--error input[type="password"],
+.form-field--error input[type="number"],
+.form-field--error input[type="url"],
+.form-field--error input[type="search"],
+.form-field--error input[type="tel"],
+.form-field--error input[type="date"],
+.form-field--error input[type="datetime-local"],
+.form-field--error input[type="time"],
 .form-field--error select,
 .form-field--error textarea {
     border-color: var(--danger);
