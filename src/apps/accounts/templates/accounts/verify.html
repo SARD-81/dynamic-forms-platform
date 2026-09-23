@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Verify email · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<div class="auth-shell auth-shell--wide">
+    <section class="auth-card" aria-labelledby="verify-title">
+        <p class="eyebrow">Email verification</p>
+        <h1 id="verify-title">Enter your verification code</h1>
+        <p class="auth-card__intro">
+            Use the six-digit code sent to your email. Codes expire after five minutes.
+        </p>
+
+        <form method="post" action="{% url 'accounts:verify' %}">
+            {% csrf_token %}
+            {% include "includes/_form_errors.html" with form=verification_form %}
+            {% include "includes/_form_field.html" with field=verification_form.email %}
+            {% include "includes/_form_field.html" with field=verification_form.code %}
+
+            <div class="form-actions">
+                <button class="button button--primary" type="submit">Verify email</button>
+            </div>
+        </form>
+    </section>
+
+    <aside class="auth-card auth-card--secondary" aria-labelledby="resend-title">
+        <h2 id="resend-title">Need a new code?</h2>
+        <p class="auth-card__intro">
+            You can request another code after the resend cooldown. Request limits protect
+            the email flow from repeated sends.
+        </p>
+
+        <form method="post" action="{% url 'accounts:resend' %}">
+            {% csrf_token %}
+            {% include "includes/_form_errors.html" with form=resend_form %}
+            {% include "includes/_form_field.html" with field=resend_form.email %}
+
+            <div class="form-actions">
+                <button class="button button--secondary" type="submit">Resend code</button>
+            </div>
+        </form>
+    </aside>
+</div>
+{% endblock %}

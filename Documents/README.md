@@ -24,6 +24,7 @@ This directory is the version-controlled engineering record for the project.
 - [Foundation bootstrap verification](deployment/foundation-bootstrap-verification.md)
 - [Quality and test foundation](testing/quality-test-foundation.md)
 - [Shared presentation template contract](architecture/presentation-template-contract.md)
+- [Authentication and email OTP contract](architecture/authentication-otp-contract.md)
 - [Rendered ERD](database/erd.svg)
 - [Authoritative ERD source](database/erd.nomnoml)
 
