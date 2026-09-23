@@ -76,12 +76,20 @@ A successful code:
 
 ## Resend semantics
 
-Resend is available only for inactive accounts.
+Resend is available only for accounts that are demonstrably still awaiting their initial
+registration verification.
 
-Before creating a replacement code, the Service enforces:
+`is_active=False` alone is not sufficient evidence, because the same flag may also represent an
+administratively deactivated account. Before creating a replacement code, the Service therefore
+requires:
 
-- 60-second cooldown after the latest send;
+- no previously verified registration challenge for the User;
+- at least one existing unverified registration challenge from the initial registration flow;
+- 60-second cooldown after the latest unverified registration challenge;
 - maximum five challenge sends in the rolling 15-minute window.
+
+A User who successfully verified registration in the past cannot use resend or registration
+verification to reactivate an account that was later administratively deactivated.
 
 When a resend is accepted, any still-usable previous registration challenge is invalidated by
 setting its `expires_at` to the current time. `verified_at` remains reserved for a code that was
@@ -204,6 +212,8 @@ Issue #26 regression tests cover:
 - incorrect attempts and exhaustion;
 - successful one-time verification;
 - resend invalidation;
+- pending-registration evidence before resend;
+- prevention of administrative-deactivation bypass through OTP resend/verification;
 - cooldown and rolling rate limit;
 - post-commit email failure coherence;
 - complete HTML register/verify/login/logout flow;
