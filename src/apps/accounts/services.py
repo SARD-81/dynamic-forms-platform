@@ -132,11 +132,7 @@ def resend_registration_otp(*, email):
         if challenges.filter(verified_at__isnull=False).exists():
             raise OTPUnavailableError
 
-        latest = (
-            challenges.filter(verified_at__isnull=True)
-            .order_by("-created_at")
-            .first()
-        )
+        latest = challenges.filter(verified_at__isnull=True).order_by("-created_at").first()
         if latest is None:
             raise OTPUnavailableError
 
@@ -191,9 +187,7 @@ def verify_registration_otp(*, email, code):
             raise OTPUnavailableError
 
         challenge = (
-            registration_challenges.filter(verified_at__isnull=True)
-            .order_by("-created_at")
-            .first()
+            registration_challenges.filter(verified_at__isnull=True).order_by("-created_at").first()
         )
         if challenge is None:
             raise OTPUnavailableError
