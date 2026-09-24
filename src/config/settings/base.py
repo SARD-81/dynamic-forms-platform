@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     "apps.forms.apps.FormsConfig",
     "apps.processes.apps.ProcessesConfig",
     "apps.reports.apps.ReportsConfig",
-    "drf_spectacular"
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -108,12 +108,12 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Dynamic Forms Platform API',
-    'DESCRIPTION': 'API Foundation and documentation for Gate 3',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Dynamic Forms Platform API",
+    "DESCRIPTION": "API Foundation and documentation for Gate 3",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

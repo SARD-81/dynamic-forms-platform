@@ -1,8 +1,5 @@
-from django.urls import path, include
-
-app_name = "api_v1"
+from django.urls import include, path
 
 urlpatterns = [
-    # اتصال Accounts API فعلی به روتر مشترک
     path("accounts/", include("apps.accounts.api_urls")),
 ]
