@@ -18,11 +18,12 @@ This document defines the core standards for the Dynamic Forms Platform API (Gat
 - Major versions change the path (`/v2/`). Minor non-breaking changes are rolled directly into the active version.
 
 ## 4. Authentication & Permissions
-- **Method:** JSON Web Token (JWT) / Session Auth (depending on client type).
-- **Protected Endpoints:** Must return `401 Unauthorized` for unauthenticated requests, and `403 Forbidden` for authenticated requests lacking specific privileges.
+- **Method:** Session Authentication (Token-based auth is deferred to future requirements).
+- **Protected Endpoints:** Must return `403 Forbidden` for unauthenticated requests (standard DRF Session Auth behavior) or when lacking specific privileges.
 
 ## 5. Error Shape
-Standardized JSON error response format across all endpoints:
+Standardized JSON error response format:
+*(Note: This is the target convention for all future Domain APIs. Existing/Core endpoints may currently use standard DRF error formats until fully standardized.)*
 ```json
 {
   "error_code": "STRING_CODE",
