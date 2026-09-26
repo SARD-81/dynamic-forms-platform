@@ -6,12 +6,13 @@ This document defines the core standards for the Dynamic Forms Platform API (Gat
 - **Base Path:** All API routes begin with `/api/v1/`.
 - **App Routing Convention:** Each domain manages its own `api_urls.py`. The core configuration (`config/api_router.py`) acts solely as a central router.
   - Example: `/api/v1/accounts/` maps to `apps.accounts.api_urls`.
+- **Code Organization:** Views, serializers, and permissions must be strictly isolated within their respective domain apps (e.g., `apps/accounts/api_views.py`, `apps/accounts/serializers.py`).
 - **Business Logic:** No business logic, serializers, or views should exist inside the `config` directory.
 
 ## 2. Documentation (OpenAPI/Swagger)
 - **Schema URL:** `/api/schema/` (Generates the raw OpenAPI YAML/JSON schema).
 - **Swagger UI URL:** `/api/v1/docs/` (Interactive API documentation).
-- **Tooling:** Powered by `drf-spectacular`.
+- **Tooling:** Powered by `drf-spectacular`. This tool was selected for its native OpenAPI 3.0 schema generation, deep integration with Django REST Framework, and superior handling of complex serializers compared to legacy tools like drf-yasg.
 
 ## 3. Versioning
 - **Strategy:** URL Path Versioning (e.g., `/v1/`).
