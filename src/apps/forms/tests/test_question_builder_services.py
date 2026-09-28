@@ -1,7 +1,9 @@
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.forms.models import Form, Question, QuestionOption
@@ -253,6 +255,17 @@ def test_question_reorder_and_delete_keep_contiguous_order(user, draft_form):
         (first.id, 2),
         (second.id, 3),
     ]
+
+    old_timestamp = timezone.now() - timedelta(days=1)
+    Question.objects.filter(pk__in=[first.id, second.id, third.id]).update(
+        updated_at=old_timestamp
+    )
+    reordered = reorder_questions(
+        form=draft_form,
+        owner=user,
+        question_ids=[second.id, third.id, first.id],
+    )
+    assert all(item.updated_at > old_timestamp for item in reordered)
 
     delete_question(question=first, owner=user)
     remaining = list(Question.objects.filter(form=draft_form).order_by("order"))

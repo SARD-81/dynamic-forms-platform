@@ -227,7 +227,7 @@ def _rewrite_question_orders(*, questions, ordered_ids):
     for order, question_id in enumerate(ordered_ids, start=1):
         question = by_id[question_id]
         question.order = order
-        question.save(update_fields=["order"])
+        question.save(update_fields=["order", "updated_at"])
 
 
 def _rewrite_option_orders(*, options, ordered_ids):
