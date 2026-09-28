@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ managed_form.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Form · {{ managed_form.get_status_display }}</p>
+        <h1>{{ managed_form.title }}</h1>
+        <p>{{ managed_form.description|default:"No description provided." }}</p>
+    </div>
+    <a class="button button--secondary" href="{% url 'forms:list' %}">Back to forms</a>
+</header>
+
+<section class="auth-card account-summary">
+    <dl class="account-details">
+        <div>
+            <dt>Status</dt>
+            <dd>{{ managed_form.get_status_display }}</dd>
+        </div>
+        <div>
+            <dt>Visibility</dt>
+            <dd>{{ managed_form.get_visibility_display }}</dd>
+        </div>
+        <div>
+            <dt>Category</dt>
+            <dd>{{ managed_form.category.name|default:"Uncategorized" }}</dd>
+        </div>
+        <div>
+            <dt>Public ID</dt>
+            <dd>{{ managed_form.public_id }}</dd>
+        </div>
+    </dl>
+
+    <div class="form-actions">
+        {% if managed_form.status == "DRAFT" %}
+            <a class="button button--secondary" href="{% url 'forms:update' managed_form.id %}">
+                Edit draft
+            </a>
+            <form class="inline-form" method="post" action="{% url 'forms:publish' managed_form.id %}">
+                {% csrf_token %}
+                <button class="button button--primary" type="submit">Publish form</button>
+            </form>
+            <a class="button button--ghost" href="{% url 'forms:delete' managed_form.id %}">
+                Delete draft
+            </a>
+        {% elif managed_form.status == "PUBLISHED" %}
+            <form class="inline-form" method="post" action="{% url 'forms:close' managed_form.id %}">
+                {% csrf_token %}
+                <button class="button button--primary" type="submit">Close form</button>
+            </form>
+        {% else %}
+            <span class="status-badge">Lifecycle complete</span>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
