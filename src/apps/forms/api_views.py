@@ -10,14 +10,38 @@ from rest_framework.response import Response
 from apps.core.integrations import form_has_active_process_runs
 
 from .models import Form
-from .selectors import get_form_for_owner, get_forms_for_owner
-from .serializers import FormSerializer, FormWriteSerializer
+from .selectors import (
+    get_form_for_owner,
+    get_option_for_owner,
+    get_question_for_owner,
+    get_questions_for_form_owner,
+    get_options_for_question_owner,
+    get_forms_for_owner,
+)
+from .serializers import (
+    FormSerializer,
+    FormWriteSerializer,
+    QuestionOptionReorderSerializer,
+    QuestionOptionSerializer,
+    QuestionOptionWriteSerializer,
+    QuestionReorderSerializer,
+    QuestionSerializer,
+    QuestionWriteSerializer,
+)
 from .services import (
     close_form,
     create_form,
+    create_question,
+    create_question_option,
     delete_draft_form,
+    delete_question,
+    delete_question_option,
     publish_form,
+    reorder_question_options,
+    reorder_questions,
     update_draft_form,
+    update_question,
+    update_question_option,
 )
 
 
@@ -54,6 +78,29 @@ def _owned_form_or_404(*, owner, form_id):
     if form is None:
         raise Http404
     return form
+
+
+def _owned_question_or_404(*, owner, form_id, question_id):
+    question = get_question_for_owner(
+        owner=owner,
+        form_id=form_id,
+        question_id=question_id,
+    )
+    if question is None:
+        raise Http404
+    return question
+
+
+def _owned_option_or_404(*, owner, form_id, question_id, option_id):
+    option = get_option_for_owner(
+        owner=owner,
+        form_id=form_id,
+        question_id=question_id,
+        option_id=option_id,
+    )
+    if option is None:
+        raise Http404
+    return option
 
 
 class FormListCreateAPIView(GenericAPIView):
@@ -170,3 +217,245 @@ class FormCloseAPIView(GenericAPIView):
         except DjangoValidationError as exc:
             return _validation_response(exc)
         return Response(FormSerializer(form).data)
+
+
+class QuestionListCreateAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionSerializer
+
+    @extend_schema(responses=QuestionSerializer(many=True))
+    def get(self, request, form_id):
+        _owned_form_or_404(owner=request.user, form_id=form_id)
+        questions = get_questions_for_form_owner(owner=request.user, form_id=form_id)
+        return Response(QuestionSerializer(questions, many=True).data)
+
+    @extend_schema(request=QuestionWriteSerializer, responses={201: QuestionSerializer})
+    def post(self, request, form_id):
+        form = _owned_form_or_404(owner=request.user, form_id=form_id)
+        serializer = QuestionWriteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+
+        try:
+            question = create_question(
+                form=form,
+                owner=request.user,
+                **serializer.validated_data,
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(
+            QuestionSerializer(question).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class QuestionReorderAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionReorderSerializer
+
+    @extend_schema(request=QuestionReorderSerializer, responses=QuestionSerializer(many=True))
+    def post(self, request, form_id):
+        form = _owned_form_or_404(owner=request.user, form_id=form_id)
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+        try:
+            questions = reorder_questions(
+                form=form,
+                owner=request.user,
+                question_ids=serializer.validated_data["question_ids"],
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(QuestionSerializer(questions, many=True).data)
+
+
+class QuestionDetailAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionSerializer
+
+    def get(self, request, form_id, question_id):
+        question = _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        return Response(QuestionSerializer(question).data)
+
+    @extend_schema(request=QuestionWriteSerializer, responses=QuestionSerializer)
+    def patch(self, request, form_id, question_id):
+        question = _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        serializer = QuestionWriteSerializer(data=request.data, partial=True)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+
+        update_fields = {
+            field: serializer.validated_data[field]
+            for field in (
+                "text",
+                "question_type",
+                "is_required",
+                "max_length",
+                "min_value",
+                "max_value",
+            )
+            if field in serializer.validated_data
+        }
+        try:
+            question = update_question(
+                question=question,
+                owner=request.user,
+                **update_fields,
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(QuestionSerializer(question).data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, form_id, question_id):
+        question = _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        try:
+            delete_question(question=question, owner=request.user)
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class QuestionOptionListCreateAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionOptionSerializer
+
+    @extend_schema(responses=QuestionOptionSerializer(many=True))
+    def get(self, request, form_id, question_id):
+        _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        options = get_options_for_question_owner(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        return Response(QuestionOptionSerializer(options, many=True).data)
+
+    @extend_schema(
+        request=QuestionOptionWriteSerializer,
+        responses={201: QuestionOptionSerializer},
+    )
+    def post(self, request, form_id, question_id):
+        question = _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        serializer = QuestionOptionWriteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+        try:
+            option = create_question_option(
+                question=question,
+                owner=request.user,
+                label=serializer.validated_data["label"],
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(
+            QuestionOptionSerializer(option).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class QuestionOptionReorderAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionOptionReorderSerializer
+
+    @extend_schema(
+        request=QuestionOptionReorderSerializer,
+        responses=QuestionOptionSerializer(many=True),
+    )
+    def post(self, request, form_id, question_id):
+        question = _owned_question_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+        try:
+            options = reorder_question_options(
+                question=question,
+                owner=request.user,
+                option_ids=serializer.validated_data["option_ids"],
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(QuestionOptionSerializer(options, many=True).data)
+
+
+class QuestionOptionDetailAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionOptionSerializer
+
+    def get(self, request, form_id, question_id, option_id):
+        option = _owned_option_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+            option_id=option_id,
+        )
+        return Response(QuestionOptionSerializer(option).data)
+
+    @extend_schema(
+        request=QuestionOptionWriteSerializer,
+        responses=QuestionOptionSerializer,
+    )
+    def patch(self, request, form_id, question_id, option_id):
+        option = _owned_option_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+            option_id=option_id,
+        )
+        serializer = QuestionOptionWriteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return _serializer_validation_response(serializer)
+        try:
+            option = update_question_option(
+                option=option,
+                owner=request.user,
+                label=serializer.validated_data["label"],
+            )
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(QuestionOptionSerializer(option).data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, request, form_id, question_id, option_id):
+        option = _owned_option_or_404(
+            owner=request.user,
+            form_id=form_id,
+            question_id=question_id,
+            option_id=option_id,
+        )
+        try:
+            delete_question_option(option=option, owner=request.user)
+        except DjangoValidationError as exc:
+            return _validation_response(exc)
+        return Response(status=status.HTTP_204_NO_CONTENT)

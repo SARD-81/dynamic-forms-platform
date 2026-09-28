@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Form
+from .models import Form, Question, QuestionOption
 
 
 class FormSerializer(serializers.ModelSerializer):
@@ -37,4 +37,69 @@ class FormWriteSerializer(serializers.Serializer):
         allow_blank=False,
         trim_whitespace=False,
         write_only=True,
+    )
+
+
+class QuestionOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionOption
+        fields = ("id", "label", "order")
+        read_only_fields = fields
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    options = QuestionOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = (
+            "id",
+            "text",
+            "question_type",
+            "is_required",
+            "order",
+            "max_length",
+            "min_value",
+            "max_value",
+            "created_at",
+            "updated_at",
+            "options",
+        )
+        read_only_fields = fields
+
+
+class QuestionWriteSerializer(serializers.Serializer):
+    text = serializers.CharField()
+    question_type = serializers.ChoiceField(choices=Question.QuestionType.choices)
+    is_required = serializers.BooleanField(required=False, default=False)
+    max_length = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    min_value = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=18,
+        decimal_places=6,
+    )
+    max_value = serializers.DecimalField(
+        required=False,
+        allow_null=True,
+        max_digits=18,
+        decimal_places=6,
+    )
+
+
+class QuestionReorderSerializer(serializers.Serializer):
+    question_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
+
+
+class QuestionOptionWriteSerializer(serializers.Serializer):
+    label = serializers.CharField(max_length=255)
+
+
+class QuestionOptionReorderSerializer(serializers.Serializer):
+    option_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
     )

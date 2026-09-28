@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Question builder · {{ managed_form.title }}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Question builder · {{ managed_form.get_status_display }}</p>
+        <h1>{{ managed_form.title }}</h1>
+        <p>
+            Build an ordered schema with Text, Number, Select, and Checkbox questions.
+            Published form schemas are read-only.
+        </p>
+    </div>
+    <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'forms:detail' managed_form.id %}">
+            Form details
+        </a>
+        {% if can_edit %}
+            <a class="button button--primary" href="{% url 'forms:question_create' managed_form.id %}">
+                Add question
+            </a>
+        {% endif %}
+    </div>
+</header>
+
+{% if not can_edit %}
+    <section class="auth-card">
+        <p>This form is {{ managed_form.get_status_display }}. Its question schema is immutable.</p>
+    </section>
+{% endif %}
+
+{% if questions %}
+    <section class="dashboard-grid" aria-label="Form questions">
+        {% for question in questions %}
+            <article class="feature-card">
+                <div class="feature-card__meta">
+                    Question {{ question.order }} · {{ question.get_question_type_display }}
+                    {% if question.is_required %} · Required{% endif %}
+                </div>
+                <h2>{{ question.text }}</h2>
+
+                {% if question.question_type == "TEXT" and question.max_length %}
+                    <p>Maximum length: {{ question.max_length }}</p>
+                {% elif question.question_type == "NUMBER" %}
+                    <p>
+                        Range:
+                        {{ question.min_value|default:"No minimum" }}
+                        —
+                        {{ question.max_value|default:"No maximum" }}
+                    </p>
+                {% endif %}
+
+                {% if question.question_type == "SELECT" or question.question_type == "CHECKBOX" %}
+                    <h3>Options</h3>
+                    {% if question.options.all %}
+                        <ol>
+                            {% for option in question.options.all %}
+                                <li>
+                                    {{ option.label }}
+                                    {% if can_edit %}
+                                        <div class="form-actions">
+                                            <a class="button button--ghost" href="{% url 'forms:option_update' managed_form.id question.id option.id %}">Edit</a>
+                                            <form class="inline-form" method="post" action="{% url 'forms:option_move' managed_form.id question.id option.id 'up' %}">
+                                                {% csrf_token %}
+                                                <button class="button button--ghost" type="submit">↑</button>
+                                            </form>
+                                            <form class="inline-form" method="post" action="{% url 'forms:option_move' managed_form.id question.id option.id 'down' %}">
+                                                {% csrf_token %}
+                                                <button class="button button--ghost" type="submit">↓</button>
+                                            </form>
+                                            <form class="inline-form" method="post" action="{% url 'forms:option_delete' managed_form.id question.id option.id %}">
+                                                {% csrf_token %}
+                                                <button class="button button--ghost" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </li>
+                            {% empty %}
+                                <li>No options yet. Add at least one before publishing.</li>
+                            {% endfor %}
+                        </ol>
+                    {% endif %}
+
+                    {% if can_edit %}
+                        <a class="button button--secondary" href="{% url 'forms:option_create' managed_form.id question.id %}">
+                            Add option
+                        </a>
+                    {% endif %}
+                {% endif %}
+
+                {% if can_edit %}
+                    <div class="form-actions">
+                        <a class="button button--secondary" href="{% url 'forms:question_update' managed_form.id question.id %}">
+                            Edit question
+                        </a>
+                        <form class="inline-form" method="post" action="{% url 'forms:question_move' managed_form.id question.id 'up' %}">
+                            {% csrf_token %}
+                            <button class="button button--ghost" type="submit">Move up</button>
+                        </form>
+                        <form class="inline-form" method="post" action="{% url 'forms:question_move' managed_form.id question.id 'down' %}">
+                            {% csrf_token %}
+                            <button class="button button--ghost" type="submit">Move down</button>
+                        </form>
+                        <form class="inline-form" method="post" action="{% url 'forms:question_delete' managed_form.id question.id %}">
+                            {% csrf_token %}
+                            <button class="button button--ghost" type="submit">Delete</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    {% url "forms:question_create" managed_form.id as add_question_url %}
+    {% if can_edit %}
+        {% include "includes/_state_empty.html" with state_title="No questions yet" state_message="Add the first question to make this form publishable." state_action_url=add_question_url state_action_label="Add question" %}
+    {% else %}
+        {% include "includes/_state_empty.html" with state_title="No questions" state_message="This form has no question schema." %}
+    {% endif %}
+{% endif %}
+{% endblock %}
