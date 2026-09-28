@@ -33,6 +33,9 @@
     </dl>
 
     <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'forms:builder' managed_form.id %}">
+            {% if managed_form.status == "DRAFT" %}Build questions{% else %}View schema{% endif %}
+        </a>
         {% if managed_form.status == "DRAFT" %}
             <a class="button button--secondary" href="{% url 'forms:update' managed_form.id %}">
                 Edit draft

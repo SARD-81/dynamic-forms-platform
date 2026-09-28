@@ -3,7 +3,7 @@ from django import forms
 from apps.core.models import Category
 from apps.core.selectors import get_category_choices_for_owner
 
-from .models import Form
+from .models import POSITIVE_INTEGER_MAX, Form, Question
 
 
 class CategoryChoiceField(forms.ModelChoiceField):
@@ -40,3 +40,43 @@ class FormManagementForm(forms.Form):
 
     def clean_title(self):
         return self.cleaned_data["title"].strip()
+
+
+class QuestionManagementForm(forms.Form):
+    text = forms.CharField(
+        label="Question text",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+    question_type = forms.ChoiceField(choices=Question.QuestionType.choices)
+    is_required = forms.BooleanField(required=False, label="Required")
+    max_length = forms.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=POSITIVE_INTEGER_MAX,
+        label="Text max length",
+        help_text="Used only for TEXT questions.",
+    )
+    min_value = forms.DecimalField(
+        required=False,
+        max_digits=18,
+        decimal_places=6,
+        label="Minimum value",
+        help_text="Used only for NUMBER questions.",
+    )
+    max_value = forms.DecimalField(
+        required=False,
+        max_digits=18,
+        decimal_places=6,
+        label="Maximum value",
+        help_text="Used only for NUMBER questions.",
+    )
+
+    def clean_text(self):
+        return self.cleaned_data["text"].strip()
+
+
+class QuestionOptionForm(forms.Form):
+    label = forms.CharField(max_length=255)
+
+    def clean_label(self):
+        return self.cleaned_data["label"].strip()
