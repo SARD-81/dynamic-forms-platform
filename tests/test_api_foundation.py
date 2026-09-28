@@ -15,6 +15,21 @@ class APIFoundationTests(TestCase):
         # تایید ثبت دقیق یک Endpoint واقعی در خروجی OpenAPI
         self.assertIn("/api/v1/accounts/login/", schema["paths"])
 
+    def test_category_list_schema_declares_array_response(self):
+        response = self.client.get(reverse("schema"), {"format": "json"})
+        self.assertEqual(response.status_code, 200)
+
+        schema = response.json()
+        response_schema = schema["paths"]["/api/v1/categories/"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
+
+        self.assertEqual(response_schema["type"], "array")
+        self.assertEqual(
+            response_schema["items"]["$ref"],
+            "#/components/schemas/Category",
+        )
+
     def test_swagger_docs_returns_200(self):
         """Swagger docs بالا بیاد"""
         response = self.client.get(reverse("swagger-ui"))
