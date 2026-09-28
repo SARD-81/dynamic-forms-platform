@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Delete category · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Categories</p>
+        <h1>Delete category</h1>
+        <p>Delete “{{ category.name }}” from your workspace?</p>
+    </div>
+</header>
+
+<section class="auth-card account-summary">
+    <p>
+        Forms and processes assigned to this category will not be deleted.
+        They will simply become uncategorized.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">Delete category</button>
+            <a class="button button--secondary" href="{% url 'core:category_list' %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

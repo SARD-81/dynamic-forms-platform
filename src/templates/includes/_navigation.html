@@ -1,5 +1,6 @@
 {% url 'core:home' as home_url %}
 {% url 'core:dashboard' as dashboard_url %}
+{% url 'core:category_list' as categories_url %}
 {% url 'accounts:login' as login_url %}
 {% url 'accounts:register' as register_url %}
 {% url 'accounts:logout' as logout_url %}
@@ -33,6 +34,7 @@
                 <a href="{{ home_url }}">Home</a>
                 {% if user.is_authenticated %}
                     <a href="{{ dashboard_url }}">Dashboard</a>
+                    <a href="{{ categories_url }}">Categories</a>
                 {% endif %}
             </div>
 
