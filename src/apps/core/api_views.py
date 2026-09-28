@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
@@ -48,6 +49,7 @@ class CategoryListCreateAPIView(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CategorySerializer
 
+    @extend_schema(responses=CategorySerializer(many=True))
     def get(self, request):
         categories = get_category_choices_for_owner(owner=request.user)
         serializer = self.get_serializer(categories, many=True)
