@@ -153,9 +153,7 @@ def test_publish_rejects_form_without_questions(user):
     form.refresh_from_db()
     assert form.status == Form.Status.DRAFT
     assert "schema" in exc_info.value.message_dict
-    assert "Add at least one question before publishing." in exc_info.value.message_dict[
-        "schema"
-    ]
+    assert "Add at least one question before publishing." in exc_info.value.message_dict["schema"]
 
 
 @pytest.mark.django_db
@@ -172,8 +170,7 @@ def test_publish_rejects_option_question_without_options(user):
         publish_form(form=form, owner=user)
 
     assert any(
-        "need at least one option" in message
-        for message in exc_info.value.message_dict["schema"]
+        "need at least one option" in message for message in exc_info.value.message_dict["schema"]
     )
 
 

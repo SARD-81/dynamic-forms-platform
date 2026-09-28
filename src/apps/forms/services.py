@@ -66,9 +66,7 @@ def _password_hash_for_visibility(
 
 
 def _publication_readiness_errors(*, form):
-    questions = list(
-        form.questions.prefetch_related("options").order_by("order", "id")
-    )
+    questions = list(form.questions.prefetch_related("options").order_by("order", "id"))
     if not questions:
         return ["Add at least one question before publishing."]
 
@@ -76,9 +74,7 @@ def _publication_readiness_errors(*, form):
     expected_question_orders = list(range(1, len(questions) + 1))
     actual_question_orders = [question.order for question in questions]
     if actual_question_orders != expected_question_orders:
-        errors.append(
-            "Question order must be contiguous and start at 1 before publishing."
-        )
+        errors.append("Question order must be contiguous and start at 1 before publishing.")
 
     for question in questions:
         label = f"Question {question.order}"
@@ -100,17 +96,13 @@ def _publication_readiness_errors(*, form):
 
         elif question.question_type == Question.QuestionType.NUMBER:
             if question.max_length is not None:
-                errors.append(
-                    f"{label}: number questions cannot use text max length."
-                )
+                errors.append(f"{label}: number questions cannot use text max length.")
             if (
                 question.min_value is not None
                 and question.max_value is not None
                 and question.min_value > question.max_value
             ):
-                errors.append(
-                    f"{label}: minimum value cannot be greater than maximum value."
-                )
+                errors.append(f"{label}: minimum value cannot be greater than maximum value.")
             if options:
                 errors.append(f"{label}: number questions cannot have options.")
 
@@ -137,9 +129,7 @@ def _publication_readiness_errors(*, form):
             expected_option_orders = list(range(1, len(options) + 1))
             actual_option_orders = [option.order for option in options]
             if actual_option_orders != expected_option_orders:
-                errors.append(
-                    f"{label}: option order must be contiguous and start at 1."
-                )
+                errors.append(f"{label}: option order must be contiguous and start at 1.")
 
             normalized_labels = [option.label.strip() for option in options]
             if any(not option_label for option_label in normalized_labels):
@@ -148,9 +138,7 @@ def _publication_readiness_errors(*, form):
                 errors.append(f"{label}: option labels must be unique.")
 
         else:
-            errors.append(
-                f"{label}: unsupported question type '{question.question_type}'."
-            )
+            errors.append(f"{label}: unsupported question type '{question.question_type}'.")
 
     return errors
 
