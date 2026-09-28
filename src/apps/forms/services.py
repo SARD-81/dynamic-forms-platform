@@ -6,6 +6,7 @@ from django.db.models import F, Max
 from apps.core.selectors import get_category_for_owner
 
 from .models import POSITIVE_INTEGER_MAX, Form, Question, QuestionOption
+from .selectors import get_questions_for_form_owner
 
 FORM_NOT_DRAFT_MESSAGE = "Only draft forms can be edited or deleted."
 FORM_PUBLISH_MESSAGE = "Only draft forms can be published."
@@ -264,6 +265,19 @@ def _locked_option(*, question, option_id):
     return option
 
 
+def _clean_option_label(label):
+    label = label.strip()
+    if not label:
+        raise ValidationError({"label": ["Option label is required."]})
+
+    max_length = QuestionOption._meta.get_field("label").max_length
+    if len(label) > max_length:
+        raise ValidationError(
+            {"label": [f"Ensure this value has at most {max_length} characters."]}
+        )
+    return label
+
+
 def create_form(
     *,
     owner,
@@ -512,9 +526,10 @@ def reorder_questions(*, form, owner, question_ids):
         )
         _rewrite_question_orders(questions=questions, ordered_ids=question_ids)
         return list(
-            Question.objects.filter(form=locked_form)
-            .prefetch_related("options")
-            .order_by("order", "id")
+            get_questions_for_form_owner(
+                owner=owner,
+                form_id=locked_form.pk,
+            )
         )
 
 
@@ -552,9 +567,7 @@ def create_question_option(*, question, owner, label):
                 {"question_type": ["Options are allowed only for select and checkbox questions."]}
             )
 
-        label = label.strip()
-        if not label:
-            raise ValidationError({"label": ["Option label is required."]})
+        label = _clean_option_label(label)
         if locked_question.options.filter(label=label).exists():
             raise ValidationError({"label": ["Option labels must be unique per question."]})
 
@@ -580,9 +593,7 @@ def update_question_option(*, option, owner, label):
         )
         locked_option = _locked_option(question=locked_question, option_id=option.pk)
 
-        label = label.strip()
-        if not label:
-            raise ValidationError({"label": ["Option label is required."]})
+        label = _clean_option_label(label)
         if locked_question.options.filter(label=label).exclude(pk=locked_option.pk).exists():
             raise ValidationError({"label": ["Option labels must be unique per question."]})
 

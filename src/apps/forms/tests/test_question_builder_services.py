@@ -166,6 +166,41 @@ def test_option_management_requires_option_question_and_unique_label(user, draft
 
 
 @pytest.mark.django_db
+def test_option_service_rejects_label_longer_than_model_limit_on_create_and_update(
+    user,
+    draft_form,
+):
+    question = create_question(
+        form=draft_form,
+        owner=user,
+        text="Choice",
+        question_type=Question.QuestionType.SELECT,
+    )
+    existing = create_question_option(question=question, owner=user, label="Existing")
+    max_length = QuestionOption._meta.get_field("label").max_length
+    too_long_label = "x" * (max_length + 1)
+
+    with pytest.raises(ValidationError) as create_error:
+        create_question_option(
+            question=question,
+            owner=user,
+            label=too_long_label,
+        )
+    assert "label" in create_error.value.message_dict
+
+    with pytest.raises(ValidationError) as update_error:
+        update_question_option(
+            option=existing,
+            owner=user,
+            label=too_long_label,
+        )
+    assert "label" in update_error.value.message_dict
+
+    existing.refresh_from_db()
+    assert existing.label == "Existing"
+
+
+@pytest.mark.django_db
 def test_question_type_change_rejects_existing_options(user, draft_form):
     question = create_question(
         form=draft_form,

@@ -82,14 +82,6 @@ def test_question_and_option_api_reorder(client, user, draft_form):
     option_two = create_question_option(question=second, owner=user, label="Two")
     client.force_login(user)
 
-    question_response = client.post(
-        f"/api/v1/forms/{draft_form.id}/questions/reorder/",
-        data=json.dumps({"question_ids": [second.id, first.id]}),
-        content_type="application/json",
-    )
-    assert question_response.status_code == 200
-    assert [item["id"] for item in question_response.json()] == [second.id, first.id]
-
     option_response = client.post(
         f"/api/v1/forms/{draft_form.id}/questions/{second.id}/options/reorder/",
         data=json.dumps({"option_ids": [option_two.id, option_one.id]}),
@@ -101,8 +93,14 @@ def test_question_and_option_api_reorder(client, user, draft_form):
         option_one.id,
     ]
 
-    detail_response = client.get(f"/api/v1/forms/{draft_form.id}/questions/{second.id}/")
-    assert [item["id"] for item in detail_response.json()["options"]] == [
+    question_response = client.post(
+        f"/api/v1/forms/{draft_form.id}/questions/reorder/",
+        data=json.dumps({"question_ids": [second.id, first.id]}),
+        content_type="application/json",
+    )
+    assert question_response.status_code == 200
+    assert [item["id"] for item in question_response.json()] == [second.id, first.id]
+    assert [item["id"] for item in question_response.json()[0]["options"]] == [
         option_two.id,
         option_one.id,
     ]
