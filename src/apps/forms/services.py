@@ -6,7 +6,7 @@ from django.db.models import F, Max
 from apps.core.selectors import get_category_for_owner
 
 from .models import POSITIVE_INTEGER_MAX, Form, Question, QuestionOption
-from .selectors import get_questions_for_form_owner
+from .selectors import get_question_for_owner, get_questions_for_form_owner
 
 FORM_NOT_DRAFT_MESSAGE = "Only draft forms can be edited or deleted."
 FORM_PUBLISH_MESSAGE = "Only draft forms can be published."
@@ -500,7 +500,11 @@ def update_question(
                 "updated_at",
             ]
         )
-        return locked_question
+        return get_question_for_owner(
+            owner=owner,
+            form_id=locked_form.pk,
+            question_id=locked_question.pk,
+        )
 
 
 def delete_question(*, question, owner):
