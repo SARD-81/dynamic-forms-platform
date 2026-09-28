@@ -50,6 +50,4 @@ def test_process_run_lock_protocol_returns_required_forms_in_stable_order(user):
     with transaction.atomic():
         locked_forms = lock_required_forms_for_process_run(process_id=process.id)
 
-    assert [form.id for form in locked_forms] == sorted(
-        [first_form.id, second_form.id]
-    )
+    assert [form.id for form in locked_forms] == sorted([first_form.id, second_form.id])

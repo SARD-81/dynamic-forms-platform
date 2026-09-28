@@ -26,6 +26,4 @@ def lock_required_forms_for_process_run(*, process_id):
         .order_by("form_id")
         .values_list("form_id", flat=True)
     )
-    return list(
-        Form.objects.select_for_update().filter(pk__in=form_ids).order_by("pk")
-    )
+    return list(Form.objects.select_for_update().filter(pk__in=form_ids).order_by("pk"))
