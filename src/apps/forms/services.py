@@ -9,9 +9,7 @@ from .models import Form
 FORM_NOT_DRAFT_MESSAGE = "Only draft forms can be edited or deleted."
 FORM_PUBLISH_MESSAGE = "Only draft forms can be published."
 FORM_CLOSE_MESSAGE = "Only published forms can be closed."
-FORM_ACTIVE_RUN_MESSAGE = (
-    "This form cannot be closed while an active process run depends on it."
-)
+FORM_ACTIVE_RUN_MESSAGE = "This form cannot be closed while an active process run depends on it."
 
 
 def _ensure_owner(*, form, owner):
@@ -39,9 +37,7 @@ def _category_for_owner(*, owner, category_id):
 
     category = get_category_for_owner(owner=owner, category_id=category_id)
     if category is None:
-        raise ValidationError(
-            {"category": ["Select a valid category from your workspace."]}
-        )
+        raise ValidationError({"category": ["Select a valid category from your workspace."]})
     return category
 
 
@@ -64,9 +60,7 @@ def _password_hash_for_visibility(
     ):
         return existing_form.access_password_hash
 
-    raise ValidationError(
-        {"access_password": ["A password is required for private forms."]}
-    )
+    raise ValidationError({"access_password": ["A password is required for private forms."]})
 
 
 def create_form(

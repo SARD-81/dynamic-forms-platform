@@ -3,9 +3,7 @@ from .models import Form
 
 def get_forms_for_owner(*, owner):
     return (
-        Form.objects.filter(owner=owner)
-        .select_related("category")
-        .order_by("-created_at", "-id")
+        Form.objects.filter(owner=owner).select_related("category").order_by("-created_at", "-id")
     )
 
 

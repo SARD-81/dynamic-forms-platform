@@ -196,9 +196,9 @@ def test_openapi_declares_form_list_as_array_and_never_exposes_hash(client, user
 
     assert response.status_code == 200
     schema = response.json()
-    response_schema = schema["paths"]["/api/v1/forms/"]["get"]["responses"]["200"][
-        "content"
-    ]["application/json"]["schema"]
+    response_schema = schema["paths"]["/api/v1/forms/"]["get"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]
 
     assert response_schema["type"] == "array"
     assert response_schema["items"]["$ref"] == "#/components/schemas/Form"
