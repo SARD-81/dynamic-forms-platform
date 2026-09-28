@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 
 from apps.accounts.models import User
-from apps.forms.models import Form
+from apps.forms.models import Form, Question
 
 
 @pytest.fixture
@@ -109,8 +109,30 @@ def test_published_form_cannot_be_edited_or_deleted(client, user):
 
 
 @pytest.mark.django_db
+def test_publish_html_rejects_unready_schema(client, user):
+    form = Form.objects.create(owner=user, title="Not ready")
+    client.force_login(user)
+
+    response = client.post(
+        reverse("forms:publish", args=[form.id]),
+        follow=True,
+    )
+
+    form.refresh_from_db()
+    assert response.status_code == 200
+    assert form.status == Form.Status.DRAFT
+    assert "Add at least one question before publishing." in response.content.decode()
+
+
+@pytest.mark.django_db
 def test_publish_and_close_html_flow(client, user):
     form = Form.objects.create(owner=user, title="Lifecycle")
+    Question.objects.create(
+        form=form,
+        text="Ready question",
+        question_type=Question.QuestionType.TEXT,
+        order=1,
+    )
     client.force_login(user)
 
     publish_response = client.post(reverse("forms:publish", args=[form.id]))

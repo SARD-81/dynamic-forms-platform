@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 
 from apps.accounts.models import User
 from apps.core.models import Category
-from apps.forms.models import Form
+from apps.forms.models import Form, Question, QuestionOption
 from apps.forms.services import (
     close_form,
     create_form,
@@ -20,6 +20,15 @@ def other_user(db):
         username="form-service-other",
         email="form-service-other@example.com",
         password="test-password",
+    )
+
+
+def add_ready_text_question(form, *, order=1):
+    return Question.objects.create(
+        form=form,
+        text="Ready question",
+        question_type=Question.QuestionType.TEXT,
+        order=order,
     )
 
 
@@ -135,8 +144,74 @@ def test_private_draft_edit_keeps_existing_password_when_blank(user):
 
 
 @pytest.mark.django_db
+def test_publish_rejects_form_without_questions(user):
+    form = create_form(owner=user, title="Empty schema")
+
+    with pytest.raises(ValidationError) as exc_info:
+        publish_form(form=form, owner=user)
+
+    form.refresh_from_db()
+    assert form.status == Form.Status.DRAFT
+    assert "schema" in exc_info.value.message_dict
+    assert "Add at least one question before publishing." in exc_info.value.message_dict[
+        "schema"
+    ]
+
+
+@pytest.mark.django_db
+def test_publish_rejects_option_question_without_options(user):
+    form = create_form(owner=user, title="Incomplete select")
+    Question.objects.create(
+        form=form,
+        text="Choose one",
+        question_type=Question.QuestionType.SELECT,
+        order=1,
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        publish_form(form=form, owner=user)
+
+    assert any(
+        "need at least one option" in message
+        for message in exc_info.value.message_dict["schema"]
+    )
+
+
+@pytest.mark.django_db
+def test_publish_rejects_non_contiguous_question_order(user):
+    form = create_form(owner=user, title="Gap")
+    add_ready_text_question(form, order=2)
+
+    with pytest.raises(ValidationError) as exc_info:
+        publish_form(form=form, owner=user)
+
+    assert any(
+        "Question order must be contiguous" in message
+        for message in exc_info.value.message_dict["schema"]
+    )
+
+
+@pytest.mark.django_db
+def test_publish_accepts_ready_option_schema(user):
+    form = create_form(owner=user, title="Ready select")
+    question = Question.objects.create(
+        form=form,
+        text="Choose one",
+        question_type=Question.QuestionType.SELECT,
+        order=1,
+    )
+    QuestionOption.objects.create(question=question, label="First", order=1)
+    QuestionOption.objects.create(question=question, label="Second", order=2)
+
+    published = publish_form(form=form, owner=user)
+
+    assert published.status == Form.Status.PUBLISHED
+
+
+@pytest.mark.django_db
 def test_published_form_definition_is_immutable(user):
     form = create_form(owner=user, title="Draft")
+    add_ready_text_question(form)
     published = publish_form(form=form, owner=user)
 
     with pytest.raises(ValidationError):
@@ -153,6 +228,7 @@ def test_published_form_definition_is_immutable(user):
 @pytest.mark.django_db
 def test_lifecycle_only_allows_draft_to_published_to_closed(user):
     form = create_form(owner=user, title="Lifecycle")
+    add_ready_text_question(form)
 
     with pytest.raises(ValidationError):
         close_form(
@@ -188,6 +264,7 @@ def test_lifecycle_only_allows_draft_to_published_to_closed(user):
 @pytest.mark.django_db
 def test_close_is_blocked_when_active_process_run_depends_on_form(user):
     form = create_form(owner=user, title="Published")
+    add_ready_text_question(form)
     form = publish_form(form=form, owner=user)
 
     with pytest.raises(ValidationError):
@@ -209,6 +286,7 @@ def test_only_draft_form_can_be_hard_deleted(user):
     assert not Form.objects.filter(pk=draft_id).exists()
 
     published = create_form(owner=user, title="Keep me")
+    add_ready_text_question(published)
     published = publish_form(form=published, owner=user)
 
     with pytest.raises(ValidationError):

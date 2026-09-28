@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import check_password
 
 from apps.accounts.models import User
 from apps.core.models import Category
-from apps.forms.models import Form
+from apps.forms.models import Form, Question
 from apps.processes.models import Process, ProcessRun, ProcessStep
 
 FORM_LIST_URL = "/api/v1/forms/"
@@ -107,8 +107,30 @@ def test_form_api_cross_user_detail_returns_404(client, user, other_user):
 
 
 @pytest.mark.django_db
+def test_form_api_publish_returns_actionable_schema_errors(client, user):
+    form = Form.objects.create(owner=user, title="Not ready")
+    client.force_login(user)
+    detail_url = f"{FORM_LIST_URL}{form.id}/"
+
+    response = client.post(f"{detail_url}publish/")
+
+    form.refresh_from_db()
+    assert response.status_code == 400
+    assert form.status == Form.Status.DRAFT
+    assert response.json()["field_errors"]["schema"] == [
+        "Add at least one question before publishing."
+    ]
+
+
+@pytest.mark.django_db
 def test_form_api_patch_draft_and_reject_after_publish(client, user):
     form = Form.objects.create(owner=user, title="Draft")
+    Question.objects.create(
+        form=form,
+        text="Ready question",
+        question_type=Question.QuestionType.TEXT,
+        order=1,
+    )
     client.force_login(user)
     detail_url = f"{FORM_LIST_URL}{form.id}/"
 
@@ -137,6 +159,12 @@ def test_form_api_patch_draft_and_reject_after_publish(client, user):
 @pytest.mark.django_db
 def test_form_api_rejects_invalid_lifecycle_transitions(client, user):
     form = Form.objects.create(owner=user, title="Draft")
+    Question.objects.create(
+        form=form,
+        text="Ready question",
+        question_type=Question.QuestionType.TEXT,
+        order=1,
+    )
     client.force_login(user)
     detail_url = f"{FORM_LIST_URL}{form.id}/"
 
