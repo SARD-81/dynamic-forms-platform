@@ -3,7 +3,7 @@ from django import forms
 from apps.core.models import Category
 from apps.core.selectors import get_category_choices_for_owner
 
-from .models import Form, POSITIVE_INTEGER_MAX, Question
+from .models import POSITIVE_INTEGER_MAX, Form, Question
 
 
 class CategoryChoiceField(forms.ModelChoiceField):

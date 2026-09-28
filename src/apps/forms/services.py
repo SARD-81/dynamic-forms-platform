@@ -5,7 +5,7 @@ from django.db.models import F, Max
 
 from apps.core.selectors import get_category_for_owner
 
-from .models import Form, POSITIVE_INTEGER_MAX, Question, QuestionOption
+from .models import POSITIVE_INTEGER_MAX, Form, Question, QuestionOption
 
 FORM_NOT_DRAFT_MESSAGE = "Only draft forms can be edited or deleted."
 FORM_PUBLISH_MESSAGE = "Only draft forms can be published."

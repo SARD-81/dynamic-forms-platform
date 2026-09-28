@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Form, POSITIVE_INTEGER_MAX, Question, QuestionOption
+from .models import POSITIVE_INTEGER_MAX, Form, Question, QuestionOption
 
 
 class FormSerializer(serializers.ModelSerializer):
