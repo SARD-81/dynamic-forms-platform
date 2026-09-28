@@ -11,6 +11,8 @@ FORM_PUBLISH_MESSAGE = "Only draft forms can be published."
 FORM_CLOSE_MESSAGE = "Only published forms can be closed."
 FORM_ACTIVE_RUN_MESSAGE = "This form cannot be closed while an active process run depends on it."
 
+_UNSET = object()
+
 
 def _ensure_owner(*, form, owner):
     if form.owner_id != owner.pk:
@@ -96,11 +98,11 @@ def update_draft_form(
     *,
     form,
     owner,
-    title,
-    description,
-    category_id,
-    visibility,
-    access_password=None,
+    title=_UNSET,
+    description=_UNSET,
+    category_id=_UNSET,
+    visibility=_UNSET,
+    access_password=_UNSET,
 ):
     with transaction.atomic():
         locked_form = Form.objects.select_for_update().get(pk=form.pk)
@@ -109,17 +111,35 @@ def update_draft_form(
         if locked_form.status != Form.Status.DRAFT:
             raise ValidationError({"status": [FORM_NOT_DRAFT_MESSAGE]})
 
-        title = _clean_title(title)
-        _validate_visibility(visibility)
-        category = _category_for_owner(owner=owner, category_id=category_id)
+        if title is _UNSET:
+            title = locked_form.title
+        else:
+            title = _clean_title(title)
+
+        if description is _UNSET:
+            description = locked_form.description
+        else:
+            description = description.strip()
+
+        if category_id is _UNSET:
+            category = locked_form.category
+        else:
+            category = _category_for_owner(owner=owner, category_id=category_id)
+
+        if visibility is _UNSET:
+            visibility = locked_form.visibility
+        else:
+            _validate_visibility(visibility)
+
+        password_input = None if access_password is _UNSET else access_password
         password_hash = _password_hash_for_visibility(
             visibility=visibility,
-            access_password=access_password,
+            access_password=password_input,
             existing_form=locked_form,
         )
 
         locked_form.title = title
-        locked_form.description = description.strip()
+        locked_form.description = description
         locked_form.category = category
         locked_form.visibility = visibility
         locked_form.access_password_hash = password_hash

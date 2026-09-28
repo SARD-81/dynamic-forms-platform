@@ -86,6 +86,32 @@ def test_update_draft_form_can_change_definition(user):
 
 
 @pytest.mark.django_db
+def test_partial_update_preserves_omitted_fields_from_locked_row(user):
+    form = create_form(
+        owner=user,
+        title="Original title",
+        description="Original description",
+    )
+    first_snapshot = Form.objects.get(pk=form.pk)
+    stale_second_snapshot = Form.objects.get(pk=form.pk)
+
+    update_draft_form(
+        form=first_snapshot,
+        owner=user,
+        title="First writer title",
+    )
+    update_draft_form(
+        form=stale_second_snapshot,
+        owner=user,
+        description="Second writer description",
+    )
+
+    form.refresh_from_db()
+    assert form.title == "First writer title"
+    assert form.description == "Second writer description"
+
+
+@pytest.mark.django_db
 def test_private_draft_edit_keeps_existing_password_when_blank(user):
     form = create_form(
         owner=user,
@@ -118,9 +144,6 @@ def test_published_form_definition_is_immutable(user):
             form=published,
             owner=user,
             title="Changed",
-            description="",
-            category_id=None,
-            visibility=Form.Visibility.PUBLIC,
         )
 
     published.refresh_from_db()

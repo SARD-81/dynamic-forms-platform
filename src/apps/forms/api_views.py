@@ -38,6 +38,17 @@ def _validation_response(exc):
     )
 
 
+def _serializer_validation_response(serializer):
+    return Response(
+        {
+            "error_code": "FORM_VALIDATION_ERROR",
+            "detail": "Invalid form data or lifecycle operation.",
+            "field_errors": serializer.errors,
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 def _owned_form_or_404(*, owner, form_id):
     form = get_form_for_owner(owner=owner, form_id=form_id)
     if form is None:
@@ -59,14 +70,7 @@ class FormListCreateAPIView(GenericAPIView):
     def post(self, request):
         serializer = FormWriteSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                {
-                    "error_code": "FORM_VALIDATION_ERROR",
-                    "detail": "Invalid form data or lifecycle operation.",
-                    "field_errors": serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return _serializer_validation_response(serializer)
 
         data = serializer.validated_data
         try:
@@ -98,25 +102,26 @@ class FormDetailAPIView(GenericAPIView):
         form = _owned_form_or_404(owner=request.user, form_id=form_id)
         serializer = FormWriteSerializer(data=request.data, partial=True)
         if not serializer.is_valid():
-            return Response(
-                {
-                    "error_code": "FORM_VALIDATION_ERROR",
-                    "detail": "Invalid form data or lifecycle operation.",
-                    "field_errors": serializer.errors,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return _serializer_validation_response(serializer)
 
         data = serializer.validated_data
+        update_fields = {
+            field: data[field]
+            for field in (
+                "title",
+                "description",
+                "category_id",
+                "visibility",
+                "access_password",
+            )
+            if field in data
+        }
+
         try:
             form = update_draft_form(
                 form=form,
                 owner=request.user,
-                title=data.get("title", form.title),
-                description=data.get("description", form.description),
-                category_id=data.get("category_id", form.category_id),
-                visibility=data.get("visibility", form.visibility),
-                access_password=data.get("access_password"),
+                **update_fields,
             )
         except DjangoValidationError as exc:
             return _validation_response(exc)
