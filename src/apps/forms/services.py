@@ -178,11 +178,7 @@ def _validate_question_definition(
     if question_type == Question.QuestionType.TEXT:
         if max_length is not None and not 1 <= max_length <= POSITIVE_INTEGER_MAX:
             raise ValidationError(
-                {
-                    "max_length": [
-                        f"Text max length must be between 1 and {POSITIVE_INTEGER_MAX}."
-                    ]
-                }
+                {"max_length": [f"Text max length must be between 1 and {POSITIVE_INTEGER_MAX}."]}
             )
         if min_value is not None or max_value is not None:
             raise ValidationError({"configuration": ["Text questions cannot use numeric bounds."]})

@@ -46,9 +46,7 @@ def test_question_and_option_selectors_are_owner_scoped(user, other_user):
         order=1,
     )
 
-    selected_questions = list(
-        get_questions_for_form_owner(owner=user, form_id=form.id)
-    )
+    selected_questions = list(get_questions_for_form_owner(owner=user, form_id=form.id))
     assert selected_questions == [question]
     assert list(selected_questions[0].options.all()) == [option, second_option]
     assert (

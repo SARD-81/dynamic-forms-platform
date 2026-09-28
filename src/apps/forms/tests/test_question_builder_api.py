@@ -101,9 +101,7 @@ def test_question_and_option_api_reorder(client, user, draft_form):
         option_one.id,
     ]
 
-    detail_response = client.get(
-        f"/api/v1/forms/{draft_form.id}/questions/{second.id}/"
-    )
+    detail_response = client.get(f"/api/v1/forms/{draft_form.id}/questions/{second.id}/")
     assert [item["id"] for item in detail_response.json()["options"]] == [
         option_two.id,
         option_one.id,
