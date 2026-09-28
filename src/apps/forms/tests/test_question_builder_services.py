@@ -257,9 +257,7 @@ def test_question_reorder_and_delete_keep_contiguous_order(user, draft_form):
     ]
 
     old_timestamp = timezone.now() - timedelta(days=1)
-    Question.objects.filter(pk__in=[first.id, second.id, third.id]).update(
-        updated_at=old_timestamp
-    )
+    Question.objects.filter(pk__in=[first.id, second.id, third.id]).update(updated_at=old_timestamp)
     reordered = reorder_questions(
         form=draft_form,
         owner=user,
