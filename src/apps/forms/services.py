@@ -179,9 +179,7 @@ def _validate_question_definition(
         if max_length is not None and max_length < 1:
             raise ValidationError({"max_length": ["Text max length must be at least 1."]})
         if min_value is not None or max_value is not None:
-            raise ValidationError(
-                {"configuration": ["Text questions cannot use numeric bounds."]}
-            )
+            raise ValidationError({"configuration": ["Text questions cannot use numeric bounds."]})
         if has_options:
             raise ValidationError({"options": ["Text questions cannot have options."]})
 
@@ -251,11 +249,7 @@ def _rewrite_option_orders(*, options, ordered_ids):
 
 
 def _locked_question(*, form, question_id):
-    question = (
-        Question.objects.select_for_update()
-        .filter(form=form, pk=question_id)
-        .first()
-    )
+    question = Question.objects.select_for_update().filter(form=form, pk=question_id).first()
     if question is None:
         raise ValidationError({"question": ["Question does not belong to this form."]})
     return question
@@ -263,9 +257,7 @@ def _locked_question(*, form, question_id):
 
 def _locked_option(*, question, option_id):
     option = (
-        QuestionOption.objects.select_for_update()
-        .filter(question=question, pk=option_id)
-        .first()
+        QuestionOption.objects.select_for_update().filter(question=question, pk=option_id).first()
     )
     if option is None:
         raise ValidationError({"option": ["Option does not belong to this question."]})
@@ -430,9 +422,7 @@ def create_question(
             has_options=False,
         )
         next_order = (
-            Question.objects.filter(form=locked_form).aggregate(max_order=Max("order"))[
-                "max_order"
-            ]
+            Question.objects.filter(form=locked_form).aggregate(max_order=Max("order"))["max_order"]
             or 0
         ) + 1
         return Question.objects.create(
@@ -463,12 +453,8 @@ def update_question(
         locked_question = _locked_question(form=locked_form, question_id=question.pk)
 
         text = locked_question.text if text is _UNSET else text
-        question_type = (
-            locked_question.question_type if question_type is _UNSET else question_type
-        )
-        is_required = (
-            locked_question.is_required if is_required is _UNSET else is_required
-        )
+        question_type = locked_question.question_type if question_type is _UNSET else question_type
+        is_required = locked_question.is_required if is_required is _UNSET else is_required
         max_length = locked_question.max_length if max_length is _UNSET else max_length
         min_value = locked_question.min_value if min_value is _UNSET else min_value
         max_value = locked_question.max_value if max_value is _UNSET else max_value
@@ -510,9 +496,7 @@ def delete_question(*, question, owner):
         locked_question.delete()
 
         remaining = list(
-            Question.objects.select_for_update()
-            .filter(form=locked_form)
-            .order_by("order", "id")
+            Question.objects.select_for_update().filter(form=locked_form).order_by("order", "id")
         )
         _rewrite_question_orders(
             questions=remaining,
@@ -524,9 +508,7 @@ def reorder_questions(*, form, owner, question_ids):
     with transaction.atomic():
         locked_form = _lock_owned_draft_form(form_id=form.pk, owner=owner)
         questions = list(
-            Question.objects.select_for_update()
-            .filter(form=locked_form)
-            .order_by("order", "id")
+            Question.objects.select_for_update().filter(form=locked_form).order_by("order", "id")
         )
         _rewrite_question_orders(questions=questions, ordered_ids=question_ids)
         return list(
@@ -603,11 +585,7 @@ def update_question_option(*, option, owner, label):
         label = label.strip()
         if not label:
             raise ValidationError({"label": ["Option label is required."]})
-        if (
-            locked_question.options.filter(label=label)
-            .exclude(pk=locked_option.pk)
-            .exists()
-        ):
+        if locked_question.options.filter(label=label).exclude(pk=locked_option.pk).exists():
             raise ValidationError({"label": ["Option labels must be unique per question."]})
 
         locked_option.label = label
@@ -657,9 +635,7 @@ def reorder_question_options(*, question, owner, option_ids):
             .order_by("order", "id")
         )
         _rewrite_option_orders(options=options, ordered_ids=option_ids)
-        return list(
-            QuestionOption.objects.filter(question=locked_question).order_by("order", "id")
-        )
+        return list(QuestionOption.objects.filter(question=locked_question).order_by("order", "id"))
 
 
 def move_question_option(*, option, owner, direction):

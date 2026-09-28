@@ -239,9 +239,7 @@ def test_option_reorder_and_delete_keep_contiguous_order(user, draft_form):
     ]
 
     delete_question_option(option=first, owner=user)
-    remaining = list(
-        QuestionOption.objects.filter(question=question).order_by("order")
-    )
+    remaining = list(QuestionOption.objects.filter(question=question).order_by("order"))
 
     assert [(item.id, item.order) for item in remaining] == [
         (third.id, 1),
@@ -278,9 +276,10 @@ def test_reorder_requires_complete_unique_id_set(user, draft_form):
             question_ids=[first.id],
         )
 
-    assert list(
-        Question.objects.filter(form=draft_form).values_list("id", "order")
-    ) == [(first.id, 1), (second.id, 2)]
+    assert list(Question.objects.filter(form=draft_form).values_list("id", "order")) == [
+        (first.id, 1),
+        (second.id, 2),
+    ]
 
 
 @pytest.mark.django_db

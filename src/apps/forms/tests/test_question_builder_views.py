@@ -34,7 +34,10 @@ def test_builder_requires_owner_and_lists_questions(client, user, other_user, dr
 
     assert response.status_code == 200
     assert "Visible question" in response.content.decode()
-    assert reverse("forms:question_update", args=[draft_form.id, question.id]) in response.content.decode()
+    assert (
+        reverse("forms:question_update", args=[draft_form.id, question.id])
+        in response.content.decode()
+    )
 
     client.force_login(other_user)
     assert client.get(reverse("forms:builder", args=[draft_form.id])).status_code == 404
@@ -98,9 +101,7 @@ def test_html_move_and_delete_reindexes_questions(client, user, draft_form):
     assert second.order == 1
     assert first.order == 2
 
-    delete_response = client.post(
-        reverse("forms:question_delete", args=[draft_form.id, second.id])
-    )
+    delete_response = client.post(reverse("forms:question_delete", args=[draft_form.id, second.id]))
     assert delete_response.status_code == 302
 
     first.refresh_from_db()

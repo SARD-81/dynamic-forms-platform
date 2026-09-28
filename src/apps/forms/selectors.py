@@ -20,9 +20,7 @@ def get_questions_for_form_owner(*, owner, form_id):
 
 
 def get_question_for_owner(*, owner, form_id, question_id):
-    return get_questions_for_form_owner(owner=owner, form_id=form_id).filter(
-        pk=question_id
-    ).first()
+    return get_questions_for_form_owner(owner=owner, form_id=form_id).filter(pk=question_id).first()
 
 
 def get_options_for_question_owner(*, owner, form_id, question_id):
@@ -34,8 +32,12 @@ def get_options_for_question_owner(*, owner, form_id, question_id):
 
 
 def get_option_for_owner(*, owner, form_id, question_id, option_id):
-    return get_options_for_question_owner(
-        owner=owner,
-        form_id=form_id,
-        question_id=question_id,
-    ).filter(pk=option_id).first()
+    return (
+        get_options_for_question_owner(
+            owner=owner,
+            form_id=form_id,
+            question_id=question_id,
+        )
+        .filter(pk=option_id)
+        .first()
+    )

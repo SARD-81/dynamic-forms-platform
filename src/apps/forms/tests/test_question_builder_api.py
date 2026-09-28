@@ -160,14 +160,9 @@ def test_question_api_hides_other_users_schema(client, user, other_user):
     )
     client.force_login(user)
 
+    assert client.get(f"/api/v1/forms/{foreign_form.id}/questions/").status_code == 404
     assert (
-        client.get(f"/api/v1/forms/{foreign_form.id}/questions/").status_code
-        == 404
-    )
-    assert (
-        client.get(
-            f"/api/v1/forms/{foreign_form.id}/questions/{foreign_question.id}/"
-        ).status_code
+        client.get(f"/api/v1/forms/{foreign_form.id}/questions/{foreign_question.id}/").status_code
         == 404
     )
 
@@ -227,12 +222,12 @@ def test_question_builder_openapi_declares_list_responses_as_arrays(client, user
 
     assert response.status_code == 200
     schema = response.json()
-    question_schema = schema["paths"]["/api/v1/forms/{form_id}/questions/"]["get"][
-        "responses"
-    ]["200"]["content"]["application/json"]["schema"]
-    option_schema = schema["paths"][
-        "/api/v1/forms/{form_id}/questions/{question_id}/options/"
-    ]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+    question_schema = schema["paths"]["/api/v1/forms/{form_id}/questions/"]["get"]["responses"][
+        "200"
+    ]["content"]["application/json"]["schema"]
+    option_schema = schema["paths"]["/api/v1/forms/{form_id}/questions/{question_id}/options/"][
+        "get"
+    ]["responses"]["200"]["content"]["application/json"]["schema"]
 
     assert question_schema["type"] == "array"
     assert question_schema["items"]["$ref"] == "#/components/schemas/Question"
