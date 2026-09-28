@@ -3,7 +3,7 @@ import json
 import pytest
 
 from apps.accounts.models import User
-from apps.forms.models import Form, Question, QuestionOption
+from apps.forms.models import Form, Question
 from apps.forms.services import create_question, create_question_option, publish_form
 
 QUESTION_TYPE = Question.QuestionType
@@ -100,6 +100,38 @@ def test_question_and_option_api_reorder(client, user, draft_form):
         option_two.id,
         option_one.id,
     ]
+
+    detail_response = client.get(
+        f"/api/v1/forms/{draft_form.id}/questions/{second.id}/"
+    )
+    assert [item["id"] for item in detail_response.json()["options"]] == [
+        option_two.id,
+        option_one.id,
+    ]
+
+
+@pytest.mark.django_db
+def test_question_api_rejects_max_length_outside_database_range(
+    client,
+    user,
+    draft_form,
+):
+    client.force_login(user)
+
+    response = client.post(
+        f"/api/v1/forms/{draft_form.id}/questions/",
+        data=json.dumps(
+            {
+                "text": "Too large",
+                "question_type": QUESTION_TYPE.TEXT,
+                "max_length": 2147483648,
+            }
+        ),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert "max_length" in response.json()["field_errors"]
 
 
 @pytest.mark.django_db

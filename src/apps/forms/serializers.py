@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Form, Question, QuestionOption
+from .models import Form, POSITIVE_INTEGER_MAX, Question, QuestionOption
 
 
 class FormSerializer(serializers.ModelSerializer):
@@ -72,7 +72,12 @@ class QuestionWriteSerializer(serializers.Serializer):
     text = serializers.CharField()
     question_type = serializers.ChoiceField(choices=Question.QuestionType.choices)
     is_required = serializers.BooleanField(required=False, default=False)
-    max_length = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    max_length = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        min_value=1,
+        max_value=POSITIVE_INTEGER_MAX,
+    )
     min_value = serializers.DecimalField(
         required=False,
         allow_null=True,
@@ -90,7 +95,7 @@ class QuestionWriteSerializer(serializers.Serializer):
 class QuestionReorderSerializer(serializers.Serializer):
     question_ids = serializers.ListField(
         child=serializers.IntegerField(min_value=1),
-        allow_empty=False,
+        allow_empty=True,
     )
 
 
@@ -101,5 +106,5 @@ class QuestionOptionWriteSerializer(serializers.Serializer):
 class QuestionOptionReorderSerializer(serializers.Serializer):
     option_ids = serializers.ListField(
         child=serializers.IntegerField(min_value=1),
-        allow_empty=False,
+        allow_empty=True,
     )

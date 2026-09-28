@@ -45,9 +45,9 @@
                 {% elif question.question_type == "NUMBER" %}
                     <p>
                         Range:
-                        {{ question.min_value|default:"No minimum" }}
+                        {{ question.min_value|default_if_none:"No minimum" }}
                         —
-                        {{ question.max_value|default:"No maximum" }}
+                        {{ question.max_value|default_if_none:"No maximum" }}
                     </p>
                 {% endif %}
 

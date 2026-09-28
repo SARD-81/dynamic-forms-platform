@@ -109,6 +109,27 @@ def test_html_move_and_delete_reindexes_questions(client, user, draft_form):
 
 
 @pytest.mark.django_db
+def test_builder_preserves_zero_numeric_bounds(client, user, draft_form):
+    create_question(
+        form=draft_form,
+        owner=user,
+        text="Zero range",
+        question_type=Question.QuestionType.NUMBER,
+        min_value=0,
+        max_value=0,
+    )
+    client.force_login(user)
+
+    response = client.get(reverse("forms:builder", args=[draft_form.id]))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "No minimum" not in content
+    assert "No maximum" not in content
+    assert "0" in content
+
+
+@pytest.mark.django_db
 def test_published_builder_is_read_only_and_mutation_is_blocked(
     client,
     user,

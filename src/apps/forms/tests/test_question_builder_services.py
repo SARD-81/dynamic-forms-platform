@@ -110,6 +110,20 @@ def test_create_question_rejects_incompatible_configuration(
 
 
 @pytest.mark.django_db
+def test_text_question_rejects_max_length_outside_database_range(user, draft_form):
+    with pytest.raises(ValidationError) as exc_info:
+        create_question(
+            form=draft_form,
+            owner=user,
+            text="Too large",
+            question_type=Question.QuestionType.TEXT,
+            max_length=2_147_483_648,
+        )
+
+    assert "max_length" in exc_info.value.message_dict
+
+
+@pytest.mark.django_db
 def test_number_question_rejects_inverted_bounds(user, draft_form):
     with pytest.raises(ValidationError) as exc_info:
         create_question(
@@ -280,6 +294,31 @@ def test_reorder_requires_complete_unique_id_set(user, draft_form):
         (first.id, 1),
         (second.id, 2),
     ]
+
+
+@pytest.mark.django_db
+def test_reorder_rejects_foreign_ids_when_collection_is_empty(user, draft_form):
+    with pytest.raises(ValidationError) as question_error:
+        reorder_questions(
+            form=draft_form,
+            owner=user,
+            question_ids=[999999],
+        )
+    assert "question_ids" in question_error.value.message_dict
+
+    question = create_question(
+        form=draft_form,
+        owner=user,
+        text="Empty options",
+        question_type=Question.QuestionType.SELECT,
+    )
+    with pytest.raises(ValidationError) as option_error:
+        reorder_question_options(
+            question=question,
+            owner=user,
+            option_ids=[999999],
+        )
+    assert "option_ids" in option_error.value.message_dict
 
 
 @pytest.mark.django_db

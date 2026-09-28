@@ -3,7 +3,7 @@ from django import forms
 from apps.core.models import Category
 from apps.core.selectors import get_category_choices_for_owner
 
-from .models import Form, Question
+from .models import Form, POSITIVE_INTEGER_MAX, Question
 
 
 class CategoryChoiceField(forms.ModelChoiceField):
@@ -52,6 +52,7 @@ class QuestionManagementForm(forms.Form):
     max_length = forms.IntegerField(
         required=False,
         min_value=1,
+        max_value=POSITIVE_INTEGER_MAX,
         label="Text max length",
         help_text="Used only for TEXT questions.",
     )

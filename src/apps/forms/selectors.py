@@ -1,3 +1,5 @@
+from django.db.models import Prefetch
+
 from .models import Form, Question, QuestionOption
 
 
@@ -14,7 +16,12 @@ def get_form_for_owner(*, owner, form_id):
 def get_questions_for_form_owner(*, owner, form_id):
     return (
         Question.objects.filter(form_id=form_id, form__owner=owner)
-        .prefetch_related("options")
+        .prefetch_related(
+            Prefetch(
+                "options",
+                queryset=QuestionOption.objects.order_by("order", "id"),
+            )
+        )
         .order_by("order", "id")
     )
 

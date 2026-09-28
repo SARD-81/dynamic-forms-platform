@@ -27,7 +27,16 @@ def test_question_and_option_selectors_are_owner_scoped(user, other_user):
         question_type=Question.QuestionType.SELECT,
         order=1,
     )
-    option = QuestionOption.objects.create(question=question, label="Visible option", order=1)
+    second_option = QuestionOption.objects.create(
+        question=question,
+        label="Second option",
+        order=2,
+    )
+    option = QuestionOption.objects.create(
+        question=question,
+        label="Visible option",
+        order=1,
+    )
 
     foreign_form = Form.objects.create(owner=other_user, title="Foreign")
     foreign_question = Question.objects.create(
@@ -37,7 +46,11 @@ def test_question_and_option_selectors_are_owner_scoped(user, other_user):
         order=1,
     )
 
-    assert list(get_questions_for_form_owner(owner=user, form_id=form.id)) == [question]
+    selected_questions = list(
+        get_questions_for_form_owner(owner=user, form_id=form.id)
+    )
+    assert selected_questions == [question]
+    assert list(selected_questions[0].options.all()) == [option, second_option]
     assert (
         get_question_for_owner(
             owner=user,

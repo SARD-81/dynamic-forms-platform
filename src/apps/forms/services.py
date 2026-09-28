@@ -5,7 +5,7 @@ from django.db.models import F, Max
 
 from apps.core.selectors import get_category_for_owner
 
-from .models import Form, Question, QuestionOption
+from .models import Form, POSITIVE_INTEGER_MAX, Question, QuestionOption
 
 FORM_NOT_DRAFT_MESSAGE = "Only draft forms can be edited or deleted."
 FORM_PUBLISH_MESSAGE = "Only draft forms can be published."
@@ -176,8 +176,14 @@ def _validate_question_definition(
         raise ValidationError({"question_type": ["Select a valid question type."]})
 
     if question_type == Question.QuestionType.TEXT:
-        if max_length is not None and max_length < 1:
-            raise ValidationError({"max_length": ["Text max length must be at least 1."]})
+        if max_length is not None and not 1 <= max_length <= POSITIVE_INTEGER_MAX:
+            raise ValidationError(
+                {
+                    "max_length": [
+                        f"Text max length must be between 1 and {POSITIVE_INTEGER_MAX}."
+                    ]
+                }
+            )
         if min_value is not None or max_value is not None:
             raise ValidationError({"configuration": ["Text questions cannot use numeric bounds."]})
         if has_options:
@@ -209,14 +215,13 @@ def _validate_question_definition(
 
 
 def _rewrite_question_orders(*, questions, ordered_ids):
-    if not questions:
-        return
-
     current_ids = [question.pk for question in questions]
     if len(ordered_ids) != len(set(ordered_ids)) or set(ordered_ids) != set(current_ids):
         raise ValidationError(
             {"question_ids": ["Provide every question exactly once when reordering."]}
         )
+    if not questions:
+        return
 
     offset = max(question.order for question in questions) + len(questions) + 1
     Question.objects.filter(pk__in=current_ids).update(order=F("order") + offset)
@@ -229,14 +234,13 @@ def _rewrite_question_orders(*, questions, ordered_ids):
 
 
 def _rewrite_option_orders(*, options, ordered_ids):
-    if not options:
-        return
-
     current_ids = [option.pk for option in options]
     if len(ordered_ids) != len(set(ordered_ids)) or set(ordered_ids) != set(current_ids):
         raise ValidationError(
             {"option_ids": ["Provide every option exactly once when reordering."]}
         )
+    if not options:
+        return
 
     offset = max(option.order for option in options) + len(options) + 1
     QuestionOption.objects.filter(pk__in=current_ids).update(order=F("order") + offset)
