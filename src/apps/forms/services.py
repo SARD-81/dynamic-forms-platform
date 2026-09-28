@@ -525,9 +525,7 @@ def move_question(*, question, owner, direction):
     with transaction.atomic():
         locked_form = _lock_owned_draft_form(form_id=question.form_id, owner=owner)
         questions = list(
-            Question.objects.select_for_update()
-            .filter(form=locked_form)
-            .order_by("order", "id")
+            Question.objects.select_for_update().filter(form=locked_form).order_by("order", "id")
         )
         ids = [item.pk for item in questions]
         if question.pk not in ids:
