@@ -15,6 +15,15 @@ from apps.forms.submission_services import submit_form
 
 
 @pytest.fixture
+def other_user(db):
+    return User.objects.create_user(
+        username="report-other",
+        email="report-other@example.com",
+        password="test-password",
+    )
+
+
+@pytest.fixture
 def report_respondent(db):
     return User.objects.create_user(
         username="report-respondent",
@@ -229,7 +238,7 @@ def test_successful_submission_invalidates_cached_report_after_commit(
 ):
     cache.clear()
     before = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
-    key = form_report_cache_key(form_id=report_schema["form"].id)
+    key = form_report_cache_key(form_public_id=report_schema["form"].public_id)
     assert before["total_submissions"] == 0
     assert cache.get(key) is not None
 
