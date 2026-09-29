@@ -130,9 +130,7 @@ def test_rest_response_detail_returns_values_without_identity(client, user, api_
     )
     client.force_login(user)
 
-    response = client.get(
-        f"/api/v1/forms/{form.id}/responses/{submission.public_id}/"
-    )
+    response = client.get(f"/api/v1/forms/{form.id}/responses/{submission.public_id}/")
     payload = response.json()
 
     assert response.status_code == 200
@@ -159,9 +157,7 @@ def test_rest_response_detail_is_form_and_owner_scoped(
     foreign_submission = FormSubmission.objects.create(form=foreign_form)
     client.force_login(user)
 
-    response = client.get(
-        f"/api/v1/forms/{form.id}/responses/{foreign_submission.public_id}/"
-    )
+    response = client.get(f"/api/v1/forms/{form.id}/responses/{foreign_submission.public_id}/")
 
     assert response.status_code == 404
 
@@ -176,7 +172,4 @@ def test_form_report_openapi_paths_are_documented(client, user):
     assert response.status_code == 200
     assert "/api/v1/forms/{form_id}/report/" in schema["paths"]
     assert "/api/v1/forms/{form_id}/responses/" in schema["paths"]
-    assert (
-        "/api/v1/forms/{form_id}/responses/{submission_public_id}/"
-        in schema["paths"]
-    )
+    assert "/api/v1/forms/{form_id}/responses/{submission_public_id}/" in schema["paths"]
