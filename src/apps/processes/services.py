@@ -96,12 +96,14 @@ def _validate_publication_readiness(*, process):
     if len(form_ids) != len(set(form_ids)):
         errors["steps"] = ["Each form can only be attached once in a process."]
 
-        # قفل‌گذاری فرم‌ها به ترتیب صعودی ID جهت جلوگیری از Deadlock
-        # و Stale Read هم‌زمان با close_form
-        locked_forms = {
-            form.pk: form
-            for form in Form.objects.select_for_update().filter(id__in=form_ids).order_by("id")
-        }
+    # قفل‌گذاری فرم‌ها به ترتیب صعودی ID جهت جلوگیری از Deadlock
+    # و Stale Read هم‌زمان با close_form
+    locked_forms = {
+        form.pk: form
+        for form in Form.objects.select_for_update()
+        .filter(id__in=form_ids)
+        .order_by("id")
+    }
 
     for step in steps:
         form = locked_forms.get(step.form_id)
