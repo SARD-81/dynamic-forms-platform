@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Prefetch
 
 from .models import Answer, AnswerOption, Form, FormSubmission, Question, QuestionOption
+from .report_cache import invalidate_form_report_cache
 
 FORM_SUBMISSION_STATUS_MESSAGE = "Only published forms accept submissions."
 
@@ -325,4 +326,8 @@ def submit_form(*, form, answers, respondent=None):
                     [AnswerOption(answer=answer, option=option) for option in options]
                 )
 
+        report_form_id = locked_form.pk
+        transaction.on_commit(
+            lambda: invalidate_form_report_cache(form_id=report_form_id)
+        )
         return submission

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Report · {{ report.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Form report · {{ report.status|title }}</p>
+        <h1>{{ report.title }}</h1>
+        <p>Owner-only analytics. View count is live; submission aggregates use the reporting cache contract.</p>
+    </div>
+    <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'forms:detail' report.id %}">Form details</a>
+        <a class="button button--primary" href="{% url 'forms:report_responses' report.id %}">
+            Browse responses
+        </a>
+    </div>
+</header>
+
+<section class="dashboard-grid" aria-label="Report totals">
+    <article class="feature-card">
+        <div class="feature-card__meta">Non-unique participant traffic</div>
+        <h2>{{ report.view_count }}</h2>
+        <p>Total successful participant GET views.</p>
+    </article>
+    <article class="feature-card">
+        <div class="feature-card__meta">Submitted responses</div>
+        <h2>{{ report.total_submissions }}</h2>
+        <p>Total persisted FormSubmission rows.</p>
+    </article>
+</section>
+
+<section class="auth-card account-summary">
+    <h2>Recent activity</h2>
+    {% if report.recent_activity %}
+        <div class="account-details">
+            {% for item in report.recent_activity %}
+                <div>
+                    <dt>{{ item.submitted_at }}</dt>
+                    <dd>
+                        {{ item.respondent_type|title }} ·
+                        <a href="{% url 'forms:report_response_detail' report.id item.public_id %}">
+                            {{ item.public_id }}
+                        </a>
+                    </dd>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No submissions yet.</p>
+    {% endif %}
+</section>
+
+<section class="auth-card account-summary">
+    <h2>Submission timeline</h2>
+    {% if report.timeline %}
+        <div class="account-details">
+            {% for item in report.timeline %}
+                <div>
+                    <dt>{{ item.date }}</dt>
+                    <dd>{{ item.count }} submission{{ item.count|pluralize }}</dd>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No timeline data yet.</p>
+    {% endif %}
+</section>
+
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Question analytics</p>
+        <h2>Aggregation</h2>
+        <p>Answered and unanswered counts are explicit so optional questions do not silently change denominators.</p>
+    </div>
+</header>
+
+{% if report.questions %}
+    <section class="dashboard-grid" aria-label="Question analytics">
+        {% for question in report.questions %}
+            <article class="feature-card">
+                <div class="feature-card__meta">
+                    Question {{ question.order }} · {{ question.question_type|title }}
+                    {% if question.is_required %} · Required{% endif %}
+                </div>
+                <h2>{{ question.text }}</h2>
+                <p>
+                    Answered: <strong>{{ question.answered_count }}</strong> ·
+                    Unanswered: <strong>{{ question.unanswered_count }}</strong>
+                </p>
+
+                {% if question.question_type == "NUMBER" and question.answered_count %}
+                    <dl class="account-details">
+                        <div><dt>Min</dt><dd>{{ question.number_min }}</dd></div>
+                        <div><dt>Max</dt><dd>{{ question.number_max }}</dd></div>
+                        <div><dt>Sum</dt><dd>{{ question.number_sum }}</dd></div>
+                        <div><dt>Average</dt><dd>{{ question.number_average }}</dd></div>
+                    </dl>
+                {% elif question.question_type == "TEXT" %}
+                    <p>Text values are available in response browsing; no numeric aggregation is applied.</p>
+                {% endif %}
+
+                {% if question.options %}
+                    <dl class="account-details">
+                        {% for option in question.options %}
+                            <div>
+                                <dt>{{ option.label }}</dt>
+                                <dd>{{ option.count }} · {{ option.percentage }}%</dd>
+                            </div>
+                        {% endfor %}
+                    </dl>
+                    <p>
+                        Percentage denominator: {{ question.percentage_denominator_count }}
+                        answered submission{{ question.percentage_denominator_count|pluralize }}.
+                    </p>
+                    {% if question.checkbox_percentage_note %}
+                        <p>{{ question.checkbox_percentage_note }}</p>
+                    {% endif %}
+                {% endif %}
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="auth-card"><p>This Form has no Questions.</p></section>
+{% endif %}
+{% endblock %}
