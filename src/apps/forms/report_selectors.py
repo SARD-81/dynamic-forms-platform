@@ -3,7 +3,14 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Avg, Count, Max, Min, Prefetch, Sum
 from django.db.models.functions import TruncDate
 
-from .models import Answer, AnswerOption, Form, FormSubmission, Question, QuestionOption
+from .models import (
+    Answer,
+    AnswerOption,
+    Form,
+    FormSubmission,
+    Question,
+    QuestionOption,
+)
 from .report_cache import get_cached_form_report, set_cached_form_report
 from .selectors import get_form_for_owner
 
