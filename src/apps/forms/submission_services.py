@@ -308,9 +308,7 @@ def submit_form(*, form, answers, respondent=None):
             answers=answers,
         )
 
-        previous_report_revision = FormSubmission.objects.filter(
-            form_id=locked_form.pk
-        ).aggregate(
+        previous_report_revision = FormSubmission.objects.filter(form_id=locked_form.pk).aggregate(
             submission_count=Count("id"),
             latest_submission_id=Max("id"),
         )

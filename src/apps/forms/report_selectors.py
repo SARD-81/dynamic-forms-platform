@@ -188,9 +188,7 @@ def get_form_report_summary(*, owner, form_id):
         aggregate = _build_submission_aggregate(
             form=form,
             total_submissions=(
-                submission_revision["submission_count"]
-                if submission_revision is not None
-                else None
+                submission_revision["submission_count"] if submission_revision is not None else None
             ),
         )
         if submission_revision is not None:
