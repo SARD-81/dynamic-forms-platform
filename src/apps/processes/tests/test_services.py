@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
@@ -154,3 +156,37 @@ class ProcessServicesTests(TestCase):
         )
         with self.assertRaises(ValidationError):
             close_process(process=draft_proc, owner=self.user)
+
+    def test_publish_process_locks_step_forms_with_select_for_update(self):
+        """انتشار پروسه باید فرم‌های متصل را برای جلوگیری از تغییر هم‌زمان قفل کند."""
+        proc = create_process(
+            owner=self.user,
+            title="Locking Flow",
+            process_type=Process.ProcessType.LINEAR,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+        create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
+
+        with patch.object(
+            Form.objects, "select_for_update", wraps=Form.objects.select_for_update
+        ) as mock_sfu:
+            published = publish_process(process=proc, owner=self.user)
+            self.assertEqual(published.status, Process.Status.PUBLISHED)
+            mock_sfu.assert_called()
+
+    def test_publish_process_fails_if_step_form_is_closed(self):
+        """اگر فرمی هم‌زمان یا قبلاً بسته شده باشد، انتشار باید با خطا متوقف شود."""
+        proc = create_process(
+            owner=self.user,
+            title="Closed Form Flow",
+            process_type=Process.ProcessType.LINEAR,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+
+        # تغییر وضعیت فرم به CLOSED
+        self.form1.status = Form.Status.CLOSED
+        self.form1.save(update_fields=["status"])
+
+        with self.assertRaises(ValidationError) as ctx:
+            publish_process(process=proc, owner=self.user)
+        self.assertIn("forms", ctx.exception.message_dict)
