@@ -6,10 +6,10 @@ from apps.core.participant_access import (
     clear_participant_unlock_failures,
     grant_participant_access,
     has_participant_grant,
-    is_participant_unlock_rate_limited,
+    ParticipantUnlockThrottleUnavailable,
     participant_client_id,
     participant_unlock_retry_after_seconds,
-    record_participant_unlock_failure,
+    reserve_participant_unlock_attempt,
     verify_participant_password,
 )
 
