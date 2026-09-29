@@ -105,10 +105,10 @@ def test_html_anonymous_submission_creates_receipt_and_answers(client, submissio
     response = client.post(
         reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
         {
-            f'q_{submission_form["text"].id}': "Anonymous",
-            f'q_{submission_form["number"].id}': "25",
-            f'q_{submission_form["select"].id}': str(submission_form["option"].id),
-            f'q_{submission_form["checkbox"].id}': [str(submission_form["check"].id)],
+            f"q_{submission_form['text'].id}": "Anonymous",
+            f"q_{submission_form['number'].id}": "25",
+            f"q_{submission_form['select'].id}": str(submission_form["option"].id),
+            f"q_{submission_form['checkbox'].id}": [str(submission_form["check"].id)],
         },
     )
 
@@ -127,8 +127,8 @@ def test_html_validation_errors_are_question_scoped_and_preserve_values(
     response = client.post(
         reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
         {
-            f'q_{submission_form["text"].id}': "",
-            f'q_{submission_form["select"].id}': "",
+            f"q_{submission_form['text'].id}": "",
+            f"q_{submission_form['select'].id}": "",
         },
     )
     content = response.content.decode()
@@ -155,8 +155,8 @@ def test_html_forged_cross_form_question_is_rejected(client, user, submission_fo
     response = client.post(
         reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
         {
-            f'q_{submission_form["text"].id}': "Valid",
-            f'q_{submission_form["select"].id}': str(submission_form["option"].id),
+            f"q_{submission_form['text'].id}": "Valid",
+            f"q_{submission_form['select'].id}": str(submission_form["option"].id),
             f"q_{foreign_question.id}": "Forged",
         },
     )
