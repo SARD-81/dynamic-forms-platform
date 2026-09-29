@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST, require_safe
@@ -13,13 +16,14 @@ from apps.core.participant_access import (
     verify_participant_password,
 )
 
-from .models import Form
+from .models import Form, Question
 from .participant_selectors import (
     RESOURCE_TYPE,
     get_form_participant_read_model,
     get_published_form_by_public_id,
     increment_form_view_count,
 )
+from .submission_services import submit_form
 
 
 def _published_form_or_404(*, public_id):
@@ -76,6 +80,128 @@ def _temporarily_unavailable_response(request, *, public_id):
     )
 
 
+def _participant_form_context(*, read_model, post_data=None, validation_errors=None):
+    model = deepcopy(read_model)
+    validation_errors = validation_errors or {}
+    known_field_names = set()
+    known_question_error_keys = set()
+
+    for question in model["questions"]:
+        field_name = f"q_{question['id']}"
+        known_field_names.add(field_name)
+        error_key = f"question_{question['id']}"
+        known_question_error_keys.add(error_key)
+        question["field_name"] = field_name
+        question["errors"] = validation_errors.get(error_key, [])
+        question["value"] = ""
+
+        if post_data is None:
+            for option in question["options"]:
+                option["selected"] = False
+            continue
+
+        if question["question_type"] == Question.QuestionType.CHECKBOX:
+            selected = set(post_data.getlist(field_name))
+            for option in question["options"]:
+                option["selected"] = str(option["id"]) in selected
+        elif question["question_type"] == Question.QuestionType.SELECT:
+            selected = post_data.get(field_name, "")
+            question["value"] = selected
+            for option in question["options"]:
+                option["selected"] = str(option["id"]) == selected
+        else:
+            question["value"] = post_data.get(field_name, "")
+            for option in question["options"]:
+                option["selected"] = False
+
+    general_errors = []
+    for key, messages in validation_errors.items():
+        if key not in known_question_error_keys:
+            general_errors.extend(messages)
+
+    return {
+        "participant_form": model,
+        "submission_errors": general_errors,
+        "known_field_names": known_field_names,
+    }
+
+
+def _html_submission_answers(*, read_model, post_data):
+    answers = []
+    errors = {}
+    known_names = set()
+
+    for question in read_model["questions"]:
+        field_name = f"q_{question['id']}"
+        known_names.add(field_name)
+        values = post_data.getlist(field_name)
+        if not values:
+            continue
+
+        error_key = f"question_{question['id']}"
+        if question["question_type"] == Question.QuestionType.CHECKBOX:
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "option_ids": values,
+                }
+            )
+            continue
+
+        if len(values) > 1:
+            errors.setdefault(error_key, []).append(
+                "Multiple values for a single-value question are not allowed."
+            )
+            continue
+
+        value = values[0]
+        if question["question_type"] == Question.QuestionType.SELECT:
+            if value == "":
+                continue
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "option_ids": [value],
+                }
+            )
+        elif question["question_type"] == Question.QuestionType.TEXT:
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "text_value": value,
+                }
+            )
+        else:
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "number_value": value,
+                }
+            )
+
+    # Do not silently ignore forged question fields from another Form.
+    for field_name in post_data:
+        if not field_name.startswith("q_") or field_name in known_names:
+            continue
+        values = post_data.getlist(field_name)
+        if len(values) > 1:
+            errors.setdefault("answers", []).append(
+                "Multiple values for a single-value question are not allowed."
+            )
+            continue
+        if values:
+            answers.append(
+                {
+                    "question_id": field_name.removeprefix("q_"),
+                    "text_value": values[0],
+                }
+            )
+
+    if errors:
+        raise ValidationError(errors)
+    return answers
+
+
 @require_safe
 def participant_form_detail(request, public_id):
     form = _published_form_or_404(public_id=public_id)
@@ -93,7 +219,54 @@ def participant_form_detail(request, public_id):
     return render(
         request,
         "participants/form_detail.html",
-        {"participant_form": read_model},
+        _participant_form_context(read_model=read_model),
+    )
+
+
+@require_POST
+def participant_form_submit(request, public_id):
+    form = _published_form_or_404(public_id=public_id)
+    if not _has_access(request=request, form=form):
+        return render(
+            request,
+            "participants/unlock.html",
+            _unlock_context(public_id=form.public_id),
+            status=403,
+        )
+
+    read_model = get_form_participant_read_model(form=form)
+    respondent = request.user if request.user.is_authenticated else None
+
+    try:
+        answers = _html_submission_answers(
+            read_model=read_model,
+            post_data=request.POST,
+        )
+        submission = submit_form(
+            form=form,
+            answers=answers,
+            respondent=respondent,
+        )
+    except ValidationError as exc:
+        errors = exc.message_dict if hasattr(exc, "message_dict") else {"answers": exc.messages}
+        return render(
+            request,
+            "participants/form_detail.html",
+            _participant_form_context(
+                read_model=read_model,
+                post_data=request.POST,
+                validation_errors=errors,
+            ),
+            status=400,
+        )
+
+    return render(
+        request,
+        "participants/submission_receipt.html",
+        {
+            "submission": submission,
+            "form_title": form.title,
+        },
     )
 
 

@@ -38,3 +38,32 @@ class ParticipantFormSerializer(serializers.Serializer):
 
 class ParticipantUnlockSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False, write_only=True)
+
+
+class ParticipantSubmissionAnswerSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField(min_value=1)
+    text_value = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        trim_whitespace=False,
+    )
+    number_value = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    option_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        required=False,
+        allow_empty=True,
+    )
+
+
+class ParticipantFormSubmissionSerializer(serializers.Serializer):
+    answers = ParticipantSubmissionAnswerSerializer(many=True, allow_empty=True)
+
+
+class ParticipantSubmissionReceiptSerializer(serializers.Serializer):
+    public_id = serializers.UUIDField()
+    submitted_at = serializers.DateTimeField()

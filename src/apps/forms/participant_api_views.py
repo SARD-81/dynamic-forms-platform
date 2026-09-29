@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -24,7 +25,13 @@ from .participant_selectors import (
     get_published_form_by_public_id,
     increment_form_view_count,
 )
-from .participant_serializers import ParticipantFormSerializer, ParticipantUnlockSerializer
+from .participant_serializers import (
+    ParticipantFormSerializer,
+    ParticipantFormSubmissionSerializer,
+    ParticipantSubmissionReceiptSerializer,
+    ParticipantUnlockSerializer,
+)
+from .submission_services import submit_form
 
 
 def _published_form_or_404(*, public_id):
@@ -66,6 +73,17 @@ def _temporarily_unavailable_response():
     )
 
 
+def _submission_validation_response(errors):
+    return Response(
+        {
+            "error_code": "FORM_SUBMISSION_VALIDATION_ERROR",
+            "detail": "The form submission is invalid.",
+            "field_errors": errors,
+        },
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 class ParticipantFormDetailAPIView(GenericAPIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [AllowAny]
@@ -85,6 +103,49 @@ class ParticipantFormDetailAPIView(GenericAPIView):
         if request.method == "GET":
             increment_form_view_count(form_id=form.pk)
         return Response(ParticipantFormSerializer(read_model).data)
+
+
+class ParticipantFormSubmissionAPIView(GenericAPIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [AllowAny]
+    serializer_class = ParticipantFormSubmissionSerializer
+
+    @extend_schema(
+        request=ParticipantFormSubmissionSerializer,
+        responses={201: ParticipantSubmissionReceiptSerializer},
+    )
+    def post(self, request, public_id):
+        form = _published_form_or_404(public_id=public_id)
+        if form.visibility == Form.Visibility.PRIVATE and not has_participant_grant(
+            session=request.session,
+            resource_type=RESOURCE_TYPE,
+            public_id=form.public_id,
+        ):
+            return _password_required_response()
+
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return _submission_validation_response(serializer.errors)
+
+        respondent = request.user if request.user.is_authenticated else None
+        try:
+            submission = submit_form(
+                form=form,
+                answers=serializer.validated_data["answers"],
+                respondent=respondent,
+            )
+        except DjangoValidationError as exc:
+            errors = exc.message_dict if hasattr(exc, "message_dict") else {"answers": exc.messages}
+            return _submission_validation_response(errors)
+
+        receipt = {
+            "public_id": submission.public_id,
+            "submitted_at": submission.submitted_at,
+        }
+        return Response(
+            ParticipantSubmissionReceiptSerializer(receipt).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ParticipantFormUnlockAPIView(GenericAPIView):
