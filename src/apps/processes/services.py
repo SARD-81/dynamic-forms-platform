@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import F, Max
 from django.utils import timezone
 
+from apps.core.integrations import lock_required_forms_for_process_run
 from apps.core.participant_access import invalidate_participant_read_model
 from apps.core.selectors import get_category_for_owner
 from apps.forms.models import Form
@@ -378,10 +379,11 @@ def start_process_run(*, process, respondent=None):
         if not steps:
             raise ValidationError({"steps": ["Cannot run a process with no steps."]})
 
-        form_ids = [step.form_id for step in steps]
-        locked_forms = {
-            f.pk: f for f in Form.objects.select_for_update().filter(id__in=form_ids).order_by("id")
-        }
+        # قرارداد قفل‌گذاری متقابل (Cross-domain locking contract):
+        # قبل از اعتبارسنجی در دسترس بودن فرم‌ها، ردیف‌های فرم با این تابع قفل می‌شوند
+        locked_forms_list = lock_required_forms_for_process_run(process_id=locked_process.pk)
+        locked_forms = {f.pk: f for f in locked_forms_list}
+
         for step in steps:
             f = locked_forms.get(step.form_id)
             if f is None or f.status != Form.Status.PUBLISHED:
@@ -450,7 +452,7 @@ def complete_process_step_run(*, process_run, step_run_id, answers, respondent=N
         if form.status != Form.Status.PUBLISHED:
             raise ValidationError({"form": ["The target form is unavailable."]})
 
-        # Call Submission Service (#33)
+        # فراخوانی موتور سابمیشن فرم‌ها بدون تکرار اعتبارسنجی فیلدها در این لایه
         submission = submit_form(
             form=form,
             answers=answers,
@@ -468,20 +470,25 @@ def complete_process_step_run(*, process_run, step_run_id, answers, respondent=N
         step_run.completed_at = timezone.now()
         step_run.save(update_fields=["submission", "status", "completed_at"])
 
-        # Handle LINEAR progression
+        # پیشروی ترتیبی مطمئن در مدل LINEAR (پیدا کردن اولین استپ بعدی بر اساس order)
         if run.process.process_type == Process.ProcessType.LINEAR:
             next_step_run = (
                 ProcessStepRun.objects.select_for_update()
-                .filter(process_run=run, process_step__order=step.order + 1)
+                .filter(process_run=run, process_step__order__gt=step.order)
+                .order_by("process_step__order", "id")
                 .first()
             )
             if next_step_run and next_step_run.status == ProcessStepRun.Status.LOCKED:
                 next_step_run.status = ProcessStepRun.Status.AVAILABLE
                 next_step_run.save(update_fields=["status"])
 
-        # Check process completion
-        all_step_runs = ProcessStepRun.objects.filter(process_run=run)
-        if all(sr.status == ProcessStepRun.Status.COMPLETED for sr in all_step_runs):
+        # بررسی پایان اجرای کل پروسه
+        has_uncompleted = (
+            ProcessStepRun.objects.filter(process_run=run)
+            .exclude(status=ProcessStepRun.Status.COMPLETED)
+            .exists()
+        )
+        if not has_uncompleted:
             run.status = ProcessRun.Status.COMPLETED
             run.completed_at = timezone.now()
             run.save(update_fields=["status", "completed_at"])
