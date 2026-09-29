@@ -201,6 +201,19 @@ def test_form_report_aggregates_number_select_checkbox_and_optional_answers(
 
 
 @pytest.mark.django_db
+def test_number_average_is_quantized_to_six_decimal_places(user, report_schema):
+    cache.clear()
+    _submit(report_schema, number=1)
+    _submit(report_schema, number=2)
+    _submit(report_schema, number=2)
+
+    report = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
+    by_id = {question["id"]: question for question in report["questions"]}
+
+    assert by_id[report_schema["number"].id]["number_average"] == Decimal("1.666667")
+
+
+@pytest.mark.django_db
 def test_report_summary_uses_constant_query_count_across_questions(
     django_assert_num_queries,
     user,
