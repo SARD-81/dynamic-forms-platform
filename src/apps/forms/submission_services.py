@@ -326,8 +326,8 @@ def submit_form(*, form, answers, respondent=None):
                     [AnswerOption(answer=answer, option=option) for option in options]
                 )
 
-        report_form_id = locked_form.pk
+        report_form_public_id = locked_form.public_id
         transaction.on_commit(
-            lambda: invalidate_form_report_cache(form_id=report_form_id)
+            lambda: invalidate_form_report_cache(form_public_id=report_form_public_id)
         )
         return submission
