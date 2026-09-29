@@ -17,6 +17,7 @@ from .report_serializers import (
     FormReportSubmissionListSerializer,
     FormReportSummarySerializer,
 )
+from .selectors import get_form_for_owner
 
 
 class FormReportPagination(PageNumberPagination):
@@ -46,8 +47,7 @@ class FormReportSubmissionListAPIView(GenericAPIView):
 
     @extend_schema(responses=FormReportSubmissionListSerializer(many=True))
     def get(self, request, form_id):
-        summary = get_form_report_summary(owner=request.user, form_id=form_id)
-        if summary is None:
+        if get_form_for_owner(owner=request.user, form_id=form_id) is None:
             raise Http404
 
         queryset = get_form_report_submissions(
