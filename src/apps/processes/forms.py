@@ -5,7 +5,7 @@ from apps.core.selectors import get_category_choices_for_owner
 from apps.forms.models import Form
 
 from .models import Process
-from .selectors import get_available_forms_for_owner
+from .selectors import get_available_forms_for_owner, get_process_steps_for_owner
 
 
 class CategoryChoiceField(forms.ModelChoiceField):
@@ -62,7 +62,10 @@ class ProcessStepManagementForm(forms.Form):
 
     def __init__(self, *args, owner, process, **kwargs):
         super().__init__(*args, **kwargs)
-        used_form_ids = process.steps.values_list("form_id", flat=True)
+        used_form_ids = get_process_steps_for_owner(
+            owner=owner,
+            process_id=process.pk,
+        ).values_list("form_id", flat=True)
         self.fields["form"].queryset = get_available_forms_for_owner(owner=owner).exclude(
             pk__in=used_form_ids
         )

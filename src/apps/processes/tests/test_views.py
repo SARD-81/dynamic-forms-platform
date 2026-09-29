@@ -118,6 +118,105 @@ def test_private_process_html_hashes_password(client, user):
 
 
 @pytest.mark.django_db
+def test_private_process_edit_blank_password_keeps_existing_hash(client, user):
+    client.force_login(user)
+    create_response = client.post(
+        reverse("processes:create"),
+        {
+            "title": "Private flow",
+            "description": "",
+            "category": "",
+            "process_type": Process.ProcessType.LINEAR,
+            "visibility": Process.Visibility.PRIVATE,
+            "access_password": "process-secret",
+        },
+    )
+    assert create_response.status_code == 302
+    process = Process.objects.get(owner=user)
+    original_hash = process.access_password_hash
+
+    update_response = client.post(
+        reverse("processes:update", args=[process.id]),
+        {
+            "title": "Private flow renamed",
+            "description": "",
+            "category": "",
+            "process_type": Process.ProcessType.LINEAR,
+            "visibility": Process.Visibility.PRIVATE,
+            "access_password": "",
+        },
+    )
+
+    process.refresh_from_db()
+    assert update_response.status_code == 302
+    assert process.title == "Private flow renamed"
+    assert process.access_password_hash == original_hash
+    assert check_password("process-secret", process.access_password_hash)
+
+
+@pytest.mark.django_db
+def test_only_draft_process_can_be_deleted_from_html(client, user, published_form):
+    draft = Process.objects.create(
+        owner=user,
+        title="Delete me",
+        process_type=Process.ProcessType.LINEAR,
+    )
+    client.force_login(user)
+
+    response = client.post(reverse("processes:delete", args=[draft.id]))
+    assert response.status_code == 302
+    assert not Process.objects.filter(pk=draft.pk).exists()
+
+    published = Process.objects.create(
+        owner=user,
+        title="Keep me",
+        process_type=Process.ProcessType.LINEAR,
+        status=Process.Status.PUBLISHED,
+    )
+    ProcessStep.objects.create(process=published, form=published_form, order=1)
+
+    blocked = client.post(reverse("processes:delete", args=[published.id]))
+    assert blocked.status_code == 302
+    assert Process.objects.filter(pk=published.pk).exists()
+
+
+@pytest.mark.django_db
+def test_step_form_choices_are_owner_scoped_and_exclude_used_forms(
+    client,
+    user,
+    other_user,
+    published_form,
+):
+    used_form = published_form
+    available_form = Form.objects.create(
+        owner=user,
+        title="Available form",
+        status=Form.Status.PUBLISHED,
+    )
+    foreign_form = Form.objects.create(
+        owner=other_user,
+        title="Foreign form",
+        status=Form.Status.PUBLISHED,
+    )
+    process = Process.objects.create(
+        owner=user,
+        title="Choices",
+        process_type=Process.ProcessType.LINEAR,
+    )
+    ProcessStep.objects.create(process=process, form=used_form, order=1)
+    client.force_login(user)
+
+    response = client.get(reverse("processes:step_create", args=[process.id]))
+    content = response.content.decode()
+
+    assert response.status_code == 200
+    assert "Available form" in content
+    assert "Published step form" not in content
+    assert "Foreign form" not in content
+    assert available_form.pk != foreign_form.pk
+
+
+@pytest.mark.django_db
 def test_cross_user_process_detail_returns_404(client, user, other_user):
     process = Process.objects.create(
         owner=other_user,
