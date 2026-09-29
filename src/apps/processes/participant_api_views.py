@@ -1,3 +1,5 @@
+import secrets
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
@@ -17,12 +19,13 @@ from apps.core.participant_access import (
     reserve_participant_unlock_attempt,
     verify_participant_password,
 )
-from apps.forms.models import Form
 
-from .models import Process, ProcessRun
+from .models import Process
 from .participant_selectors import (
     RESOURCE_TYPE,
+    get_executable_process_by_public_id,
     get_process_participant_read_model,
+    get_process_run_for_process,
     get_published_process_by_public_id,
     increment_process_view_count,
 )
@@ -43,23 +46,9 @@ def _published_process_or_404(*, public_id):
 
 
 def _executable_process_or_404(*, public_id):
-    process = (
-        Process.objects.filter(
-            public_id=public_id,
-            status__in=[Process.Status.PUBLISHED, Process.Status.CLOSED],
-        )
-        .select_related("category")
-        .first()
-    )
+    process = get_executable_process_by_public_id(public_id=public_id)
     if process is None:
         raise Http404
-
-    if (
-        process.visibility == Process.Visibility.PUBLIC
-        and process.steps.filter(form__visibility=Form.Visibility.PRIVATE).exists()
-    ):
-        raise Http404
-
     return process
 
 
@@ -107,12 +96,7 @@ def _validation_response(errors):
 
 
 def _get_run_for_participant(*, process, run_public_id, request):
-    run = (
-        ProcessRun.objects.filter(process=process, public_id=run_public_id)
-        .select_related("process")
-        .prefetch_related("step_runs__process_step__form")
-        .first()
-    )
+    run = get_process_run_for_process(process=process, run_public_id=run_public_id)
     if run is None:
         raise Http404
 
@@ -130,7 +114,11 @@ def _get_run_for_participant(*, process, run_public_id, request):
         if raw_token:
             raw_token = raw_token.strip()
 
-        if not raw_token or hash_resume_token(raw_token) != run.resume_token_hash:
+        token_hash = hash_resume_token(raw_token) if raw_token else ""
+        target_hash = run.resume_token_hash or ""
+
+        # مقایسه Constant-Time با secrets.compare_digest
+        if not raw_token or not secrets.compare_digest(token_hash, target_hash):
             return None, Response(
                 {
                     "error_code": "INVALID_RESUME_TOKEN",
@@ -170,7 +158,8 @@ class ParticipantProcessUnlockAPIView(GenericAPIView):
 
     @extend_schema(request=ParticipantUnlockSerializer, responses={204: None, 429: None, 503: None})
     def post(self, request, public_id):
-        process = _published_process_or_404(public_id=public_id)
+        # پشتیبانی از آنلاک پروسه‌های CLOSED برای ادامه ران‌های قبلی شرکت‌کننده
+        process = _executable_process_or_404(public_id=public_id)
         if process.visibility == Process.Visibility.PUBLIC:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -216,6 +205,7 @@ class ParticipantProcessRunStartAPIView(GenericAPIView):
 
     @extend_schema(responses={201: ParticipantProcessRunDetailSerializer})
     def post(self, request, public_id):
+        # پروسه حتماً باید PUBLISHED باشد؛ پروسه CLOSED به هیچ‌وجه شروع نمی‌شود
         process = _published_process_or_404(public_id=public_id)
         if process.visibility == Process.Visibility.PRIVATE and not has_participant_grant(
             session=request.session,

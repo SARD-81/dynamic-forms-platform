@@ -422,11 +422,23 @@ def start_process_run(*, process, respondent=None):
         return process_run, raw_token
 
 
-def complete_process_step_run(*, process_run, step_run_id, answers, respondent=None):
+def complete_process_step_run(
+    *,
+    process_run,
+    step_run_id,
+    answers,
+    respondent=_UNSET,
+):
     with transaction.atomic():
         run = ProcessRun.objects.select_for_update().get(pk=process_run.pk)
         if run.status == ProcessRun.Status.COMPLETED:
             raise ValidationError({"run": ["This process run is already completed."]})
+
+        # الزام Authoritative Respondent طبق دستور تیم‌لید (Blocker 3)
+        if respondent is not _UNSET and respondent != run.respondent:
+            raise ValidationError(
+                {"respondent": ["Caller respondent does not match process run respondent."]}
+            )
 
         step_run = (
             ProcessStepRun.objects.select_for_update()
@@ -452,11 +464,11 @@ def complete_process_step_run(*, process_run, step_run_id, answers, respondent=N
         if form.status != Form.Status.PUBLISHED:
             raise ValidationError({"form": ["The target form is unavailable."]})
 
-        # فراخوانی موتور سابمیشن فرم‌ها بدون تکرار اعتبارسنجی فیلدها در این لایه
+        # هویت شرکت‌کننده در سابمیشن منحصراً از run.respondent قفل‌شده استخراج می‌شود
         submission = submit_form(
             form=form,
             answers=answers,
-            respondent=respondent or run.respondent,
+            respondent=run.respondent,
         )
 
         # Invariant 2: submission.form_id == process_step.form_id
@@ -470,7 +482,7 @@ def complete_process_step_run(*, process_run, step_run_id, answers, respondent=N
         step_run.completed_at = timezone.now()
         step_run.save(update_fields=["submission", "status", "completed_at"])
 
-        # پیشروی ترتیبی مطمئن در مدل LINEAR (پیدا کردن اولین استپ بعدی بر اساس order)
+        # پیشروی ترتیبی مطمئن در مدل LINEAR
         if run.process.process_type == Process.ProcessType.LINEAR:
             next_step_run = (
                 ProcessStepRun.objects.select_for_update()

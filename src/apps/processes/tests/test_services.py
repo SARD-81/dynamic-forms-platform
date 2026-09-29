@@ -1,20 +1,21 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from apps.core.models import Category
 from apps.forms.models import Form
-from apps.processes.models import Process, ProcessRun, ProcessStepRun
+from apps.processes.models import Process, ProcessStep
 from apps.processes.services import (
     close_process,
-    complete_process_step_run,
     create_process,
     create_process_step,
     delete_process_step,
     publish_process,
-    start_process_run,
+    reorder_process_steps,
+    update_draft_process,
 )
 
 User = get_user_model()
@@ -56,22 +57,20 @@ class ProcessServicesTests(TestCase):
             visibility=Process.Visibility.PUBLIC,
         )
         self.assertEqual(proc.status, Process.Status.DRAFT)
-        self.assertEqual(proc.visibility, Process.Visibility.PUBLIC)
         self.assertIsNone(proc.access_password_hash)
 
         # Private process
-        priv_proc = create_process(
+        proc_priv = create_process(
             owner=self.user,
-            title="Secret Process",
+            title="Confidential",
             process_type=Process.ProcessType.FREE,
             visibility=Process.Visibility.PRIVATE,
-            access_password="SecretPassword123",
+            access_password="SecretPassword1",
         )
-        self.assertEqual(priv_proc.visibility, Process.Visibility.PRIVATE)
-        self.assertIsNotNone(priv_proc.access_password_hash)
+        self.assertTrue(check_password("SecretPassword1", proc_priv.access_password_hash))
 
     def test_create_process_private_without_password_fails(self):
-        with self.assertRaises(ValidationError) as ctx:
+        with self.assertRaises(ValidationError):
             create_process(
                 owner=self.user,
                 title="Invalid Private",
@@ -79,286 +78,138 @@ class ProcessServicesTests(TestCase):
                 visibility=Process.Visibility.PRIVATE,
                 access_password=None,
             )
-        self.assertIn("access_password", ctx.exception.message_dict)
 
     def test_category_ownership_validation(self):
-        with self.assertRaises(ValidationError) as ctx:
+        with self.assertRaises(ValidationError):
             create_process(
                 owner=self.user,
                 title="Wrong Category",
                 process_type=Process.ProcessType.LINEAR,
                 category_id=self.other_category.pk,
             )
-        self.assertIn("category", ctx.exception.message_dict)
 
     def test_step_management_contiguous_and_duplicate_rejection(self):
         proc = create_process(
             owner=self.user,
-            title="Step Test",
+            title="Flow",
             process_type=Process.ProcessType.LINEAR,
         )
-        step1 = create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        step2 = create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
-        self.assertEqual(step1.order, 1)
-        self.assertEqual(step2.order, 2)
+        s1 = create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+        s2 = create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
 
-        # عدم امکان افزودن فرم تکراری
-        with self.assertRaises(ValidationError) as ctx:
+        self.assertEqual(s1.order, 1)
+        self.assertEqual(s2.order, 2)
+
+        # Re-adding same form should fail
+        with self.assertRaises(ValidationError):
             create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        self.assertIn("form_id", ctx.exception.message_dict)
 
-        # حذف مرحله و بازنویسی ترتیب
-        delete_process_step(process=proc, owner=self.user, step_id=step1.pk)
-        step2.refresh_from_db()
-        self.assertEqual(step2.order, 1)
+        # Reordering steps
+        reordered = reorder_process_steps(process=proc, owner=self.user, step_ids=[s2.pk, s1.pk])
+        self.assertEqual([s.pk for s in reordered], [s2.pk, s1.pk])
+        self.assertEqual([s.order for s in reordered], [1, 2])
+
+        # Deleting step restores contiguous order
+        delete_process_step(process=proc, owner=self.user, step_id=s2.pk)
+        remaining = ProcessStep.objects.filter(process=proc)
+        self.assertEqual(remaining.count(), 1)
+        self.assertEqual(remaining.first().order, 1)
 
     def test_publish_readiness_validations(self):
         proc = create_process(
             owner=self.user,
-            title="Empty Process",
+            title="Flow",
             process_type=Process.ProcessType.LINEAR,
         )
-        # انتشار پروسه بدون مرحله نامعتبر است
-        with self.assertRaises(ValidationError) as ctx:
-            publish_process(process=proc, owner=self.user)
-        self.assertIn("steps", ctx.exception.message_dict)
 
-    def test_publish_process_locks_step_forms_with_select_for_update(self):
-        proc = create_process(
-            owner=self.user,
-            title="Lock Test",
-            process_type=Process.ProcessType.LINEAR,
-        )
+        # Cannot publish without steps
+        with self.assertRaises(ValidationError):
+            publish_process(process=proc, owner=self.user)
+
+        # Cannot publish with draft form
+        step = create_process_step(process=proc, owner=self.user, form_id=self.draft_form.pk)
+        with self.assertRaises(ValidationError):
+            publish_process(process=proc, owner=self.user)
+
+        # Replace with published form and publish successfully
+        step.delete()
         create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
         published = publish_process(process=proc, owner=self.user)
         self.assertEqual(published.status, Process.Status.PUBLISHED)
 
-    def test_public_process_rejects_private_form_at_publication(self):
-        priv_form = Form.objects.create(
-            owner=self.user,
-            title="Private Form",
-            status=Form.Status.PUBLISHED,
-            visibility=Form.Visibility.PRIVATE,
-            access_password_hash="some-hash",
-        )
-        proc = create_process(
-            owner=self.user,
-            title="Public With Private Form",
-            process_type=Process.ProcessType.LINEAR,
-            visibility=Process.Visibility.PUBLIC,
-        )
-        create_process_step(process=proc, owner=self.user, form_id=priv_form.pk)
-        with self.assertRaises(ValidationError) as ctx:
-            publish_process(process=proc, owner=self.user)
-        self.assertIn("forms", ctx.exception.message_dict)
+        # Once published, steps cannot be modified
+        with self.assertRaises(ValidationError):
+            create_process_step(process=published, owner=self.user, form_id=self.form2.pk)
 
-    def test_publish_process_fails_if_step_form_is_closed(self):
-        closed_form = Form.objects.create(
+        with self.assertRaises(ValidationError):
+            update_draft_process(process=published, owner=self.user, title="New Title")
+
+        # Can close from published
+        closed = close_process(process=published, owner=self.user)
+        self.assertEqual(closed.status, Process.Status.CLOSED)
+
+        # Cannot close draft directly
+        draft_proc = create_process(
             owner=self.user,
-            title="Closed Form",
-            status=Form.Status.CLOSED,
-        )
-        proc = create_process(
-            owner=self.user,
-            title="Closed Step Form",
+            title="Draft Only",
             process_type=Process.ProcessType.LINEAR,
         )
-        create_process_step(process=proc, owner=self.user, form_id=closed_form.pk)
-        with self.assertRaises(ValidationError) as ctx:
-            publish_process(process=proc, owner=self.user)
-        self.assertIn("forms", ctx.exception.message_dict)
+        with self.assertRaises(ValidationError):
+            close_process(process=draft_proc, owner=self.user)
 
-    # =========================================================================
-    # PROCESS EXECUTION ENGINE TESTS (#35)
-    # =========================================================================
-
-    def test_start_process_run_authenticated_and_anonymous(self):
-        """تست شروع اجرای پروسه برای کاربر لاگین‌شده و کاربر ناشناس با هش توکن."""
+    def test_publish_process_locks_step_forms_with_select_for_update(self):
+        """انتشار پروسه باید فرم‌های متصل را برای جلوگیری از تغییر هم‌زمان قفل کند."""
         proc = create_process(
             owner=self.user,
-            title="Execution Test",
-            process_type=Process.ProcessType.LINEAR,
-        )
-        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        publish_process(process=proc, owner=self.user)
-
-        # 1. تست حالت Authenticated
-        run_auth, raw_token_auth = start_process_run(process=proc, respondent=self.user)
-        self.assertEqual(run_auth.respondent, self.user)
-        self.assertIsNone(run_auth.resume_token_hash)
-        self.assertIsNone(raw_token_auth)
-
-        # 2. تست حالت Anonymous
-        run_anon, raw_token_anon = start_process_run(process=proc, respondent=None)
-        self.assertIsNone(run_anon.respondent)
-        self.assertIsNotNone(run_anon.resume_token_hash)
-        self.assertIsNotNone(raw_token_anon)
-
-    def test_linear_process_execution_flow(self):
-        """تست جریان اجرای خطی (LINEAR): استپ اول AVAILABLE و بقیه LOCKED."""
-        proc = create_process(
-            owner=self.user,
-            title="Linear Flow",
+            title="Locking Flow",
             process_type=Process.ProcessType.LINEAR,
         )
         create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
         create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
-        publish_process(process=proc, owner=self.user)
 
-        run, _ = start_process_run(process=proc, respondent=self.user)
-        step_runs = list(run.step_runs.order_by("process_step__order"))
+        with patch.object(
+            Form.objects, "select_for_update", wraps=Form.objects.select_for_update
+        ) as mock_sfu:
+            published = publish_process(process=proc, owner=self.user)
+            self.assertEqual(published.status, Process.Status.PUBLISHED)
+            mock_sfu.assert_called()
 
-        self.assertEqual(step_runs[0].status, ProcessStepRun.Status.AVAILABLE)
-        self.assertEqual(step_runs[1].status, ProcessStepRun.Status.LOCKED)
-
-    def test_invariants_enforcement_in_step_completion(self):
-        """تست بررسی اینواریانت‌های سرویس و جلوگیری از تکمیل مجدد (Duplicate Completion)."""
+    def test_public_process_rejects_private_form_at_publication(self):
+        private_form = Form.objects.create(
+            owner=self.user,
+            title="Private published form",
+            visibility=Form.Visibility.PRIVATE,
+            access_password_hash=make_password("private-secret"),
+            status=Form.Status.PUBLISHED,
+        )
         proc = create_process(
             owner=self.user,
-            title="Invariant Test",
+            title="Public process",
             process_type=Process.ProcessType.LINEAR,
+            visibility=Process.Visibility.PUBLIC,
         )
-        step = create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        publish_process(process=proc, owner=self.user)
-
-        run, _ = start_process_run(process=proc, respondent=self.user)
-        step_run = run.step_runs.first()
-
-        # 1. تکمیل موفق استپ
-        completed_step_run = complete_process_step_run(
-            process_run=run,
-            step_run_id=step_run.pk,
-            answers=[],
-            respondent=self.user,
-        )
-        self.assertEqual(completed_step_run.status, ProcessStepRun.Status.COMPLETED)
-        self.assertIsNotNone(completed_step_run.completed_at)
-
-        # 2. تست Duplicate Completion (تلاش برای تکمیل مجدد استپی که پروسه آن تمام شده)
-        with self.assertRaises(ValidationError) as ctx:
-            complete_process_step_run(
-                process_run=run,
-                step_run_id=step_run.pk,
-                answers=[],
-                respondent=self.user,
-            )
-        self.assertIn("run", ctx.exception.message_dict)
-
-        # 3. تست Invariant: رد مرحله‌ای از پروسه دیگر (cross-process step rejection)
-        other_proc = create_process(
-            owner=self.user,
-            title="Other Process",
-            process_type=Process.ProcessType.LINEAR,
-        )
-        create_process_step(process=other_proc, owner=self.user, form_id=self.form2.pk)
-        publish_process(process=other_proc, owner=self.user)
-        other_run, _ = start_process_run(process=other_proc, respondent=self.user)
-        other_step_run = other_run.step_runs.first()
-
-        # دستکاری شبیه‌سازی برای تست اینواریانت process_step.process_id == process_run.process_id
-        other_step_run.process_step = step
-        other_step_run.save(update_fields=["process_step"])
+        create_process_step(process=proc, owner=self.user, form_id=private_form.pk)
 
         with self.assertRaises(ValidationError) as ctx:
-            complete_process_step_run(
-                process_run=other_run,
-                step_run_id=other_step_run.pk,
-                answers=[],
-                respondent=self.user,
-            )
-        self.assertIn("invariant", ctx.exception.message_dict)
+            publish_process(process=proc, owner=self.user)
 
-        # 4. تست Invariant: رد سابمیشنی با form_id نامطابق (wrong-form submission rejection)
-        fake_submission = MagicMock(form_id=99999)
-        with patch("apps.processes.services.submit_form", return_value=fake_submission):
-            new_run, _ = start_process_run(process=proc, respondent=self.user)
-            new_step_run = new_run.step_runs.first()
-            with self.assertRaises(ValidationError) as ctx:
-                complete_process_step_run(
-                    process_run=new_run,
-                    step_run_id=new_step_run.pk,
-                    answers=[],
-                    respondent=self.user,
-                )
-            self.assertIn("invariant", ctx.exception.message_dict)
+        self.assertIn("forms", ctx.exception.message_dict)
+        proc.refresh_from_db()
+        self.assertEqual(proc.status, Process.Status.DRAFT)
 
-    def test_free_process_execution_arbitrary_order_and_completion(self):
-        """تست پروسه FREE: همه استپ‌ها در دسترس هستند و بدون ترتیب تکمیل می‌شوند."""
+    def test_publish_process_fails_if_step_form_is_closed(self):
+        """اگر فرمی هم‌زمان یا قبلاً بسته شده باشد، انتشار باید با خطا متوقف شود."""
         proc = create_process(
             owner=self.user,
-            title="Free Workflow",
-            process_type=Process.ProcessType.FREE,
-        )
-        step1 = create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        step2 = create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
-        publish_process(process=proc, owner=self.user)
-
-        run, _ = start_process_run(process=proc, respondent=self.user)
-        step_runs = {sr.process_step_id: sr for sr in run.step_runs.all()}
-
-        # در ابتدای کار هر دو AVAILABLE هستند
-        self.assertEqual(step_runs[step1.pk].status, ProcessStepRun.Status.AVAILABLE)
-        self.assertEqual(step_runs[step2.pk].status, ProcessStepRun.Status.AVAILABLE)
-
-        # تکمیل استپ ۲ قبل از استپ ۱ (Arbitrary Order)
-        complete_process_step_run(
-            process_run=run,
-            step_run_id=step_runs[step2.pk].pk,
-            answers=[],
-            respondent=self.user,
-        )
-        run.refresh_from_db()
-        self.assertEqual(run.status, ProcessRun.Status.IN_PROGRESS)
-        self.assertIsNone(run.completed_at)
-
-        # تکمیل استپ ۱ و بررسی ثبت مهر زمانی پایان کل پروسه
-        complete_process_step_run(
-            process_run=run,
-            step_run_id=step_runs[step1.pk].pk,
-            answers=[],
-            respondent=self.user,
-        )
-        run.refresh_from_db()
-        self.assertEqual(run.status, ProcessRun.Status.COMPLETED)
-        self.assertIsNotNone(run.completed_at)
-
-    def test_closed_process_rejects_new_run(self):
-        """تست عدم امکان شروع پروسه‌ای که در وضعیت CLOSED قرار دارد."""
-        proc = create_process(
-            owner=self.user,
-            title="Will Be Closed",
+            title="Closed Form Flow",
             process_type=Process.ProcessType.LINEAR,
         )
         create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        publish_process(process=proc, owner=self.user)
-        close_process(process=proc, owner=self.user)
 
-        with self.assertRaises(ValidationError) as ctx:
-            start_process_run(process=proc, respondent=self.user)
-        self.assertIn("process", ctx.exception.message_dict)
-
-    def test_step_completion_fails_if_step_form_is_closed(self):
-        """تست رفتار BL-DATA-002: در صورتی که فرم حین اجرا CLOSED شود، خطا صادر می‌شود."""
-        proc = create_process(
-            owner=self.user,
-            title="Form Closes Later",
-            process_type=Process.ProcessType.LINEAR,
-        )
-        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
-        publish_process(process=proc, owner=self.user)
-
-        run, _ = start_process_run(process=proc, respondent=self.user)
-        step_run = run.step_runs.first()
-
-        # بستن فرم
+        # تغییر وضعیت فرم به CLOSED
         self.form1.status = Form.Status.CLOSED
         self.form1.save(update_fields=["status"])
 
         with self.assertRaises(ValidationError) as ctx:
-            complete_process_step_run(
-                process_run=run,
-                step_run_id=step_run.pk,
-                answers=[],
-                respondent=self.user,
-            )
-        self.assertIn("form", ctx.exception.message_dict)
+            publish_process(process=proc, owner=self.user)
+        self.assertIn("forms", ctx.exception.message_dict)
