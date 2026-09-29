@@ -8,6 +8,7 @@ from apps.accounts.models import User
 from apps.core.participant_access import grant_participant_access
 from apps.forms.models import (
     Answer,
+    AnswerOption,
     Form,
     FormSubmission,
     Question,
@@ -47,11 +48,23 @@ def submission_form(user):
         is_required=True,
     )
     option = QuestionOption.objects.create(question=select, label="Developer", order=1)
+    optional_select = Question.objects.create(
+        form=form,
+        text="Optional role",
+        question_type=Question.QuestionType.SELECT,
+        order=4,
+        is_required=False,
+    )
+    optional_option = QuestionOption.objects.create(
+        question=optional_select,
+        label="Optional developer",
+        order=1,
+    )
     checkbox = Question.objects.create(
         form=form,
         text="Tools",
         question_type=Question.QuestionType.CHECKBOX,
-        order=4,
+        order=5,
     )
     check = QuestionOption.objects.create(question=checkbox, label="Git", order=1)
     return {
@@ -60,6 +73,8 @@ def submission_form(user):
         "number": number,
         "select": select,
         "option": option,
+        "optional_select": optional_select,
+        "optional_option": optional_option,
         "checkbox": checkbox,
         "check": check,
     }
@@ -95,6 +110,7 @@ def test_html_form_renders_real_dynamic_inputs(client, submission_form):
     assert f'name="q_{submission_form["text"].id}"' in content
     assert f'name="q_{submission_form["number"].id}"' in content
     assert f'name="q_{submission_form["select"].id}"' in content
+    assert f'name="q_{submission_form["optional_select"].id}"' in content
     assert f'name="q_{submission_form["checkbox"].id}"' in content
     assert "Submit form" in content
 
@@ -135,6 +151,83 @@ def test_html_validation_errors_are_question_scoped_and_preserve_values(
     assert response.status_code == 400
     assert "This question is required." in content
     assert not FormSubmission.objects.filter(form=submission_form["form"]).exists()
+
+
+@pytest.mark.django_db
+def test_html_optional_select_placeholder_is_treated_as_omitted(client, submission_form):
+    response = client.post(
+        reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
+        {
+            f"q_{submission_form['text'].id}": "Optional select omitted",
+            f"q_{submission_form['select'].id}": str(submission_form["option"].id),
+            f"q_{submission_form['optional_select'].id}": "",
+        },
+    )
+
+    assert response.status_code == 200
+    submission = FormSubmission.objects.get(form=submission_form["form"])
+    assert not submission.answers.filter(
+        question=submission_form["optional_select"]
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_html_required_select_placeholder_returns_required_error(client, submission_form):
+    response = client.post(
+        reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
+        {
+            f"q_{submission_form['text'].id}": "Required select missing",
+            f"q_{submission_form['select'].id}": "",
+        },
+    )
+
+    assert response.status_code == 400
+    content = response.content.decode()
+    assert "This question is required." in content
+    assert "A positive integer ID is required." not in content
+    assert not FormSubmission.objects.filter(form=submission_form["form"]).exists()
+    assert not Answer.objects.filter(question__form=submission_form["form"]).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("question_key", ["text", "number", "select"])
+def test_html_duplicate_values_for_single_value_question_are_rejected(
+    client,
+    submission_form,
+    question_key,
+):
+    field_name = f"q_{submission_form[question_key].id}"
+    post_data = {
+        f"q_{submission_form['text'].id}": "Valid text",
+        f"q_{submission_form['number'].id}": "30",
+        f"q_{submission_form['select'].id}": str(submission_form["option"].id),
+    }
+
+    if question_key == "select":
+        post_data[field_name] = [
+            str(submission_form["option"].id),
+            str(submission_form["option"].id),
+        ]
+    elif question_key == "number":
+        post_data[field_name] = ["30", "31"]
+    else:
+        post_data[field_name] = ["first", "second"]
+
+    response = client.post(
+        reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
+        post_data,
+    )
+
+    assert response.status_code == 400
+    assert (
+        "Multiple values for a single-value question are not allowed."
+        in response.content.decode()
+    )
+    assert not FormSubmission.objects.filter(form=submission_form["form"]).exists()
+    assert not Answer.objects.filter(question__form=submission_form["form"]).exists()
+    assert not AnswerOption.objects.filter(
+        answer__question__form=submission_form["form"]
+    ).exists()
 
 
 @pytest.mark.django_db

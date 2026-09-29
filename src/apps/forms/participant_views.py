@@ -128,34 +128,77 @@ def _participant_form_context(*, read_model, post_data=None, validation_errors=N
 
 def _html_submission_answers(*, read_model, post_data):
     answers = []
+    errors = {}
     known_names = set()
 
     for question in read_model["questions"]:
         field_name = f"q_{question['id']}"
         known_names.add(field_name)
-        if field_name not in post_data:
+        values = post_data.getlist(field_name)
+        if not values:
             continue
 
-        answer = {"question_id": question["id"]}
-        if question["question_type"] == Question.QuestionType.TEXT:
-            answer["text_value"] = post_data.get(field_name, "")
-        elif question["question_type"] == Question.QuestionType.NUMBER:
-            answer["number_value"] = post_data.get(field_name, "")
+        error_key = f"question_{question['id']}"
+        if question["question_type"] == Question.QuestionType.CHECKBOX:
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "option_ids": values,
+                }
+            )
+            continue
+
+        if len(values) > 1:
+            errors.setdefault(error_key, []).append(
+                "Multiple values for a single-value question are not allowed."
+            )
+            continue
+
+        value = values[0]
+        if question["question_type"] == Question.QuestionType.SELECT:
+            if value == "":
+                continue
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "option_ids": [value],
+                }
+            )
+        elif question["question_type"] == Question.QuestionType.TEXT:
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "text_value": value,
+                }
+            )
         else:
-            answer["option_ids"] = post_data.getlist(field_name)
-        answers.append(answer)
+            answers.append(
+                {
+                    "question_id": question["id"],
+                    "number_value": value,
+                }
+            )
 
     # Do not silently ignore forged question fields from another Form.
     for field_name in post_data:
         if not field_name.startswith("q_") or field_name in known_names:
             continue
-        answers.append(
-            {
-                "question_id": field_name.removeprefix("q_"),
-                "text_value": post_data.get(field_name, ""),
-            }
-        )
+        values = post_data.getlist(field_name)
+        if len(values) > 1:
+            errors.setdefault("answers", []).append(
+                "Multiple values for a single-value question are not allowed."
+            )
+            continue
+        if values:
+            answers.append(
+                {
+                    "question_id": field_name.removeprefix("q_"),
+                    "text_value": values[0],
+                }
+            )
 
+    if errors:
+        raise ValidationError(errors)
     return answers
 
 
@@ -192,13 +235,13 @@ def participant_form_submit(request, public_id):
         )
 
     read_model = get_form_participant_read_model(form=form)
-    answers = _html_submission_answers(
-        read_model=read_model,
-        post_data=request.POST,
-    )
     respondent = request.user if request.user.is_authenticated else None
 
     try:
+        answers = _html_submission_answers(
+            read_model=read_model,
+            post_data=request.POST,
+        )
         submission = submit_form(
             form=form,
             answers=answers,
