@@ -27,6 +27,12 @@ def _percentage(*, count, denominator):
     )
 
 
+def _report_decimal(value):
+    if value is None:
+        return None
+    return value.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+
+
 def _build_submission_aggregate(*, form):
     submissions = FormSubmission.objects.filter(form_id=form.pk)
     total_submissions = submissions.count()
@@ -114,10 +120,10 @@ def _build_submission_aggregate(*, form):
         if question.question_type == Question.QuestionType.NUMBER:
             item.update(
                 {
-                    "number_min": stats.get("number_min"),
-                    "number_max": stats.get("number_max"),
-                    "number_sum": stats.get("number_sum"),
-                    "number_average": stats.get("number_average"),
+                    "number_min": _report_decimal(stats.get("number_min")),
+                    "number_max": _report_decimal(stats.get("number_max")),
+                    "number_sum": _report_decimal(stats.get("number_sum")),
+                    "number_average": _report_decimal(stats.get("number_average")),
                 }
             )
 
