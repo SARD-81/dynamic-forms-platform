@@ -5,7 +5,7 @@ import pytest
 from django.core.cache import cache
 
 from apps.accounts.models import User
-from apps.forms.models import Form, FormSubmission, Question, QuestionOption
+from apps.forms.models import Form, Question, QuestionOption
 from apps.forms.report_cache import form_report_cache_key
 from apps.forms.report_selectors import (
     get_form_report_submission_detail,
