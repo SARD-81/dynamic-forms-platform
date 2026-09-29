@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">Workspace</p>
         <h1>Dashboard</h1>
-        <p>Welcome, {{ user.get_username }}. Gate 3 domain areas will connect here as they land.</p>
+        <p>Welcome, {{ user.get_username }}. Manage your forms, processes, and shared workspace.</p>
     </div>
 </header>
 
@@ -33,8 +33,10 @@
     <article class="feature-card" data-feature="processes">
         <div class="feature-card__meta">Workflow</div>
         <h2>Processes</h2>
-        <p>Compose published forms into linear or free processes.</p>
-        <span class="status-badge">Integration pending</span>
+        <p>Compose your forms into linear or free participant workflows.</p>
+        <a class="button button--secondary" href="{% url 'processes:list' %}">
+            Manage processes
+        </a>
     </article>
 
     <article class="feature-card" data-feature="reports">

@@ -9,6 +9,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
     path("forms/", include("apps.forms.urls")),
+    path("processes/", include("apps.processes.urls")),
     # API v1 Base Routing (Namespace برداشته شد)
     path("api/v1/", include("config.api_router")),
     # OpenAPI Documentation
