@@ -166,9 +166,7 @@ def test_html_optional_select_placeholder_is_treated_as_omitted(client, submissi
 
     assert response.status_code == 200
     submission = FormSubmission.objects.get(form=submission_form["form"])
-    assert not submission.answers.filter(
-        question=submission_form["optional_select"]
-    ).exists()
+    assert not submission.answers.filter(question=submission_form["optional_select"]).exists()
 
 
 @pytest.mark.django_db
@@ -220,14 +218,11 @@ def test_html_duplicate_values_for_single_value_question_are_rejected(
 
     assert response.status_code == 400
     assert (
-        "Multiple values for a single-value question are not allowed."
-        in response.content.decode()
+        "Multiple values for a single-value question are not allowed." in response.content.decode()
     )
     assert not FormSubmission.objects.filter(form=submission_form["form"]).exists()
     assert not Answer.objects.filter(question__form=submission_form["form"]).exists()
-    assert not AnswerOption.objects.filter(
-        answer__question__form=submission_form["form"]
-    ).exists()
+    assert not AnswerOption.objects.filter(answer__question__form=submission_form["form"]).exists()
 
 
 @pytest.mark.django_db
