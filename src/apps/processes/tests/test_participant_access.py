@@ -313,7 +313,7 @@ def test_private_process_html_unlock_rate_limit_stops_password_hashing(
         )
 
     assert first.status_code == 403
-    assert second.status_code == 429
+    assert second.status_code == 403
     assert blocked.status_code == 429
     assert blocked["Retry-After"] == "900"
     assert verifier.call_count == 2
@@ -352,7 +352,7 @@ def test_private_process_rest_unlock_rate_limit_stops_password_hashing(
         )
 
     assert first.status_code == 403
-    assert second.status_code == 429
+    assert second.status_code == 403
     assert blocked.status_code == 429
     assert blocked.json()["error_code"] == "PARTICIPANT_ACCESS_RATE_LIMITED"
     assert blocked["Retry-After"] == "900"
