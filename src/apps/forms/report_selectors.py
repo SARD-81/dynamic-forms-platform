@@ -33,9 +33,17 @@ def _report_decimal(value):
     return value.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
 
-def _build_submission_aggregate(*, form):
+def _form_submission_revision(*, form):
+    return FormSubmission.objects.filter(form_id=form.pk).aggregate(
+        submission_count=Count("id"),
+        latest_submission_id=Max("id"),
+    )
+
+
+def _build_submission_aggregate(*, form, total_submissions=None):
     submissions = FormSubmission.objects.filter(form_id=form.pk)
-    total_submissions = submissions.count()
+    if total_submissions is None:
+        total_submissions = submissions.count()
 
     recent_activity = [
         {
@@ -167,13 +175,31 @@ def get_form_report_summary(*, owner, form_id):
         return None
 
     aggregate = None
+    submission_revision = None
     if form.status != Form.Status.DRAFT:
-        aggregate = get_cached_form_report(form_public_id=form.public_id)
+        submission_revision = _form_submission_revision(form=form)
+        aggregate = get_cached_form_report(
+            form_public_id=form.public_id,
+            submission_count=submission_revision["submission_count"],
+            latest_submission_id=submission_revision["latest_submission_id"],
+        )
 
     if aggregate is None:
-        aggregate = _build_submission_aggregate(form=form)
-        if form.status != Form.Status.DRAFT:
-            set_cached_form_report(form_public_id=form.public_id, payload=aggregate)
+        aggregate = _build_submission_aggregate(
+            form=form,
+            total_submissions=(
+                submission_revision["submission_count"]
+                if submission_revision is not None
+                else None
+            ),
+        )
+        if submission_revision is not None:
+            set_cached_form_report(
+                form_public_id=form.public_id,
+                submission_count=submission_revision["submission_count"],
+                latest_submission_id=submission_revision["latest_submission_id"],
+                payload=aggregate,
+            )
 
     return {
         "id": form.pk,

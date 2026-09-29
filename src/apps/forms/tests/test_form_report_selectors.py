@@ -251,7 +251,11 @@ def test_successful_submission_invalidates_cached_report_after_commit(
 ):
     cache.clear()
     before = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
-    key = form_report_cache_key(form_public_id=report_schema["form"].public_id)
+    key = form_report_cache_key(
+        form_public_id=report_schema["form"].public_id,
+        submission_count=0,
+        latest_submission_id=None,
+    )
     assert before["total_submissions"] == 0
     assert cache.get(key) is not None
 
@@ -261,6 +265,43 @@ def test_successful_submission_invalidates_cached_report_after_commit(
     assert cache.get(key) is None
     after = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
     assert after["total_submissions"] == 1
+
+
+@pytest.mark.django_db
+def test_failed_cache_delete_cannot_resurrect_stale_report_after_redis_recovers(
+    user,
+    report_schema,
+    django_capture_on_commit_callbacks,
+):
+    cache.clear()
+    before = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
+    stale_key = form_report_cache_key(
+        form_public_id=report_schema["form"].public_id,
+        submission_count=0,
+        latest_submission_id=None,
+    )
+    assert before["total_submissions"] == 0
+    assert cache.get(stale_key) is not None
+
+    with patch(
+        "apps.forms.report_cache.cache.delete",
+        side_effect=RuntimeError("redis delete failed"),
+    ):
+        with django_capture_on_commit_callbacks(execute=True):
+            submission = _submit(report_schema, number=13)
+
+    assert cache.get(stale_key) is not None
+
+    after = get_form_report_summary(owner=user, form_id=report_schema["form"].id)
+    fresh_key = form_report_cache_key(
+        form_public_id=report_schema["form"].public_id,
+        submission_count=1,
+        latest_submission_id=submission.id,
+    )
+
+    assert after["total_submissions"] == 1
+    assert cache.get(fresh_key) is not None
+    assert fresh_key != stale_key
 
 
 @pytest.mark.django_db

@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from django.core.exceptions import ValidationError
 from django.core.validators import DecimalValidator
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Count, Max, Prefetch
 
 from .models import Answer, AnswerOption, Form, FormSubmission, Question, QuestionOption
 from .report_cache import invalidate_form_report_cache
@@ -308,6 +308,13 @@ def submit_form(*, form, answers, respondent=None):
             answers=answers,
         )
 
+        previous_report_revision = FormSubmission.objects.filter(
+            form_id=locked_form.pk
+        ).aggregate(
+            submission_count=Count("id"),
+            latest_submission_id=Max("id"),
+        )
+
         submission = FormSubmission.objects.create(
             form=locked_form,
             respondent=respondent,
@@ -327,7 +334,13 @@ def submit_form(*, form, answers, respondent=None):
                 )
 
         report_form_public_id = locked_form.public_id
+        previous_submission_count = previous_report_revision["submission_count"]
+        previous_latest_submission_id = previous_report_revision["latest_submission_id"]
         transaction.on_commit(
-            lambda: invalidate_form_report_cache(form_public_id=report_form_public_id)
+            lambda: invalidate_form_report_cache(
+                form_public_id=report_form_public_id,
+                submission_count=previous_submission_count,
+                latest_submission_id=previous_latest_submission_id,
+            )
         )
         return submission

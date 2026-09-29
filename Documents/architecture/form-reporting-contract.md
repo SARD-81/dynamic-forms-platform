@@ -84,14 +84,14 @@ When no submission answered a SELECT/CHECKBOX Question, every option percentage 
 
 Aggregation is assembled with a constant number of ORM queries across Question count:
 
-- Form submission count;
+- authoritative submission revision (`COUNT(id)` + `MAX(id)`), with the count reused as `total_submissions`;
 - recent activity;
 - timeline;
 - Question schema + prefetched Options;
 - Answer aggregation grouped by Question;
 - AnswerOption aggregation grouped by Option.
 
-No per-Question database query loop is used.
+No per-Question database query loop is used. The authoritative revision query replaces a separate submission-count query, so revision safety does not add a query to the cache-miss aggregation path.
 
 Response detail prefetches Answer Question data and selected QuestionOptions.
 
@@ -103,11 +103,15 @@ The live Form row supplies `view_count` on every report request, so participant 
 
 DRAFT reports are not cached because their schema can still change.
 
-After `submit_form(...)` commits successfully, a `transaction.on_commit()` callback invalidates the Form report aggregate cache. Failed/rolled-back submissions do not publish invalidation callbacks.
+For PUBLISHED/CLOSED Forms, every report summary read first obtains an authoritative submission revision from PostgreSQL: `COUNT(FormSubmission.id)` plus `MAX(FormSubmission.id)`. The immutable Form `public_id` and this revision are both part of the cache key.
 
-Cache failure is best-effort for reporting: reads fall back to PostgreSQL and cache write/delete failure never makes the report unavailable.
+A newly committed submission therefore changes the cache identity before the next report read. An older cached aggregate cannot be selected again, even if Redis was unavailable when cleanup ran and the stale entry is still physically present.
 
-PostgreSQL remains the source of truth.
+After `submit_form(...)` commits successfully, a `transaction.on_commit()` callback still deletes the previous revision key as best-effort cleanup. Failed/rolled-back submissions do not publish cleanup callbacks. Cleanup failure affects only temporary cache storage; old revision keys remain unreachable and expire through the normal five-minute TTL.
+
+Cache read/write failure remains best-effort for reporting: reads fall back to PostgreSQL and cache failures never make the report unavailable.
+
+PostgreSQL remains the source of truth for both report data and cache revision identity.
 
 ## Owner HTML routes
 
