@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Delete draft process · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Process authoring</p>
+        <h1>Delete draft process</h1>
+        <p>Delete “{{ managed_process.title }}”?</p>
+    </div>
+</header>
+
+<section class="auth-card account-summary">
+    <p>Only draft processes can be hard-deleted in the normal product flow.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">Delete draft</button>
+            <a class="button button--secondary" href="{% url 'processes:detail' managed_process.id %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

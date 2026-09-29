@@ -2,6 +2,7 @@
 {% url 'core:dashboard' as dashboard_url %}
 {% url 'core:category_list' as categories_url %}
 {% url 'forms:list' as forms_url %}
+{% url 'processes:list' as processes_url %}
 {% url 'accounts:login' as login_url %}
 {% url 'accounts:register' as register_url %}
 {% url 'accounts:logout' as logout_url %}
@@ -37,6 +38,7 @@
                     <a href="{{ dashboard_url }}">Dashboard</a>
                     <a href="{{ categories_url }}">Categories</a>
                     <a href="{{ forms_url }}">Forms</a>
+                    <a href="{{ processes_url }}">Processes</a>
                 {% endif %}
             </div>
 
