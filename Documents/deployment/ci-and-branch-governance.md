@@ -92,3 +92,20 @@ The repository remains private and native branch protection is explicitly not a 
 requirement under CHG-0002 / BL-ARCH-002.
 
 This platform limitation does not waive the documented PR/review/CI workflow.
+
+
+## Governance exceptions
+
+Peer review remains the default requirement for GATE 3 Pull Requests. A merge that occurs without an
+independent approval is an explicit governance exception and must not be represented as if the normal
+review requirement was satisfied.
+
+For every such exception:
+
+- record the affected PR and resulting merge commit in the project governance audit trail;
+- record that independent peer approval was absent at merge time;
+- do not inherit or reuse an approval from an earlier or related PR;
+- keep CI/test evidence separate from review evidence: green CI does not substitute for peer approval;
+- return to the normal peer-review workflow for subsequent Pull Requests.
+
+This exception mechanism is an audit rule, not an alternative default workflow.

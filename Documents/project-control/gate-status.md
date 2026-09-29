@@ -1,6 +1,6 @@
 # Project Gate Status
 
-Updated: 2026-09-22
+Updated: 2026-09-29
 
 ## GATE 0 — Scope & Architecture
 
@@ -108,6 +108,9 @@ dev
 - GATE 2I / PR #18: merged by repository owner into `dev` after clean-bootstrap verification. Docker settings isolation, 24 tests, HTTP/Daphne, pytest cache hygiene, working-tree cleanliness, and final CI all passed before merge.
 - GATE 2J / PR #20: merged into `dev` as the documentation-only BL-FOUNDATION-001 freeze and GATE 2 closure step.
 - GATE 2 milestone / PR #22: merged `dev` into `main`, promoting the completed foundation and synchronizing both long-lived branches at the GATE 2 milestone.
+- GATE 3 / Issue #34 backend / PR #54: merged into `dev` after an independent approval on PR #54 and green CI.
+- GATE 3 / Issue #34 presentation / PR #56: squash-merged into `dev` as an explicit governance exception. PR #56 had no independent peer approval at merge time. The approval recorded on backend PR #54 applies only to PR #54 and is not inherited by PR #56. CI run #106 was green with 200 passing tests before merge. Resulting merge commit: `3a34ab1496eef0a590ded36a7b62409620fe8648`.
+- GATE 3 / Issue #32 / PR #55: squash-merged into `dev` as an explicit governance exception with team-lead authorization. PR #55 had no independent peer `APPROVED` review at merge time; Codex `COMMENTED` reviews, resolved review threads, and green CI are verification evidence rather than peer approval. CI run #118 was fully green with 240 passing tests before merge. Resulting merge commit: `dea2d73ae633a2631457570ab703cc0b8bb21d10`.
 
 The GATE 2 owner merges above were explicit bootstrap/access exceptions, not a replacement for the
 peer-review policy. Collaborator write access is now available, so normal GATE 3 Pull Requests are
