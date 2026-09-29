@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F, Max
 
+from apps.core.participant_access import invalidate_participant_read_model
 from apps.core.selectors import get_category_for_owner
 from apps.forms.models import Form
 
@@ -109,6 +110,15 @@ def _validate_publication_readiness(*, process):
             form_title = form.title if form else "Unknown"
             errors.setdefault("forms", []).append(
                 f"Form '{form_title}' must be published before the process can be published."
+            )
+            continue
+
+        if (
+            process.visibility == Process.Visibility.PUBLIC
+            and form.visibility != Form.Visibility.PUBLIC
+        ):
+            errors.setdefault("forms", []).append(
+                f"Form '{form.title}' must be public before a public process can be published."
             )
 
     if process.visibility == Process.Visibility.PRIVATE and not process.access_password_hash:
@@ -245,6 +255,12 @@ def publish_process(*, process, owner):
 
         locked_process.status = Process.Status.PUBLISHED
         locked_process.save(update_fields=["status", "updated_at"])
+        transaction.on_commit(
+            lambda public_id=locked_process.public_id: invalidate_participant_read_model(
+                resource_type="process",
+                public_id=public_id,
+            )
+        )
         return locked_process
 
 
@@ -258,6 +274,12 @@ def close_process(*, process, owner):
 
         locked_process.status = Process.Status.CLOSED
         locked_process.save(update_fields=["status", "updated_at"])
+        transaction.on_commit(
+            lambda public_id=locked_process.public_id: invalidate_participant_read_model(
+                resource_type="process",
+                public_id=public_id,
+            )
+        )
         return locked_process
 
 

@@ -101,6 +101,20 @@ ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS = 60
 ACCOUNT_OTP_RATE_LIMIT_COUNT = 5
 ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 
+PARTICIPANT_UNLOCK_RATE_LIMIT_COUNT = 5
+PARTICIPANT_UNLOCK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": required_env("REDIS_CACHE_URL"),
+        "OPTIONS": {
+            "socket_connect_timeout": 1,
+            "socket_timeout": 1,
+        },
+    }
+}
+
 CELERY_BROKER_URL = required_env("CELERY_BROKER_URL")
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_ACCEPT_CONTENT = ["json"]

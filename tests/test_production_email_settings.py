@@ -18,6 +18,7 @@ def _production_env(**overrides):
             "POSTGRES_PASSWORD": "database-password",
             "POSTGRES_HOST": "127.0.0.1",
             "POSTGRES_PORT": "5432",
+            "REDIS_CACHE_URL": "redis://127.0.0.1:6379/0",
             "CELERY_BROKER_URL": "redis://127.0.0.1:6379/1",
             "DJANGO_ALLOWED_HOSTS": "example.com",
             "DJANGO_CSRF_TRUSTED_ORIGINS": "https://example.com",

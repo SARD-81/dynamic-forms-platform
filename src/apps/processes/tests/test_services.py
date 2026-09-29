@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
@@ -173,6 +173,29 @@ class ProcessServicesTests(TestCase):
             published = publish_process(process=proc, owner=self.user)
             self.assertEqual(published.status, Process.Status.PUBLISHED)
             mock_sfu.assert_called()
+
+    def test_public_process_rejects_private_form_at_publication(self):
+        private_form = Form.objects.create(
+            owner=self.user,
+            title="Private published form",
+            visibility=Form.Visibility.PRIVATE,
+            access_password_hash=make_password("private-secret"),
+            status=Form.Status.PUBLISHED,
+        )
+        proc = create_process(
+            owner=self.user,
+            title="Public process",
+            process_type=Process.ProcessType.LINEAR,
+            visibility=Process.Visibility.PUBLIC,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=private_form.pk)
+
+        with self.assertRaises(ValidationError) as ctx:
+            publish_process(process=proc, owner=self.user)
+
+        self.assertIn("forms", ctx.exception.message_dict)
+        proc.refresh_from_db()
+        self.assertEqual(proc.status, Process.Status.DRAFT)
 
     def test_publish_process_fails_if_step_form_is_closed(self):
         """اگر فرمی هم‌زمان یا قبلاً بسته شده باشد، انتشار باید با خطا متوقف شود."""

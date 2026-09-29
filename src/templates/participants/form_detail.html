@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}{{ participant_form.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Published form · {{ participant_form.visibility|title }}</p>
+        <h1>{{ participant_form.title }}</h1>
+        <p>{{ participant_form.description|default:"No description provided." }}</p>
+    </div>
+</header>
+
+<section class="dashboard-grid" aria-label="Form questions">
+    {% for question in participant_form.questions %}
+        <article class="feature-card">
+            <div class="feature-card__meta">
+                Question {{ question.order }} · {{ question.question_type|title }}
+                {% if question.is_required %} · Required{% endif %}
+            </div>
+            <h2>{{ question.text }}</h2>
+
+            {% if question.question_type == "TEXT" %}
+                <p>Text response{% if question.max_length %} · max {{ question.max_length }} characters{% endif %}</p>
+            {% elif question.question_type == "NUMBER" %}
+                <p>
+                    Number response ·
+                    min {{ question.min_value|default_if_none:"none" }} ·
+                    max {{ question.max_value|default_if_none:"none" }}
+                </p>
+            {% else %}
+                <ol>
+                    {% for option in question.options %}
+                        <li>{{ option.label }}</li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </article>
+    {% endfor %}
+</section>
+
+<section class="auth-card">
+    <p>Submission is enabled by the next Gate 3 submission-engine issue. This page exposes the authoritative published schema only.</p>
+</section>
+{% endblock %}

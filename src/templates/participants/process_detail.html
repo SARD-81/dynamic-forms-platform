@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ participant_process.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">
+            Published process · {{ participant_process.process_type|title }} ·
+            {{ participant_process.visibility|title }}
+        </p>
+        <h1>{{ participant_process.title }}</h1>
+        <p>{{ participant_process.description|default:"No description provided." }}</p>
+    </div>
+</header>
+
+<section class="dashboard-grid" aria-label="Process steps">
+    {% for step in participant_process.steps %}
+        <article class="feature-card">
+            <div class="feature-card__meta">Step {{ step.order }}</div>
+            <h2>Form step</h2>
+            <a class="button button--secondary" href="{% url 'forms_participant:detail' step.form_public_id %}">
+                Open form
+            </a>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="auth-card">
+    <p>Process execution and resume behavior are implemented by the dedicated execution-engine issue.</p>
+</section>
+{% endblock %}
