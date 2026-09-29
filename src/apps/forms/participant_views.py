@@ -84,15 +84,15 @@ def _participant_form_context(*, read_model, post_data=None, validation_errors=N
     model = deepcopy(read_model)
     validation_errors = validation_errors or {}
     known_field_names = set()
+    known_question_error_keys = set()
 
     for question in model["questions"]:
         field_name = f"q_{question['id']}"
         known_field_names.add(field_name)
+        error_key = f"question_{question['id']}"
+        known_question_error_keys.add(error_key)
         question["field_name"] = field_name
-        question["errors"] = validation_errors.get(
-            f"question_{question['id']}",
-            [],
-        )
+        question["errors"] = validation_errors.get(error_key, [])
         question["value"] = ""
 
         if post_data is None:
@@ -116,7 +116,7 @@ def _participant_form_context(*, read_model, post_data=None, validation_errors=N
 
     general_errors = []
     for key, messages in validation_errors.items():
-        if not key.startswith("question_"):
+        if key not in known_question_error_keys:
             general_errors.extend(messages)
 
     return {
