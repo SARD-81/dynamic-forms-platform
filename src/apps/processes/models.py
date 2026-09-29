@@ -79,6 +79,9 @@ class Process(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return f"Process {self.pk} - {self.title}"
+
 
 class ProcessStep(models.Model):
     process = models.ForeignKey(
@@ -108,6 +111,9 @@ class ProcessStep(models.Model):
                 name="process_step_order_gte_1_ck",
             ),
         ]
+
+    def __str__(self):
+        return f"Step {self.order} for Process {self.process_id}"
 
 
 class ProcessRun(models.Model):
@@ -140,6 +146,7 @@ class ProcessRun(models.Model):
     )
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
@@ -182,6 +189,9 @@ class ProcessRun(models.Model):
             ),
         ]
 
+    def __str__(self):
+        return f"Run {self.pk} - {self.process.title}"
+
 
 class ProcessStepRun(models.Model):
     class Status(models.TextChoices):
@@ -199,6 +209,7 @@ class ProcessStepRun(models.Model):
         on_delete=models.PROTECT,
         related_name="run_states",
     )
+    # تغییر به OneToOneField جهت تطابق با تست دیتابیس و جلوگیری از تعلق یک سابمیت به چند استپ‌ران
     submission = models.OneToOneField(
         "forms.FormSubmission",
         on_delete=models.PROTECT,
@@ -209,6 +220,7 @@ class ProcessStepRun(models.Model):
     status = models.CharField(
         max_length=16,
         choices=Status.choices,
+        default=Status.LOCKED,
     )
     completed_at = models.DateTimeField(null=True, blank=True)
 
@@ -240,3 +252,6 @@ class ProcessStepRun(models.Model):
                 name="step_run_state_data_ck",
             ),
         ]
+
+    def __str__(self):
+        return f"StepRun {self.pk} ({self.status}) for Run {self.process_run_id}"

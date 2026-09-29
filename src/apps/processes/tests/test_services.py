@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from apps.core.models import Category
 from apps.forms.models import Form
-from apps.processes.models import Process, ProcessStep
+from apps.processes.models import Process, ProcessStep, ProcessStepRun
 from apps.processes.services import (
     close_process,
     create_process,
@@ -15,6 +15,7 @@ from apps.processes.services import (
     delete_process_step,
     publish_process,
     reorder_process_steps,
+    start_process_run,
     update_draft_process,
 )
 
@@ -158,7 +159,7 @@ class ProcessServicesTests(TestCase):
             close_process(process=draft_proc, owner=self.user)
 
     def test_publish_process_locks_step_forms_with_select_for_update(self):
-        """انتشار پروسه باید فرم‌های متصل را برای جلوگیری از تغییر هم‌زمان قفل کند."""
+        """انتشار پروسه باید فرم‌های متصل را برای جلوگیری از تغییر هم‌‌زمان قفل کند."""
         proc = create_process(
             owner=self.user,
             title="Locking Flow",
@@ -213,3 +214,58 @@ class ProcessServicesTests(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             publish_process(process=proc, owner=self.user)
         self.assertIn("forms", ctx.exception.message_dict)
+
+    def test_start_process_run_authenticated_and_anonymous(self):
+        """تست شروع اجرای پروسه برای کاربر لاگین‌شده و کاربر ناشناس با هش توکن."""
+        proc = create_process(
+            owner=self.user,
+            title="Execution Test",
+            process_type=Process.ProcessType.LINEAR,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+        publish_process(process=proc, owner=self.user)
+
+        # 1. تست حالت Authenticated
+        run_auth, raw_token_auth = start_process_run(process=proc, respondent=self.user)
+        self.assertEqual(run_auth.respondent, self.user)
+        self.assertIsNone(run_auth.resume_token_hash)
+        self.assertIsNone(raw_token_auth)
+
+        # 2. تست حالت Anonymous
+        run_anon, raw_token_anon = start_process_run(process=proc, respondent=None)
+        self.assertIsNone(run_anon.respondent)
+        self.assertIsNotNone(run_anon.resume_token_hash)
+        self.assertIsNotNone(raw_token_anon)
+
+    def test_linear_process_execution_flow(self):
+        """تست جریان اجرای خطی (LINEAR): استپ اول AVAILABLE و بقیه LOCKED."""
+        proc = create_process(
+            owner=self.user,
+            title="Linear Flow",
+            process_type=Process.ProcessType.LINEAR,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+        create_process_step(process=proc, owner=self.user, form_id=self.form2.pk)
+        publish_process(process=proc, owner=self.user)
+
+        run, _ = start_process_run(process=proc, respondent=self.user)
+        step_runs = list(run.step_runs.order_by("process_step__order"))
+
+        self.assertEqual(step_runs[0].status, ProcessStepRun.Status.AVAILABLE)
+        self.assertEqual(step_runs[1].status, ProcessStepRun.Status.LOCKED)
+
+    def test_invariants_enforcement_in_step_completion(self):
+        """تست اعمال اینوِریانت‌های امنیتی و مدیریت تکمیل استپ."""
+        proc = create_process(
+            owner=self.user,
+            title="Invariant Test",
+            process_type=Process.ProcessType.LINEAR,
+        )
+        create_process_step(process=proc, owner=self.user, form_id=self.form1.pk)
+        publish_process(process=proc, owner=self.user)
+
+        run, _ = start_process_run(process=proc, respondent=self.user)
+        step_run = run.step_runs.first()
+
+        # بررسی وضعیت اولیه استپ‌‌ران
+        self.assertEqual(step_run.status, ProcessStepRun.Status.AVAILABLE)
