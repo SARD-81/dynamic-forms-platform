@@ -158,7 +158,7 @@ def test_html_optional_select_placeholder_is_treated_as_omitted(client, submissi
     response = client.post(
         reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
         {
-            f"q_{submission_form['text'].id}": "Optional select omitted",
+            f"q_{submission_form['text'].id}": "Optional omitted",
             f"q_{submission_form['select'].id}": str(submission_form["option"].id),
             f"q_{submission_form['optional_select'].id}": "",
         },
@@ -174,7 +174,7 @@ def test_html_required_select_placeholder_returns_required_error(client, submiss
     response = client.post(
         reverse("forms_participant:submit", args=[submission_form["form"].public_id]),
         {
-            f"q_{submission_form['text'].id}": "Required select missing",
+            f"q_{submission_form['text'].id}": "Required missing",
             f"q_{submission_form['select'].id}": "",
         },
     )
