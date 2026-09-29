@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F, Max
 
+from apps.core.participant_access import invalidate_participant_read_model
 from apps.core.selectors import get_category_for_owner
 
 from .models import POSITIVE_INTEGER_MAX, Form, Question, QuestionOption
@@ -382,6 +383,12 @@ def publish_form(*, form, owner):
 
         locked_form.status = Form.Status.PUBLISHED
         locked_form.save(update_fields=["status", "updated_at"])
+        transaction.on_commit(
+            lambda public_id=locked_form.public_id: invalidate_participant_read_model(
+                resource_type="form",
+                public_id=public_id,
+            )
+        )
 
     return locked_form
 
@@ -399,6 +406,12 @@ def close_form(*, form, owner, active_run_checker):
 
         locked_form.status = Form.Status.CLOSED
         locked_form.save(update_fields=["status", "updated_at"])
+        transaction.on_commit(
+            lambda public_id=locked_form.public_id: invalidate_participant_read_model(
+                resource_type="form",
+                public_id=public_id,
+            )
+        )
 
     return locked_form
 

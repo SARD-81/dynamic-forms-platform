@@ -10,6 +10,8 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),
     path("forms/", include("apps.forms.urls")),
     path("processes/", include("apps.processes.urls")),
+    path("p/forms/", include("apps.forms.participant_urls")),
+    path("p/processes/", include("apps.processes.participant_urls")),
     # API v1 Base Routing (Namespace برداشته شد)
     path("api/v1/", include("config.api_router")),
     # OpenAPI Documentation

@@ -33,6 +33,7 @@ Base settings refuse to start when any of these are missing or empty:
 - `POSTGRES_PASSWORD`
 - `POSTGRES_HOST`
 - `POSTGRES_PORT`
+- `REDIS_CACHE_URL`
 - `CELERY_BROKER_URL`
 
 There are intentionally no database credential fallbacks.
@@ -74,11 +75,16 @@ The architecture reserves separate Redis logical databases/URLs:
 - `CELERY_BROKER_URL` — Celery broker
 - `CHANNEL_LAYER_URL` — Channels layer
 
-The current settings layer actively consumes `CELERY_BROKER_URL`.
+The current settings layer actively consumes:
 
-`REDIS_CACHE_URL` and `CHANNEL_LAYER_URL` are already present in the environment contract and
-Docker/CI runtime, but Django cache and Channels Redis wiring remain future implementation work in
-their relevant feature/deployment gates.
+- `REDIS_CACHE_URL` through Django's built-in Redis cache backend;
+- `CELERY_BROKER_URL` through Celery.
+
+`CHANNEL_LAYER_URL` remains reserved in the environment contract and Docker/CI runtime for the
+Channels Redis wiring authorized by the relevant later feature gate.
+
+Test settings replace the Redis cache backend with deterministic Django `LocMemCache`, so tests do
+not depend on Redis availability.
 
 ## Docker development behavior
 
@@ -122,6 +128,8 @@ environment variables directly.
 - never falls back to SQLite;
 - forces a deterministic test-only Django secret after base settings import;
 - forces `CELERY_BROKER_URL = "memory://"` even when CI/Docker inject a development broker URL;
+- provides a bootstrap `REDIS_CACHE_URL` for base-settings import and then replaces the cache
+  backend with deterministic Django `LocMemCache`;
 - uses Celery eager execution;
 - uses Django's local-memory email backend;
 - uses a faster password hasher.
