@@ -5,6 +5,15 @@ from apps.forms.models import Answer, Form, FormSubmission, Question
 
 
 @pytest.fixture
+def other_user(db):
+    return User.objects.create_user(
+        username="report-other",
+        email="report-other@example.com",
+        password="test-password",
+    )
+
+
+@pytest.fixture
 def api_report_form(user):
     form = Form.objects.create(
         owner=user,
