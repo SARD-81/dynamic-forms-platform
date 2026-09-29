@@ -1,9 +1,10 @@
+from contextlib import ExitStack
 from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.hashers import make_password
 from django.core.cache import cache
-from django.test import override_settings
+from django.test import Client, override_settings
 from django.urls import reverse
 
 from apps.core.participant_access import invalidate_participant_read_model
