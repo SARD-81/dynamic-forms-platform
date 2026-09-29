@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import Avg, Count, Max, Min, Prefetch, Sum
 from django.db.models.functions import TruncDate
