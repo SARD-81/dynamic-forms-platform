@@ -15,9 +15,9 @@ FORM_REPORT_PAGE_SIZE = 20
 def _percentage(*, count, denominator):
     if not denominator:
         return Decimal("0.00")
-    return (
-        (Decimal(count) * Decimal("100")) / Decimal(denominator)
-    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return ((Decimal(count) * Decimal("100")) / Decimal(denominator)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
 
 
 def _build_submission_aggregate(*, form):
@@ -45,10 +45,7 @@ def _build_submission_aggregate(*, form):
         .annotate(count=Count("id"))
         .order_by("-day")[:FORM_REPORT_TIMELINE_DAYS]
     )
-    timeline = [
-        {"date": row["day"], "count": row["count"]}
-        for row in reversed(timeline_rows)
-    ]
+    timeline = [{"date": row["day"], "count": row["count"]} for row in reversed(timeline_rows)]
 
     questions = list(
         Question.objects.filter(form_id=form.pk)
