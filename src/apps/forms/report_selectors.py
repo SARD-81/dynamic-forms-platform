@@ -158,12 +158,12 @@ def get_form_report_summary(*, owner, form_id):
 
     aggregate = None
     if form.status != Form.Status.DRAFT:
-        aggregate = get_cached_form_report(form_id=form.pk)
+        aggregate = get_cached_form_report(form_public_id=form.public_id)
 
     if aggregate is None:
         aggregate = _build_submission_aggregate(form=form)
         if form.status != Form.Status.DRAFT:
-            set_cached_form_report(form_id=form.pk, payload=aggregate)
+            set_cached_form_report(form_public_id=form.public_id, payload=aggregate)
 
     return {
         "id": form.pk,
