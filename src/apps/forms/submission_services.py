@@ -266,9 +266,7 @@ def _validate_submission_payload(*, form, answers):
         if isinstance(raw_ids, (list, tuple)):
             for raw_id in raw_ids:
                 try:
-                    all_raw_option_ids.append(
-                        _parse_positive_id(raw_id, field_name="answers")
-                    )
+                    all_raw_option_ids.append(_parse_positive_id(raw_id, field_name="answers"))
                 except ValidationError:
                     pass
     all_existing_option_ids = set(
@@ -349,10 +347,7 @@ def submit_form(*, form, answers, respondent=None):
             options = item.get("options", [])
             if options:
                 AnswerOption.objects.bulk_create(
-                    [
-                        AnswerOption(answer=answer, option=option)
-                        for option in options
-                    ]
+                    [AnswerOption(answer=answer, option=option) for option in options]
                 )
 
         return submission
