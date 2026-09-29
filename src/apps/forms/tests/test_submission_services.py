@@ -152,9 +152,7 @@ def test_submission_service_rejects_non_published_forms(user, status):
 def test_submission_rejects_missing_required_question(submission_schema):
     answers = valid_answers(submission_schema)
     answers = [
-        answer
-        for answer in answers
-        if answer["question_id"] != submission_schema["text"].id
+        answer for answer in answers if answer["question_id"] != submission_schema["text"].id
     ]
 
     with pytest.raises(ValidationError) as exc_info:
