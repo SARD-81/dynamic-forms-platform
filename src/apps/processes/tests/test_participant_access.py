@@ -358,7 +358,6 @@ def test_private_process_rest_unlock_rate_limit_stops_password_hashing(
     assert verifier.call_count == 2
 
 
-
 @pytest.mark.django_db
 @pytest.mark.parametrize("cache_failure", ["read", "write"])
 @pytest.mark.parametrize("surface", ["html", "rest"])
@@ -380,9 +379,7 @@ def test_private_process_unlock_fails_closed_across_fresh_sessions_when_redis_is
                 )
             )
         else:
-            stack.enter_context(
-                patch("apps.core.participant_access.cache.get", return_value=None)
-            )
+            stack.enter_context(patch("apps.core.participant_access.cache.get", return_value=None))
             stack.enter_context(
                 patch(
                     "apps.core.participant_access.cache.add",
@@ -415,10 +412,7 @@ def test_private_process_unlock_fails_closed_across_fresh_sessions_when_redis_is
 
             assert response.status_code == 503
             if surface == "rest":
-                assert (
-                    response.json()["error_code"]
-                    == "PARTICIPANT_ACCESS_TEMPORARILY_UNAVAILABLE"
-                )
+                assert response.json()["error_code"] == "PARTICIPANT_ACCESS_TEMPORARILY_UNAVAILABLE"
 
     assert html_verifier.call_count == 0
     assert api_verifier.call_count == 0
