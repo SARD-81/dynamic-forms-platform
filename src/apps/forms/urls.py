@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import report_views, views
 
 app_name = "forms"
 
@@ -13,6 +13,21 @@ urlpatterns = [
     path("<int:form_id>/close/", views.form_close, name="close"),
     path("<int:form_id>/delete/", views.form_delete, name="delete"),
     path("<int:form_id>/builder/", views.form_builder, name="builder"),
+    path(
+        "<int:form_id>/report/",
+        report_views.form_report_dashboard,
+        name="report",
+    ),
+    path(
+        "<int:form_id>/report/responses/",
+        report_views.form_report_responses,
+        name="report_responses",
+    ),
+    path(
+        "<int:form_id>/report/responses/<uuid:submission_public_id>/",
+        report_views.form_report_response_detail,
+        name="report_response_detail",
+    ),
     path(
         "<int:form_id>/builder/questions/new/",
         views.question_create,

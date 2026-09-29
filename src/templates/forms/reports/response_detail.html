@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Response · {{ report.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Submitted response · {{ submission.respondent_type|title }}</p>
+        <h1>{{ report.title }}</h1>
+        <p>{{ submission.submitted_at }} · {{ submission.public_id }}</p>
+    </div>
+    <a class="button button--secondary" href="{% url 'forms:report_responses' report.id %}">
+        Back to responses
+    </a>
+</header>
+
+{% if submission.answers %}
+    <section class="dashboard-grid" aria-label="Submitted answers">
+        {% for answer in submission.answers %}
+            <article class="feature-card">
+                <div class="feature-card__meta">
+                    Question {{ answer.question_order }} · {{ answer.question_type|title }}
+                </div>
+                <h2>{{ answer.question_text }}</h2>
+
+                {% if answer.question_type == "TEXT" %}
+                    <p>{{ answer.text_value }}</p>
+                {% elif answer.question_type == "NUMBER" %}
+                    <p>{{ answer.number_value }}</p>
+                {% else %}
+                    {% if answer.selected_options %}
+                        <ul>
+                            {% for option in answer.selected_options %}
+                                <li>{{ option.label }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No option selected.</p>
+                    {% endif %}
+                {% endif %}
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="auth-card">
+        <p>This submission contains no Answer rows.</p>
+    </section>
+{% endif %}
+{% endblock %}
