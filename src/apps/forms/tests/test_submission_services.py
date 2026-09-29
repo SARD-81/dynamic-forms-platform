@@ -304,7 +304,7 @@ def test_service_only_invariant_rejects_question_from_another_form(
         submit_form(form=submission_schema["form"], answers=answers)
 
     errors = exc_info.value.message_dict[f"question_{foreign_question.id}"]
-    assert any("does not belong to this form" in message for message in errors)
+    assert "Invalid question ID for this form." in errors
     assert not FormSubmission.objects.filter(form=submission_schema["form"]).exists()
 
 
@@ -322,7 +322,7 @@ def test_service_only_invariant_rejects_option_from_another_question(
         submit_form(form=submission_schema["form"], answers=answers)
 
     errors = exc_info.value.message_dict[f"question_{submission_schema['select'].id}"]
-    assert any("does not belong to this question" in message for message in errors)
+    assert "Invalid option ID for this question." in errors
     assert not FormSubmission.objects.filter(form=submission_schema["form"]).exists()
 
 
@@ -339,8 +339,11 @@ def test_submission_rejects_unknown_question_and_option_ids(submission_schema):
         submit_form(form=submission_schema["form"], answers=answers)
 
     errors = exc_info.value.message_dict
-    assert "Unknown question ID." in errors["question_999999"]
-    assert "Unknown option ID." in errors[f"question_{submission_schema['select'].id}"]
+    assert "Invalid question ID for this form." in errors["question_999999"]
+    assert (
+        "Invalid option ID for this question."
+        in errors[f"question_{submission_schema['select'].id}"]
+    )
 
 
 @pytest.mark.django_db

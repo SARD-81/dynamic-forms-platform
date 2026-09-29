@@ -161,7 +161,7 @@ def test_html_forged_cross_form_question_is_rejected(client, user, submission_fo
     )
 
     assert response.status_code == 400
-    assert "does not belong to this form" in response.content.decode()
+    assert "Invalid question ID for this form." in response.content.decode()
     assert not FormSubmission.objects.filter(form=submission_form["form"]).exists()
 
 

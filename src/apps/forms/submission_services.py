@@ -25,6 +25,9 @@ def _parse_positive_id(value, *, field_name):
         parsed = int(value)
     except (TypeError, ValueError) as exc:
         raise ValidationError({field_name: ["A positive integer ID is required."]}) from exc
+
+    if isinstance(value, (float, Decimal)) and value != parsed:
+        raise ValidationError({field_name: ["A positive integer ID is required."]})
     if parsed < 1:
         raise ValidationError({field_name: ["A positive integer ID is required."]})
     return parsed
@@ -144,7 +147,6 @@ def _validate_option_answer(
     question,
     payload,
     errors,
-    all_existing_option_ids,
 ):
     key = _question_error_key(question.pk)
     if "text_value" in payload or "number_value" in payload:
@@ -173,10 +175,7 @@ def _validate_option_answer(
     for option_id in option_ids:
         option = options_by_id.get(option_id)
         if option is None:
-            if option_id in all_existing_option_ids:
-                _add_error(errors, key, "An option does not belong to this question.")
-            else:
-                _add_error(errors, key, "Unknown option ID.")
+            _add_error(errors, key, "Invalid option ID for this question.")
             continue
         selected_options.append(option)
 
@@ -234,23 +233,13 @@ def _validate_submission_payload(*, form, answers):
         payload_by_question_id[question_id] = payload
 
     supplied_set = set(supplied_question_ids)
-    foreign_or_unknown_ids = supplied_set - set(questions_by_id)
-    existing_foreign_question_ids = set(
-        Question.objects.filter(pk__in=foreign_or_unknown_ids).values_list("pk", flat=True)
-    )
-    for question_id in sorted(foreign_or_unknown_ids):
-        if question_id in existing_foreign_question_ids:
-            _add_error(
-                errors,
-                _question_error_key(question_id),
-                "Question does not belong to this form.",
-            )
-        else:
-            _add_error(
-                errors,
-                _question_error_key(question_id),
-                "Unknown question ID.",
-            )
+    invalid_question_ids = supplied_set - set(questions_by_id)
+    for question_id in sorted(invalid_question_ids):
+        _add_error(
+            errors,
+            _question_error_key(question_id),
+            "Invalid question ID for this form.",
+        )
 
     for question in questions:
         if question.is_required and question.pk not in payload_by_question_id:
@@ -259,19 +248,6 @@ def _validate_submission_payload(*, form, answers):
                 _question_error_key(question.pk),
                 "This question is required.",
             )
-
-    all_raw_option_ids = []
-    for payload in payload_by_question_id.values():
-        raw_ids = payload.get("option_ids")
-        if isinstance(raw_ids, (list, tuple)):
-            for raw_id in raw_ids:
-                try:
-                    all_raw_option_ids.append(_parse_positive_id(raw_id, field_name="answers"))
-                except ValidationError:
-                    pass
-    all_existing_option_ids = set(
-        QuestionOption.objects.filter(pk__in=all_raw_option_ids).values_list("pk", flat=True)
-    )
 
     validated = []
     for question_id, payload in payload_by_question_id.items():
@@ -304,7 +280,6 @@ def _validate_submission_payload(*, form, answers):
                 question=question,
                 payload=payload,
                 errors=errors,
-                all_existing_option_ids=all_existing_option_ids,
             )
 
         if answer is not None:
