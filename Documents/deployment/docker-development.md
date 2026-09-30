@@ -1,57 +1,79 @@
-# Docker Development Foundation
+# Docker Development Runtime
 
-**Gate:** 2H — Docker Development Foundation  
-**Status:** COMPLETED / PASSED  
-**Target baseline:** BL-FOUNDATION-001
+**Historical foundation:** Gate 2H / BL-FOUNDATION-001  
+**Current Gate 3 extension:** CHG-0003 / Issue #40  
+**Status:** ACTIVE DEVELOPMENT RUNTIME
 
-## Scope
+## Topology evolution
 
-The development Compose topology intentionally contains exactly three services:
+BL-FOUNDATION-001 originally froze the Gate 2 development topology as exactly three services:
 
 - `web`
 - `postgres`
 - `redis`
 
-Intentionally deferred:
+CHG-0003 later authorized the mandatory Gate 3 scheduled-delivery extension. Issue #40 applied that authorization without editing the frozen historical baseline.
 
-- Nginx
-- Celery worker
-- Celery Beat
-- production container topology
+The active development topology now contains five services:
+
+- `web`
+- `postgres`
+- `redis`
+- `celery-worker`
+- `celery-beat`
+
+Nginx and production orchestration remain out of scope.
 
 ## Images and runtime
 
 ### web
 
-- base image: `python:3.12-slim-bookworm`
-- installs `requirements/dev.txt`
-- exposes port 8000
-- bind-mounts the repository at `/app`
-- runs migrations after PostgreSQL is healthy
-- starts Django's Daphne-backed development `runserver`
+- base image: `python:3.12-slim-bookworm`;
+- installs `requirements/dev.txt`;
+- exposes port 8000;
+- bind-mounts the repository at `/app`;
+- waits for PostgreSQL and Redis health;
+- runs migrations;
+- starts Django's Daphne-backed development `runserver`.
 
-Because `daphne` is first in `INSTALLED_APPS`, the installed Daphne integration owns Django's
-`runserver` command and serves the ASGI application during development.
+Because `daphne` is first in `INSTALLED_APPS`, its integration owns Django's development `runserver` command and serves the ASGI application.
 
-The source bind mount plus Django/Daphne development autoreload means Python source edits are
-observed without rebuilding the image.
+### celery-worker
 
-The web service does not export `DJANGO_SETTINGS_MODULE`. Management commands default to
-development settings, while pytest uses `config.settings.test` from `pyproject.toml`.
+- reuses the same application image as `web`;
+- waits for PostgreSQL and Redis health;
+- uses Redis logical DB 1 through `CELERY_BROKER_URL`;
+- command:
+
+```text
+celery --workdir=src -A config worker --loglevel=INFO
+```
+
+### celery-beat
+
+- reuses the same application image;
+- runs a separate default Celery Beat scheduler process;
+- uses the same broker configuration;
+- command:
+
+```text
+celery --workdir=src -A config beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+```
+
+Beat is intentionally not embedded in the worker with `-B`, and `django-celery-beat` is not required.
 
 ### postgres
 
-- image: `postgres:16-alpine`
-- persistent named volume: `postgres_data`
-- health checked with `pg_isready`
+- image: `postgres:16-alpine`;
+- persistent named volume: `postgres_data`;
+- health checked with `pg_isready`.
 
 ### redis
 
-- image: `redis:7-alpine`
-- health checked with `redis-cli ping`
+- image: `redis:7-alpine`;
+- health checked with `redis-cli ping`.
 
-PostgreSQL and Redis are not published to host ports, avoiding conflicts with host-installed
-services.
+PostgreSQL and Redis are not published to host ports.
 
 ## Environment behavior
 
@@ -59,12 +81,12 @@ Compose reads project values from repository-root `.env` through normal Compose 
 
 Inside the Docker network:
 
-- PostgreSQL host → `postgres`
-- Redis cache → `redis:6379/0`
-- Celery broker → `redis:6379/1`
-- Channels layer reservation → `redis:6379/2`
+- PostgreSQL host → `postgres`;
+- Django cache → `redis:6379/0`;
+- Celery broker → `redis:6379/1`;
+- Channels layer reservation → `redis:6379/2` only if optional Issue #41 is implemented later.
 
-This preserves the non-Docker local contract where PostgreSQL/Redis may use `127.0.0.1`.
+Business/domain code must use Django/Celery/Channels abstractions and must not create ad-hoc Redis clients.
 
 ## First-time setup
 
@@ -82,70 +104,90 @@ Copy-Item .env.example .env
 
 Set local values for:
 
-- `DJANGO_SECRET_KEY`
-- `POSTGRES_PASSWORD`
+- `DJANGO_SECRET_KEY`;
+- `POSTGRES_PASSWORD`.
 
 Then:
 
 ```bash
 docker compose --env-file .env config --quiet
-docker compose up --build -d
-docker compose ps
+docker compose --env-file .env up --build -d
+docker compose --env-file .env ps
+```
+
+Expected running services:
+
+```text
+web
+postgres
+redis
+celery-worker
+celery-beat
 ```
 
 Open:
 
 ```text
-http://localhost:8000/admin/login/
+http://localhost:8000/
+http://localhost:8000/api/v1/
+http://localhost:8000/api/v1/docs/
 ```
 
 ## Daily commands
 
 ```bash
-docker compose up -d
-docker compose logs -f web
-docker compose exec web python src/manage.py check
-docker compose exec web pytest
-docker compose down
+docker compose --env-file .env up -d
+docker compose --env-file .env logs -f web
+docker compose --env-file .env logs -f celery-worker
+docker compose --env-file .env logs -f celery-beat
+docker compose --env-file .env exec web python src/manage.py check
+docker compose --env-file .env exec web pytest
+docker compose --env-file .env down
 ```
 
 pytest must report `settings: config.settings.test`.
 
-Inside the Docker web service, pytest's cache provider is disabled through
-`PYTEST_ADDOPTS=-p no:cacheprovider`. This prevents the root-running development container from
-creating root-owned `.pytest_cache` files in the host bind mount. Host pytest is unaffected.
+Inside the Docker web service, pytest's cache provider is disabled through `PYTEST_ADDOPTS=-p no:cacheprovider` so the root-running development container does not create root-owned `.pytest_cache` files in the host bind mount.
+
+## Scheduled-report runtime
+
+Celery Beat runs the periodic-report due dispatcher once per hour. Due selection is period-based, so hourly polling does not generate hourly reports.
+
+Development EMAIL delivery uses Django's console backend. API delivery uses the documented finite timeout, bounded retry policy and deterministic period-level `Idempotency-Key` from the periodic-report contract.
+
+## CI clean-bootstrap verification
+
+Gate 3 Issue #42 adds a permanent `docker-smoke` CI job. From a clean GitHub-hosted runner it:
+
+1. prepares a disposable `.env`;
+2. builds the repository image;
+3. starts all five development services;
+4. waits for containerized Django readiness;
+5. verifies all five services are running;
+6. executes Celery worker `inspect ping`;
+7. verifies scheduled-report task registration;
+8. smoke-tests login, API root and OpenAPI schema from the running containerized application;
+9. destroys containers and volumes even on failure.
+
+This complements, rather than replaces, the normal pytest/migration/lint checks.
 
 ## Destructive local reset
 
 ```bash
-docker compose down -v
+docker compose --env-file .env down -v
 ```
 
 This deletes the Docker-managed PostgreSQL development volume.
 
-## GATE 2H runtime evidence
+## Historical Gate 2H evidence
 
-Verified on Ubuntu 24.04:
+The original three-service Gate 2 foundation was verified on Ubuntu 24.04 with successful image build, PostgreSQL/Redis health, migrations, Django checks, database-constraint tests, HTTP/Daphne response, autoreload, and a clean working tree.
 
-- Docker 29.1.3
-- Docker Compose 2.40.3
-- image build successful
-- PostgreSQL healthy
-- Redis healthy
-- all initial migrations applied
-- Django system check passed
-- 23 database-constraint tests passed
-- `HEAD /admin/login/` returned HTTP 200
-- response server was Daphne
-- source-file touch triggered StatReloader and Daphne restart
-- working tree remained clean
+That historical evidence belongs to BL-FOUNDATION-001 and is not rewritten by the Gate 3 runtime extension.
 
 ## Cross-platform rule
 
-Documentation uses direct `docker compose` commands.
-
-Make/WSL wrappers may exist only as optional conveniences.
-
+Documentation uses direct `docker compose` commands. Make/WSL wrappers may exist only as optional conveniences.
 
 ## Troubleshooting
 
@@ -153,17 +195,22 @@ Make/WSL wrappers may exist only as optional conveniences.
 
 If `postgres` is healthy but `web` exits with a PostgreSQL password authentication error, check whether `POSTGRES_PASSWORD` changed while an older Docker PostgreSQL volume still exists.
 
-The PostgreSQL image initializes the database user password when the data directory is first created. Changing the Compose environment variable later does not rewrite credentials already stored in that volume.
-
 For disposable development data only:
 
 ```bash
-docker compose down -v
-docker compose up --build -d
+docker compose --env-file .env down -v
+docker compose --env-file .env up --build -d
 ```
 
-This deletes the local Docker PostgreSQL development volume and all data inside it.
+### Worker does not receive tasks
+
+Confirm Redis is healthy and that both `web`/worker use logical DB 1 through the same `CELERY_BROKER_URL`. Then inspect the worker:
+
+```bash
+docker compose --env-file .env exec celery-worker \
+  celery --workdir=src -A config inspect ping --timeout=10
+```
 
 ### Bake/buildx warning
 
-A warning that Docker Compose is configured to build using Bake while buildx is unavailable is non-blocking when the ordinary Docker builder completes successfully. Gate 2 does not require buildx.
+A warning that Docker Compose is configured to build using Bake while buildx is unavailable is non-blocking when the ordinary Docker builder completes successfully. The project does not require buildx.
