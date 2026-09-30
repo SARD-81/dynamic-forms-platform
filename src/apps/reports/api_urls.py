@@ -8,7 +8,11 @@ from .api_views import (
 )
 
 urlpatterns = [
-    path("subscriptions/", ReportSubscriptionListCreateAPIView.as_view(), name="report_subscription_list"),
+    path(
+        "subscriptions/",
+        ReportSubscriptionListCreateAPIView.as_view(),
+        name="report_subscription_list",
+    ),
     path(
         "subscriptions/<int:subscription_id>/",
         ReportSubscriptionDetailAPIView.as_view(),

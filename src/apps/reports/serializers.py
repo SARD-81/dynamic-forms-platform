@@ -37,7 +37,9 @@ class ReportSubscriptionWriteSerializer(serializers.Serializer):
             if not email:
                 raise serializers.ValidationError({"email": "Required for EMAIL delivery."})
             if endpoint_url:
-                raise serializers.ValidationError({"endpoint_url": "Must be empty for EMAIL delivery."})
+                raise serializers.ValidationError(
+                    {"endpoint_url": "Must be empty for EMAIL delivery."}
+                )
         elif method == ReportSubscription.DeliveryMethod.API:
             if not endpoint_url:
                 raise serializers.ValidationError({"endpoint_url": "Required for API delivery."})

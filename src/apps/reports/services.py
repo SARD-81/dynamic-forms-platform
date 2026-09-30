@@ -4,6 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import ReportSubscription
+from .periods import report_period_bounds
 from .selectors import get_platform_report_activity
 
 
@@ -34,7 +35,9 @@ def validate_subscription_input(*, frequency, delivery_method, email=None, endpo
         if not email:
             raise ValidationError({"email": "An email target is required for EMAIL delivery."})
         if endpoint_url:
-            raise ValidationError({"endpoint_url": "API endpoint must be empty for EMAIL delivery."})
+            raise ValidationError(
+                {"endpoint_url": "API endpoint must be empty for EMAIL delivery."}
+            )
         validate_email(email)
         return email, None
 
@@ -69,7 +72,14 @@ def create_report_subscription(
 
 @transaction.atomic
 def update_report_subscription(
-    *, actor, subscription_id, frequency, delivery_method, email=None, endpoint_url=None, is_active=True
+    *,
+    actor,
+    subscription_id,
+    frequency,
+    delivery_method,
+    email=None,
+    endpoint_url=None,
+    is_active=True,
 ):
     ensure_staff_actor(actor)
     subscription = ReportSubscription.objects.select_for_update().get(pk=subscription_id)
@@ -107,35 +117,15 @@ def deactivate_report_subscription(*, actor, subscription_id):
     return subscription
 
 
-def report_period_bounds(*, frequency, as_of=None):
-    if frequency not in ReportSubscription.Frequency.values:
-        raise ValidationError({"frequency": "Unsupported report frequency."})
-
-    as_of = as_of or timezone.now()
-    if timezone.is_naive(as_of):
-        as_of = timezone.make_aware(as_of, timezone.get_current_timezone())
-    local_as_of = timezone.localtime(as_of)
-
-    if frequency == ReportSubscription.Frequency.WEEKLY:
-        period_end = local_as_of.replace(hour=0, minute=0, second=0, microsecond=0)
-        period_end = period_end - timezone.timedelta(days=period_end.weekday())
-        period_start = period_end - timezone.timedelta(days=7)
-        return period_start, period_end
-
-    period_end = local_as_of.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    if period_end.month == 1:
-        period_start = period_end.replace(year=period_end.year - 1, month=12)
-    else:
-        period_start = period_end.replace(month=period_end.month - 1)
-    return period_start, period_end
-
-
 def generate_periodic_report_payload(*, frequency, as_of=None):
     period_start, period_end = report_period_bounds(frequency=frequency, as_of=as_of)
     generated_at = as_of or timezone.now()
     if timezone.is_naive(generated_at):
         generated_at = timezone.make_aware(generated_at, timezone.get_current_timezone())
-    activity = get_platform_report_activity(period_start=period_start, period_end=period_end)
+    activity = get_platform_report_activity(
+        period_start=period_start,
+        period_end=period_end,
+    )
     return {
         "schema_version": "1.0",
         "frequency": frequency,

@@ -1,11 +1,11 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
-from rest_framework import status
 
 from .models import ReportSubscription
 from .selectors import get_report_subscription, get_report_subscriptions
@@ -53,10 +53,16 @@ class ReportSubscriptionListCreateAPIView(GenericAPIView):
         serializer = ReportSubscriptionWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            subscription = create_report_subscription(actor=request.user, **serializer.validated_data)
+            subscription = create_report_subscription(
+                actor=request.user,
+                **serializer.validated_data,
+            )
         except DjangoValidationError as exc:
             return _service_error(exc)
-        return Response(ReportSubscriptionSerializer(subscription).data, status=status.HTTP_201_CREATED)
+        return Response(
+            ReportSubscriptionSerializer(subscription).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class ReportSubscriptionDetailAPIView(GenericAPIView):
@@ -73,7 +79,10 @@ class ReportSubscriptionDetailAPIView(GenericAPIView):
     def get(self, request, subscription_id):
         return Response(ReportSubscriptionSerializer(self._get_object(subscription_id)).data)
 
-    @extend_schema(request=ReportSubscriptionWriteSerializer, responses=ReportSubscriptionSerializer)
+    @extend_schema(
+        request=ReportSubscriptionWriteSerializer,
+        responses=ReportSubscriptionSerializer,
+    )
     def put(self, request, subscription_id):
         subscription = self._get_object(subscription_id)
         serializer = ReportSubscriptionWriteSerializer(data=request.data)
@@ -110,8 +119,14 @@ class PeriodicReportPreviewAPIView(GenericAPIView):
 
     @extend_schema(responses=PeriodicReportPayloadSerializer)
     def get(self, request):
-        frequency = request.query_params.get("frequency", ReportSubscription.Frequency.WEEKLY)
+        frequency = request.query_params.get(
+            "frequency",
+            ReportSubscription.Frequency.WEEKLY,
+        )
         if frequency not in ReportSubscription.Frequency.values:
-            return Response({"frequency": ["Unsupported report frequency."]}, status=400)
+            return Response(
+                {"frequency": ["Unsupported report frequency."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         payload = generate_periodic_report_payload(frequency=frequency)
         return Response(PeriodicReportPayloadSerializer(payload).data)

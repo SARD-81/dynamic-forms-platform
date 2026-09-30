@@ -1,10 +1,11 @@
-from django.db.models import Count, Q, Sum
+from django.db.models import BigIntegerField, Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
 
 from apps.forms.models import Form, FormSubmission
 from apps.processes.models import Process, ProcessRun
 
 from .models import ReportSubscription
+from .periods import report_period_bounds
 
 
 def get_report_subscriptions():
@@ -47,8 +48,20 @@ def get_platform_report_activity(*, period_start, period_end):
         completed_at__lt=period_end,
     ).count()
 
-    form_views = Form.objects.aggregate(total=Coalesce(Sum("view_count"), 0))["total"]
-    process_views = Process.objects.aggregate(total=Coalesce(Sum("view_count"), 0))["total"]
+    form_views = Form.objects.aggregate(
+        total=Coalesce(
+            Sum("view_count"),
+            Value(0),
+            output_field=BigIntegerField(),
+        )
+    )["total"]
+    process_views = Process.objects.aggregate(
+        total=Coalesce(
+            Sum("view_count"),
+            Value(0),
+            output_field=BigIntegerField(),
+        )
+    )["total"]
 
     return {
         "forms": {
@@ -78,11 +91,12 @@ def get_platform_report_activity(*, period_start, period_end):
 
 
 def get_due_report_subscriptions(*, as_of=None):
-    from .services import report_period_bounds
-
     due = []
     for subscription in get_report_subscriptions().filter(is_active=True):
-        _, period_end = report_period_bounds(frequency=subscription.frequency, as_of=as_of)
+        _, period_end = report_period_bounds(
+            frequency=subscription.frequency,
+            as_of=as_of,
+        )
         if subscription.last_sent_at is None or subscription.last_sent_at < period_end:
             due.append(subscription)
     return due
