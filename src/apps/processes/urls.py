@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import report_views, views
 
 app_name = "processes"
 
@@ -13,6 +13,21 @@ urlpatterns = [
     path("<int:process_id>/close/", views.process_close, name="close"),
     path("<int:process_id>/delete/", views.process_delete, name="delete"),
     path("<int:process_id>/builder/", views.process_builder, name="builder"),
+    path(
+        "<int:process_id>/report/",
+        report_views.process_report_dashboard,
+        name="report",
+    ),
+    path(
+        "<int:process_id>/report/runs/",
+        report_views.process_report_runs,
+        name="report_runs",
+    ),
+    path(
+        "<int:process_id>/report/runs/<uuid:run_public_id>/",
+        report_views.process_report_run_detail,
+        name="report_run_detail",
+    ),
     path(
         "<int:process_id>/builder/steps/new/",
         views.process_step_create,
