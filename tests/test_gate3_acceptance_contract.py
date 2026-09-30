@@ -21,7 +21,9 @@ class Gate3AcceptanceContractTests(TestCase):
         }
 
         missing = expected_paths.difference(paths)
-        self.assertFalse(missing, f"Mandatory Gate 3 API paths missing from OpenAPI: {sorted(missing)}")
+        self.assertFalse(
+            missing, f"Mandatory Gate 3 API paths missing from OpenAPI: {sorted(missing)}"
+        )
 
     def test_api_root_and_swagger_are_available_together(self):
         api_root = self.client.get("/api/v1/")
