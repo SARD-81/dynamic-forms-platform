@@ -27,9 +27,7 @@ def _process_report_revision(*, process):
             filter=Q(status=ProcessRun.Status.COMPLETED),
         ),
     )
-    step_revision = ProcessStepRun.objects.filter(
-        process_run__process_id=process.pk
-    ).aggregate(
+    step_revision = ProcessStepRun.objects.filter(process_run__process_id=process.pk).aggregate(
         completed_step_count=Count(
             "id",
             filter=Q(status=ProcessStepRun.Status.COMPLETED),
@@ -151,9 +149,7 @@ def process_run_list_item(run):
     return {
         "public_id": run.public_id,
         "status": run.status,
-        "respondent_type": (
-            "authenticated" if run.respondent_id is not None else "anonymous"
-        ),
+        "respondent_type": ("authenticated" if run.respondent_id is not None else "anonymous"),
         "started_at": run.started_at,
         "completed_at": run.completed_at,
         "completed_steps": run.completed_steps,
@@ -191,9 +187,7 @@ def get_process_report_run_detail(*, owner, process_id, run_public_id):
     return {
         "public_id": run.public_id,
         "status": run.status,
-        "respondent_type": (
-            "authenticated" if run.respondent_id is not None else "anonymous"
-        ),
+        "respondent_type": ("authenticated" if run.respondent_id is not None else "anonymous"),
         "started_at": run.started_at,
         "completed_at": run.completed_at,
         "steps": [
