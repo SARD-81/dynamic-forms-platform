@@ -41,9 +41,9 @@ GATE 2 was promoted from `dev` to `main` through milestone PR #22.
 
 ## GATE 3 — Application Feature Implementation
 
-Status: **CLOSED / FROZEN**
+Status: **CLOSED / FROZEN / PROMOTED TO MAIN**
 
-Execution tracker: GitHub Issue #25  
+Execution tracker: GitHub Issue #25 — CLOSED / completed  
 Execution plan: `Documents/project-control/gate3-execution-plan.md`  
 Acceptance verification: `Documents/testing/gate3-acceptance-verification.md`
 
@@ -51,9 +51,17 @@ Technical freeze point:
 
 `dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
+Documentation-freeze activation on `dev`:
+
+`53695eba20c39da8913bed27fdd16fd0efff6b4d`
+
+Milestone promotion on `main` through PR #76:
+
+`419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
+
 Active Gate 3 baselines:
 
-- `BL-FOUNDATION-002` — **FROZEN / AUTHORITATIVE** — active engineering/runtime foundation;
+- `BL-FOUNDATION-002` — **FROZEN / AUTHORITATIVE** — active engineering/runtime foundation until superseded through approved later change control;
 - `BL-APPLICATION-001` — **FROZEN / AUTHORITATIVE** — integrated mandatory application feature baseline.
 
 Historical baselines remain immutable:
@@ -83,9 +91,9 @@ The frozen Gate 3 application includes:
 
 ### Gate 3 closure evidence
 
-Issue #42 closure candidate PR #74 was Team Lead reviewed, corrected for the final OpenAPI runtime-coverage finding and squash-merged.
+Issue #42 closure-candidate PR #74 was Team Lead reviewed, corrected for the final OpenAPI runtime-coverage finding and squash-merged.
 
-PR #74 produced the technical freeze commit:
+PR #74 produced technical freeze commit:
 
 `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
@@ -100,21 +108,25 @@ Final closure-candidate CI #183:
 - critical HTML/API/OpenAPI smoke — PASS;
 - mandatory runtime OpenAPI paths, including Form/Process reporting — PASS.
 
-The follow-up documentation-only freeze PR creates/activates BL-FOUNDATION-002 and BL-APPLICATION-001 without changing application/runtime behavior.
+PR #75 then froze `BL-FOUNDATION-002` and `BL-APPLICATION-001` without changing application/runtime behavior. It squash-merged to `dev` as `53695eba20c39da8913bed27fdd16fd0efff6b4d` with green CI #187.
 
-### Bonus state
+PR #76 promoted the closed/frozen Gate 3 state from `dev` to `main`. Final promotion CI #189 passed `lint`, `test` with 365 tests, `migration-check` and `docker-smoke`. The milestone was explicitly Team Lead authorized and squash-merged to `main` as `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
 
-Issue #41 — Channels/WebSockets real-time reporting — is **DEFERRED FROM GATE 3** as optional BONUS/STRETCH scope.
+Because milestone promotion used squash merge, `dev` and `main` retain different commit histories while representing the same promoted Gate 3 tree content.
 
-It remains open for possible later implementation. No mandatory Gate 3 capability depends on WebSockets; HTTP reporting is authoritative.
+### Bonus state carried forward
+
+Issue #41 — Channels/WebSockets real-time reporting — was **DEFERRED FROM GATE 3** as optional BONUS/STRETCH scope.
+
+It is carried into Gate 4 as optional work. No mandatory capability depends on WebSockets; HTTP reporting remains authoritative.
 
 ### Applied Gate 3 Change Records
 
-- CHG-0003 — APPROVED / APPLIED for Redis cache and mandatory Celery worker/Beat runtime; optional Channels portion remains unapplied with #41 deferred;
+- CHG-0003 — APPROVED / APPLIED for Redis cache and mandatory Celery worker/Beat runtime; optional Channels portion remains available for #41;
 - CHG-0004 — APPROVED / APPLIED for production email configuration contract;
 - CHG-0005 — APPROVED / APPLIED for Team Lead Verification merge governance.
 
-## Gate 3 active governance
+## Active governance after Gate 3
 
 Workflow under CHG-0005:
 
@@ -128,34 +140,72 @@ Issue
 → explicit Team Lead merge decision
 ```
 
-Independent peer `APPROVED` review is optional and is not a merge, Definition-of-Done, Issue-closure, or Gate-closure prerequisite. Reviewers are not automatically requested merely to satisfy process.
+Independent peer `APPROVED` review is optional and is not a merge, Definition-of-Done, Issue-closure or Gate-closure prerequisite. Reviewers are not automatically requested merely to satisfy process.
 
 Team Lead Verification must confirm scope, integration state, required CI, architecture/frozen-baseline compatibility, migration intent, disposition of material findings, applicable security/privacy coverage and documentation synchronization.
 
-## Required CI after Gate 3 freeze
+## Stable CI entering Gate 4
 
-The stable required jobs are:
+The active Gate 3 verification jobs remain:
 
 - `lint` — Ruff format/lint;
 - `test` — full pytest suite;
 - `migration-check` — Django system check, migration drift and Compose config;
 - `docker-smoke` — clean full development topology bootstrap plus Celery and critical HTTP/API/OpenAPI smoke checks.
 
-## Gate 3 milestone promotion
+Gate 4 Issue #83 may add a production-oriented stable smoke job only after CHG-0006 authorizes the production runtime/quality boundary.
 
-Gate 3 closure/freeze on `dev` and promotion to `main` are separate control points.
+## GATE 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
-After the documentation-only freeze PR is reviewed and merged, promotion is:
+Status: **IN PROGRESS**
 
-```text
-dev
-→ Pull Request to main
-→ full required CI including docker-smoke
-→ Team Lead Verification
-→ explicit Team Lead merge decision
-```
+Tracker: GitHub Issue #77  
+Execution plan: `Documents/project-control/gate4-execution-plan.md`  
+Kickoff integration point: `dev@53695eba20c39da8913bed27fdd16fd0efff6b4d`
 
-Gate 3 being CLOSED means the mandatory feature set and baselines are frozen on `dev`; release/milestone promotion is complete only after the separate `dev → main` PR is explicitly merged.
+### Purpose
+
+Gate 4 closes the remaining production-delivery requirement intentionally left outside Gate 3. The mandatory target is a reproducible production-oriented runtime with real ASGI serving, `collectstatic`, Nginx reverse proxy/static serving, retained PostgreSQL/Redis/Celery behavior, operational diagnostics, production smoke verification and a documented release/runbook contract.
+
+The frozen Gate 3 application/data semantics remain authoritative inputs and must not be silently changed.
+
+### Team allocation by difficulty
+
+Mahsa-Alipour — **LIGHT only**:
+
+- #79 production requirements traceability / release evidence matrix;
+- #82 production deployment runbook + manual acceptance.
+
+amirrezaparvaneh — **MEDIUM**:
+
+- #80 operational health/readiness + runtime logging;
+- #83 production topology CI smoke/regression.
+
+SARD-81 — **HARD / CRITICAL**:
+
+- #78 CHG-0006 production-runtime authorization;
+- #81 production ASGI/Nginx/collectstatic topology;
+- #84 final integrated acceptance/baseline/promotion;
+- #41 optional real-time Channels/WebSockets bonus.
+
+All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
+
+### Gate 4 execution order
+
+Wave 1 starts in parallel with #78, #79 and #80 so all three team members have independent work immediately.
+
+After #78, SARD-81 proceeds to #81 while Mahsa may prepare #82. After stable #80/#81 interfaces exist, AmirReza proceeds to #83 and Mahsa finalizes #82. #41 may run as optional bonus after production proxy integration is stable. #84 closes/freeze/promotes only after mandatory #78–#83 are complete.
+
+### Gate 4 baseline/change-control target
+
+- #78 owns `CHG-0006` before production topology changes are applied;
+- applied/verified production foundation is expected to require `BL-FOUNDATION-003` before Gate 4 closure;
+- Gate 4 release acceptance is proposed as `BL-RELEASE-001`;
+- `BL-APPLICATION-001` remains authoritative unless application semantics actually change through explicit control.
+
+### Gate 4 bonus
+
+#41 real-time reporting is optional and non-blocking. If implemented it must use the previously reserved Channels Redis role, remain additive to authoritative HTTP reporting and integrate WebSocket ingress through the Gate 4 Nginx topology.
 
 ## Merge governance audit trail
 
@@ -186,22 +236,25 @@ Historical entries are not rewritten when governance changes later.
 - GATE 3 / Issue #38 / PR #70: Team Lead Verification; CI #174 green with 352 tests. Merge `cf10d45b357215b7e6f19cda9be8accadb33a926`.
 - GATE 3 / Issue #40 / PR #72: Team Lead Verification; CI #179 green with 361 tests. Merge `255d95b2150c89a07819d8a772cdc7742910d0fe`.
 - GATE 3 / Issue #42 closure candidate / PR #74: Team Lead reviewed; final OpenAPI smoke finding resolved; CI #183 green with 365 tests and full docker-smoke. Squash merge `72d5af1b5f26d9d3b8ba67605d96a69605878dcc` — technical freeze point for BL-FOUNDATION-002 and BL-APPLICATION-001.
+- GATE 3 / baseline freeze / PR #75: Team Lead Verification; CI #187 green. Squash merge `53695eba20c39da8913bed27fdd16fd0efff6b4d`.
+- GATE 3 milestone / PR #76: `dev → main`; Team Lead Verification; CI #189 green with 365 tests plus docker-smoke. Squash merge `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
 
 All entries before CHG-0005's effective merge retain their historical classification. After CHG-0005 is effective, absence of independent peer approval is not a Governance Exception by itself.
 
 ## Repository housekeeping
 
-Completed on 2026-09-22:
+Completed historical cleanup includes Issues #15, #17, #19 and #23 after their implementing PRs, plus accidental Issue #73 as `not_planned`.
 
-- Issue #15 closed as completed; implementation was delivered by PR #16.
-- Issue #17 closed as completed; implementation was delivered by PR #18.
-- Issue #19 closed as completed; implementation was delivered by PR #20.
-- Issue #23 closed as completed; status synchronization was delivered by PR #24.
-
-A temporary accidental Issue #73 created during #42 tooling was immediately closed as `not_planned` without implementation impact.
+Stale stacked Draft PR #62 was closed as superseded on 2026-09-30 because its intended Process presentation flow was rebuilt and delivered by merged PR #63.
 
 ## Current control point
 
-**GATE 3 mandatory application work is CLOSED/FROZEN at `dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`.**
+**GATE 4 — IN PROGRESS.**
 
-The remaining repository control action after activation of this documentation-only freeze is the separate Team Lead reviewed `dev → main` milestone promotion.
+Wave 1 is ready to run in parallel:
+
+- #78 — SARD-81 / HARD;
+- #79 — Mahsa / LIGHT;
+- #80 — AmirReza / MEDIUM.
+
+Gate 4 work starts from current `dev` and treats the frozen/promoted Gate 3 state as authoritative input.
