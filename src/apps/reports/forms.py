@@ -7,7 +7,7 @@ class ReportSubscriptionForm(forms.Form):
     frequency = forms.ChoiceField(choices=ReportSubscription.Frequency.choices)
     delivery_method = forms.ChoiceField(choices=ReportSubscription.DeliveryMethod.choices)
     email = forms.EmailField(required=False)
-    endpoint_url = forms.URLField(required=False)
+    endpoint_url = forms.URLField(required=False, assume_scheme="https")
     is_active = forms.BooleanField(required=False, initial=True)
 
     def clean(self):
