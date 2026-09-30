@@ -8,13 +8,23 @@ This directory is the version-controlled engineering record for the project.
 - `database/` — ERD source/render, data dictionary, model mapping, and constraint verification
 - `project-control/` — gate status, execution plans, frozen baselines, decision log, and change records
 - `deployment/` — environment, Docker, CI, bootstrap, and deployment records
-- `testing/` — quality/test foundation
+- `testing/` — quality/test and integrated acceptance verification
 - `api/` — versioned API contracts and OpenAPI documentation
 
-## Current execution
+## Current execution / control
 
 - [GATE 3 Application Execution Plan](project-control/gate3-execution-plan.md)
 - [Project Gate Status](project-control/gate-status.md)
+- [Gate 3 Acceptance Verification](testing/gate3-acceptance-verification.md)
+
+## Authoritative active baselines
+
+- [BL-ARCH-002](project-control/baselines/BL-ARCH-002.md) — architecture
+- [BL-DATA-002](project-control/baselines/BL-DATA-002.md) — domain/data
+- [BL-FOUNDATION-002](project-control/baselines/BL-FOUNDATION-002.md) — active engineering/runtime foundation after Gate 3
+- [BL-APPLICATION-001](project-control/baselines/BL-APPLICATION-001.md) — frozen mandatory Gate 3 application behavior
+
+`BL-FOUNDATION-001` remains frozen historical Gate 2 evidence and is superseded only for the active foundation state; it is not rewritten.
 
 ## Primary foundation documents
 
