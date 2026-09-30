@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <section class="auth-card" aria-labelledby="login-title">
+        <p class="eyebrow">Account</p>
+        <h1 id="login-title">Sign in</h1>
+        <p class="auth-card__intro">
+            Use your username and password after your email has been verified.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% include "includes/_form_errors.html" with form=form %}
+            {% include "includes/_form_field.html" with field=form.username %}
+            {% include "includes/_form_field.html" with field=form.password %}
+            {{ form.next }}
+
+            <div class="form-actions">
+                <button class="button button--primary" type="submit">Sign in</button>
+            </div>
+        </form>
+
+        <p class="auth-card__footer">
+            Need an account?
+            <a href="{% url 'accounts:register' %}">Create one</a>
+        </p>
+    </section>
+</div>
+{% endblock %}

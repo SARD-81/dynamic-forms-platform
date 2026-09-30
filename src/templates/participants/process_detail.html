@@ -1,0 +1,55 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ participant_process.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block public_kicker %}
+Published process · {{ participant_process.process_type|title }} · {{ participant_process.visibility|title }}
+{% endblock %}
+
+{% block public_title %}{{ participant_process.title }}{% endblock %}
+
+{% block public_intro %}
+<p>{{ participant_process.description|default:"No description provided." }}</p>
+{% endblock %}
+
+{% block public_content %}
+{% if execution_errors %}
+    <div class="form-summary-error" role="alert">
+        <p class="form-summary-error__title">Unable to start this process</p>
+        {% for error in execution_errors %}<p>{{ error }}</p>{% endfor %}
+    </div>
+{% endif %}
+
+<section class="auth-card">
+    <h2>Process execution</h2>
+    {% if current_run %}
+        <p>You already have an in-progress run for this process.</p>
+        <div class="form-actions">
+            <a class="button button--primary"
+               href="{% url 'processes_participant:run_detail' participant_process.public_id current_run.public_id %}">
+                Continue your run
+            </a>
+        </div>
+    {% else %}
+        <p>Start a new run. Linear processes unlock steps in order; free processes let you complete available steps in any order.</p>
+        <form method="post" action="{% url 'processes_participant:run_start' participant_process.public_id %}">
+            {% csrf_token %}
+            <button class="button button--primary" type="submit">Start process</button>
+        </form>
+    {% endif %}
+    <p class="auth-card__footer">
+        Have a resume token from an anonymous run?
+        <a href="{% url 'processes_participant:resume' participant_process.public_id %}">Resume a run</a>
+    </p>
+</section>
+
+<section class="dashboard-grid" aria-label="Process steps">
+    {% for step in participant_process.steps %}
+        <article class="feature-card">
+            <div class="feature-card__meta">Step {{ step.order }}</div>
+            <h2>Form step</h2>
+            <p>This form is completed inside the process run so progress can be tracked safely.</p>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

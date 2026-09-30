@@ -3,6 +3,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+POSITIVE_INTEGER_MAX = 2_147_483_647
+
 
 class Form(models.Model):
     class Visibility(models.TextChoices):

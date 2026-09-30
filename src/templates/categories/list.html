@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Categories · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+{% url "core:category_create" as create_url %}
+
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Organization</p>
+        <h1>Categories</h1>
+        <p>Organize your forms and processes with private, owner-scoped categories.</p>
+    </div>
+    <a class="button button--primary" href="{{ create_url }}">Create category</a>
+</header>
+
+{% if categories %}
+    <section class="dashboard-grid" aria-label="Your categories">
+        {% for category in categories %}
+            <article class="feature-card">
+                <div class="feature-card__meta">Category</div>
+                <h2>{{ category.name }}</h2>
+                <p>Available only inside your workspace.</p>
+                <div class="form-actions">
+                    <a
+                        class="button button--secondary"
+                        href="{% url 'core:category_update' category.id %}"
+                    >
+                        Rename
+                    </a>
+                    <a
+                        class="button button--ghost"
+                        href="{% url 'core:category_delete' category.id %}"
+                    >
+                        Delete
+                    </a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    {% include "includes/_state_empty.html" with state_title="No categories yet" state_message="Create your first category to organize forms and processes." state_action_url=create_url state_action_label="Create category" %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Unlock {{ resource_type_label }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Private {{ resource_type_label }}</p>
+        <h1>Participant access required</h1>
+        <p>Enter the access password to continue. The password is never stored in your session.</p>
+    </div>
+</header>
+
+<section class="auth-card">
+    {% if unlock_error %}
+        <div class="message message--error" role="alert">{{ unlock_error }}</div>
+    {% endif %}
+    <form method="post" action="{% url unlock_url public_id %}" novalidate>
+        {% csrf_token %}
+        {% if unlock_next %}
+            <input type="hidden" name="next" value="{{ unlock_next }}">
+        {% endif %}
+        <div class="form-field">
+            <label for="participant-password">Access password</label>
+            <input
+                id="participant-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">Unlock</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

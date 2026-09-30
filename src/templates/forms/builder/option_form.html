@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} · {{ managed_form.title }}{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Question {{ question.order }} · {{ question.get_question_type_display }}</p>
+        <h1>{{ page_title }}</h1>
+        <p>{{ question.text }}</p>
+    </div>
+</header>
+
+<section class="auth-card account-summary">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "includes/_form_errors.html" %}
+        {% include "includes/_form_field.html" with field=form.label %}
+
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">{{ submit_label }}</button>
+            <a class="button button--secondary" href="{% url 'forms:builder' managed_form.id %}">
+                Cancel
+            </a>
+        </div>
+    </form>
+</section>
+{% endblock %}

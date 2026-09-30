@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from celery.schedules import crontab
+
 from config.env import required_env
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -25,6 +27,7 @@ INSTALLED_APPS = [
     "apps.forms.apps.FormsConfig",
     "apps.processes.apps.ProcessesConfig",
     "apps.reports.apps.ReportsConfig",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -88,8 +91,56 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+
+DEFAULT_FROM_EMAIL = "no-reply@dynamic-forms.local"
+
+ACCOUNT_OTP_LENGTH = 6
+ACCOUNT_OTP_LIFETIME_SECONDS = 5 * 60
+ACCOUNT_OTP_MAX_ATTEMPTS = 5
+ACCOUNT_OTP_RESEND_COOLDOWN_SECONDS = 60
+ACCOUNT_OTP_RATE_LIMIT_COUNT = 5
+ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+
+PARTICIPANT_UNLOCK_RATE_LIMIT_COUNT = 5
+PARTICIPANT_UNLOCK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": required_env("REDIS_CACHE_URL"),
+        "OPTIONS": {
+            "socket_connect_timeout": 1,
+            "socket_timeout": 1,
+        },
+    }
+}
+
 CELERY_BROKER_URL = required_env("CELERY_BROKER_URL")
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_BEAT_SCHEDULE = {
+    "dispatch-due-periodic-reports-hourly": {
+        "task": "apps.reports.tasks.dispatch_due_report_subscriptions",
+        "schedule": crontab(minute=0),
+    },
+}
+
+REPORT_API_DELIVERY_TIMEOUT_SECONDS = 10
+REPORT_DELIVERY_MAX_RETRIES = 2
+REPORT_DELIVERY_RETRY_DELAY_SECONDS = 30
+REPORT_DELIVERY_RETRY_MAX_DELAY_SECONDS = 5 * 60
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Dynamic Forms Platform API",
+    "DESCRIPTION": "API Foundation and documentation for Gate 3",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

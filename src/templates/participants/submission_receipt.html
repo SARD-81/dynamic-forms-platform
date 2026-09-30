@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Submission received · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Submission received</p>
+        <h1>Thank you</h1>
+        <p>Your response to “{{ form_title }}” was saved successfully.</p>
+    </div>
+</header>
+
+<section class="auth-card account-summary">
+    <dl class="account-details">
+        <div>
+            <dt>Receipt ID</dt>
+            <dd>{{ submission.public_id }}</dd>
+        </div>
+        <div>
+            <dt>Submitted at</dt>
+            <dd>{{ submission.submitted_at }}</dd>
+        </div>
+    </dl>
+    <p>This receipt identifies only your newly created submission. It does not provide browsing access to other submissions.</p>
+</section>
+{% endblock %}
