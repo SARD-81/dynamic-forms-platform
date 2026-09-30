@@ -1,21 +1,26 @@
 # Dynamic Forms Platform
 
 A private team project for building and managing dynamic forms, multi-step workflows, submissions,
-reporting, and scheduled delivery with Django. Real-time report updates through Channels/WebSockets
-remain optional bonus scope and are not required for application correctness.
+reporting, scheduled delivery, and production-ready Django deployment. Real-time report updates
+through Channels/WebSockets remain optional bonus scope and are not required for application
+correctness or Gate 4 closure.
 
 ## Project status
 
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / HISTORICAL FOUNDATION
-- GATE 3 — **CLOSED / FROZEN** — BL-FOUNDATION-002 + BL-APPLICATION-001 at technical freeze `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
+- GATE 3 — **CLOSED / FROZEN / PROMOTED TO MAIN** — BL-FOUNDATION-002 + BL-APPLICATION-001; technical freeze `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`; milestone main commit `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
+- GATE 4 — **IN PROGRESS** — Production Readiness, Release Hardening & Bonus Enhancements; tracker #77
 
-Gate 3 development followed the Issue → branch → implementation/tests → PR → required CI green →
-Team Lead Verification → explicit merge workflow defined by CHG-0005.
+Gate 3 delivered and froze the mandatory application feature set and was promoted from `dev` to
+`main` through milestone PR #76 after green CI and Team Lead Verification.
 
-The separate `dev → main` milestone promotion remains a release/control action after Gate 3 freeze
-and uses the same required CI + Team Lead Verification model.
+Gate 4 closes the production-delivery gap intentionally left outside Gate 3: production ASGI
+serving without Django `runserver`, `collectstatic`, Nginx reverse proxy/static serving,
+operational health/readiness, production smoke verification and release/runbook evidence.
+
+See [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 
 ## Implemented Gate 3 capabilities
 
@@ -35,13 +40,27 @@ and uses the same required CI + Team Lead Verification model.
 - final browser FREE-flow and one-time resume-token hardening;
 - clean five-service Docker bootstrap/runtime smoke verification in CI.
 
-Issue #41 real-time reporting through Channels/WebSockets is explicitly deferred BONUS/STRETCH scope.
-HTTP reporting remains authoritative.
+Issue #41 real-time reporting through Channels/WebSockets is carried into Gate 4 as explicitly
+optional BONUS/STRETCH scope. HTTP reporting remains authoritative.
 
 The authoritative Gate 3 acceptance map is
 [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md).
 
-## Runtime baseline
+## Gate 4 ownership
+
+Work is intentionally distributed by difficulty:
+
+- Mahsa-Alipour — **LIGHT** documentation QA, traceability, runbook and manual acceptance work;
+- amirrezaparvaneh — **MEDIUM** health/readiness/logging and production CI verification;
+- SARD-81 — **HARD / CRITICAL** production change control, ASGI/Nginx/static/security topology,
+  optional real-time integration, final acceptance/baselines/promotion.
+
+All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
+
+Wave 1 starts in parallel with Issues #78, #79 and #80 so every team member has useful independent
+work immediately.
+
+## Runtime baseline entering Gate 4
 
 - Python 3.12
 - Django 5.2 LTS
@@ -55,9 +74,14 @@ The authoritative Gate 3 acceptance map is
 - GitHub Actions
 - Docker Compose
 
+The active frozen Gate 3 foundation is `BL-FOUNDATION-002`. Gate 4 production-runtime changes must
+first be authorized by #78 / CHG-0006 and may only become a new active foundation after verified
+implementation and a superseding baseline.
+
 ## Quick Start — Docker development
 
-This is the recommended first-time path.
+This is the recommended first-time development path. The production-oriented Gate 4 runtime is not
+claimed as complete until the corresponding Gate 4 Issues are implemented and verified.
 
 Prerequisite: Docker Engine/Desktop with Docker Compose v2.
 
@@ -104,7 +128,7 @@ docker compose up --build -d
 docker compose ps
 ```
 
-Expected state:
+Expected development state:
 
 - `postgres` — healthy
 - `redis` — healthy
@@ -124,7 +148,7 @@ The Django admin remains available at:
 http://localhost:8000/admin/login/
 ```
 
-### 4. Verify the foundation and scheduled-report runtime
+### 4. Verify the development foundation and scheduled-report runtime
 
 ```bash
 docker compose exec web python src/manage.py check
@@ -265,6 +289,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md),
 
 ## Foundation and verification documentation
 
+- [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md) — active production-readiness execution plan
 - [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen historical Gate 2 repository & engineering foundation
 - [BL-FOUNDATION-002](Documents/project-control/baselines/BL-FOUNDATION-002.md) — active frozen Gate 3 engineering/runtime foundation
 - [BL-APPLICATION-001](Documents/project-control/baselines/BL-APPLICATION-001.md) — frozen mandatory Gate 3 application feature baseline
