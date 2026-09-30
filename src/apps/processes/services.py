@@ -1,13 +1,19 @@
+import hashlib
+import secrets
+
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F, Max
+from django.utils import timezone
 
+from apps.core.integrations import lock_required_forms_for_process_run
 from apps.core.participant_access import invalidate_participant_read_model
 from apps.core.selectors import get_category_for_owner
 from apps.forms.models import Form
+from apps.forms.submission_services import submit_form
 
-from .models import Process, ProcessStep
+from .models import Process, ProcessRun, ProcessStep, ProcessStepRun
 from .selectors import get_process_steps_for_owner
 
 PROCESS_NOT_DRAFT_MESSAGE = "Only draft processes can be edited or deleted."
@@ -97,8 +103,6 @@ def _validate_publication_readiness(*, process):
     if len(form_ids) != len(set(form_ids)):
         errors["steps"] = ["Each form can only be attached once in a process."]
 
-    # قفل‌گذاری فرم‌ها به ترتیب صعودی ID جهت جلوگیری از Deadlock
-    # و Stale Read هم‌زمان با close_form
     locked_forms = {
         form.pk: form
         for form in Form.objects.select_for_update().filter(id__in=form_ids).order_by("id")
@@ -349,3 +353,156 @@ def reorder_process_steps(*, process, owner, step_ids):
                 process_id=locked_process.pk,
             )
         )
+
+
+# ==========================================
+# PROCESS EXECUTION ENGINE (#35)
+# ==========================================
+
+
+def generate_resume_token():
+    return secrets.token_urlsafe(32)
+
+
+def hash_resume_token(raw_token):
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def start_process_run(*, process, respondent=None):
+    with transaction.atomic():
+        locked_process = Process.objects.select_for_update().get(pk=process.pk)
+
+        if locked_process.status != Process.Status.PUBLISHED:
+            raise ValidationError({"process": ["Only published processes can be executed."]})
+
+        steps = list(locked_process.steps.order_by("order", "id"))
+        if not steps:
+            raise ValidationError({"steps": ["Cannot run a process with no steps."]})
+
+        # قرارداد قفل‌گذاری متقابل (Cross-domain locking contract):
+        # قبل از اعتبارسنجی در دسترس بودن فرم‌ها، ردیف‌های فرم با این تابع قفل می‌شوند
+        locked_forms_list = lock_required_forms_for_process_run(process_id=locked_process.pk)
+        locked_forms = {f.pk: f for f in locked_forms_list}
+
+        for step in steps:
+            f = locked_forms.get(step.form_id)
+            if f is None or f.status != Form.Status.PUBLISHED:
+                raise ValidationError({"forms": ["All step forms must be published."]})
+
+        raw_token = None
+        token_hash = None
+        if respondent:
+            if respondent.is_anonymous:
+                raise ValidationError({"respondent": ["Authenticated user required."]})
+        else:
+            raw_token = generate_resume_token()
+            token_hash = hash_resume_token(raw_token)
+
+        process_run = ProcessRun.objects.create(
+            process=locked_process,
+            respondent=respondent if respondent and not respondent.is_anonymous else None,
+            resume_token_hash=token_hash,
+            status=ProcessRun.Status.IN_PROGRESS,
+        )
+
+        for index, step in enumerate(steps):
+            if locked_process.process_type == Process.ProcessType.LINEAR:
+                step_status = (
+                    ProcessStepRun.Status.AVAILABLE if index == 0 else ProcessStepRun.Status.LOCKED
+                )
+            else:
+                step_status = ProcessStepRun.Status.AVAILABLE
+
+            ProcessStepRun.objects.create(
+                process_run=process_run,
+                process_step=step,
+                status=step_status,
+            )
+
+        return process_run, raw_token
+
+
+def complete_process_step_run(
+    *,
+    process_run,
+    step_run_id,
+    answers,
+    respondent=_UNSET,
+):
+    with transaction.atomic():
+        run = ProcessRun.objects.select_for_update().get(pk=process_run.pk)
+        if run.status == ProcessRun.Status.COMPLETED:
+            raise ValidationError({"run": ["This process run is already completed."]})
+
+        # الزام Authoritative Respondent طبق دستور تیم‌لید (Blocker 3)
+        if respondent is not _UNSET and respondent != run.respondent:
+            raise ValidationError(
+                {"respondent": ["Caller respondent does not match process run respondent."]}
+            )
+
+        step_run = (
+            ProcessStepRun.objects.select_for_update()
+            .select_related("process_step", "process_step__process", "process_step__form")
+            .filter(pk=step_run_id, process_run=run)
+            .first()
+        )
+        if not step_run:
+            raise ValidationError({"step_run": ["Step run not found."]})
+
+        if step_run.status != ProcessStepRun.Status.AVAILABLE:
+            raise ValidationError({"status": ["This step is not available for completion."]})
+
+        step = step_run.process_step
+
+        # Invariant 1: process_step.process_id == process_run.process_id
+        if step.process_id != run.process_id:
+            raise ValidationError(
+                {"invariant": ["process_step.process_id must match process_run.process_id"]}
+            )
+
+        form = step.form
+        if form.status != Form.Status.PUBLISHED:
+            raise ValidationError({"form": ["The target form is unavailable."]})
+
+        # هویت شرکت‌کننده در سابمیشن منحصراً از run.respondent قفل‌شده استخراج می‌شود
+        submission = submit_form(
+            form=form,
+            answers=answers,
+            respondent=run.respondent,
+        )
+
+        # Invariant 2: submission.form_id == process_step.form_id
+        if submission.form_id != step.form_id:
+            raise ValidationError(
+                {"invariant": ["submission.form_id must match process_step.form_id"]}
+            )
+
+        step_run.submission = submission
+        step_run.status = ProcessStepRun.Status.COMPLETED
+        step_run.completed_at = timezone.now()
+        step_run.save(update_fields=["submission", "status", "completed_at"])
+
+        # پیشروی ترتیبی مطمئن در مدل LINEAR
+        if run.process.process_type == Process.ProcessType.LINEAR:
+            next_step_run = (
+                ProcessStepRun.objects.select_for_update()
+                .filter(process_run=run, process_step__order__gt=step.order)
+                .order_by("process_step__order", "id")
+                .first()
+            )
+            if next_step_run and next_step_run.status == ProcessStepRun.Status.LOCKED:
+                next_step_run.status = ProcessStepRun.Status.AVAILABLE
+                next_step_run.save(update_fields=["status"])
+
+        # بررسی پایان اجرای کل پروسه
+        has_uncompleted = (
+            ProcessStepRun.objects.filter(process_run=run)
+            .exclude(status=ProcessStepRun.Status.COMPLETED)
+            .exists()
+        )
+        if not has_uncompleted:
+            run.status = ProcessRun.Status.COMPLETED
+            run.completed_at = timezone.now()
+            run.save(update_fields=["status", "completed_at"])
+
+        return step_run
