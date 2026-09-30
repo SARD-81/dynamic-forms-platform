@@ -106,10 +106,12 @@ ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 PARTICIPANT_UNLOCK_RATE_LIMIT_COUNT = 5
 PARTICIPANT_UNLOCK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 
+REDIS_CACHE_URL = required_env("REDIS_CACHE_URL")
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": required_env("REDIS_CACHE_URL"),
+        "LOCATION": REDIS_CACHE_URL,
         "OPTIONS": {
             "socket_connect_timeout": 1,
             "socket_timeout": 1,
@@ -143,4 +145,52 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API Foundation and documentation for Gate 3",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "sensitive_data_filter": {
+            "()": "apps.core.logging.SensitiveDataFilter",
+        },
+    },
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "filters": ["sensitive_data_filter"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }
