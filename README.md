@@ -8,11 +8,14 @@ remain optional bonus scope and are not required for application correctness.
 
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
-- GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / AUTHORITATIVE
-- GATE 3 — **IN PROGRESS / CLOSURE CANDIDATE** — mandatory feature/runtime work through #40 is merged; #42 final verification/freeze remains
+- GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / HISTORICAL FOUNDATION
+- GATE 3 — **CLOSED / FROZEN** — BL-FOUNDATION-002 + BL-APPLICATION-001 at technical freeze `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
-Active GATE 3 development starts from `dev` and follows the Issue → branch → implementation/tests →
-PR → required CI green → Team Lead Verification → squash merge workflow defined by CHG-0005.
+Gate 3 development followed the Issue → branch → implementation/tests → PR → required CI green →
+Team Lead Verification → explicit merge workflow defined by CHG-0005.
+
+The separate `dev → main` milestone promotion remains a release/control action after Gate 3 freeze
+and uses the same required CI + Team Lead Verification model.
 
 ## Implemented Gate 3 capabilities
 
@@ -28,7 +31,12 @@ PR → required CI green → Team Lead Verification → squash merge workflow de
 - DRF API v1 with OpenAPI schema and Swagger UI;
 - Redis-backed participant/report caching with explicit invalidation and database fallback;
 - staff-managed WEEKLY/MONTHLY report subscriptions;
-- Celery/Beat scheduled EMAIL/API report delivery with bounded retry behavior.
+- Celery/Beat scheduled EMAIL/API report delivery with bounded retry behavior;
+- final browser FREE-flow and one-time resume-token hardening;
+- clean five-service Docker bootstrap/runtime smoke verification in CI.
+
+Issue #41 real-time reporting through Channels/WebSockets is explicitly deferred BONUS/STRETCH scope.
+HTTP reporting remains authoritative.
 
 The authoritative Gate 3 acceptance map is
 [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md).
@@ -155,7 +163,7 @@ docker compose down
 A first clean bootstrap should complete in under 15 minutes, excluding image-download/network time.
 The CI `docker-smoke` job also performs a clean image build, starts the complete five-service
 development topology, verifies the Celery worker/task registry, and smoke-tests critical HTML/API
-routes on every PR to `dev` or `main`.
+and mandatory OpenAPI routes on every PR to `dev` or `main`.
 
 ## Application layout
 
@@ -245,7 +253,7 @@ Issue → branch from dev → implementation/tests → PR to dev → required CI
 Milestone promotion:
 
 ```text
-dev → PR to main → required CI green → Team Lead Verification → squash merge to main
+dev → PR to main → required CI green → Team Lead Verification → explicit Team Lead merge decision
 ```
 
 Independent peer approval is optional under CHG-0005 and is not auto-requested merely to satisfy
@@ -258,8 +266,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md),
 ## Foundation and verification documentation
 
 - [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen historical Gate 2 repository & engineering foundation
-- [Project gate status](Documents/project-control/gate-status.md) — current gate execution status
-- [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md) — integrated closure-candidate evidence map
+- [BL-FOUNDATION-002](Documents/project-control/baselines/BL-FOUNDATION-002.md) — active frozen Gate 3 engineering/runtime foundation
+- [BL-APPLICATION-001](Documents/project-control/baselines/BL-APPLICATION-001.md) — frozen mandatory Gate 3 application feature baseline
+- [Project gate status](Documents/project-control/gate-status.md) — current gate/baseline status
+- [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md) — frozen integrated acceptance evidence
 - [Environment contract](Documents/deployment/environment-contract.md)
 - [Docker development](Documents/deployment/docker-development.md)
 - [Quality & test foundation](Documents/testing/quality-test-foundation.md)
@@ -272,15 +282,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md),
 - [Rendered ERD](Documents/database/erd.svg)
 - [Authoritative ERD source](Documents/database/erd.nomnoml)
 
-After the #42 closure-candidate is merged, a separate freeze PR will create `BL-FOUNDATION-002` and
-`BL-APPLICATION-001` using the exact merged `dev` SHA. Previous frozen baselines are never edited in
-place.
+Previous frozen baselines are never edited in place. Structural changes require explicit Change
+Records and superseding baselines where needed.
 
 ## Configuration boundary
 
 Only settings/configuration may read environment variables.
 
-Business code, Services, Selectors, views, and models must not call `os.getenv()` directly.
+Business code, Services, Selectors, views, APIs, tasks and models must not call `os.getenv()`
+directly.
 
 Frozen baselines are never edited silently; approved structural changes require Change Records and
 superseding baselines when needed.
