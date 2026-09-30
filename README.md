@@ -18,7 +18,8 @@ Gate 3 delivered and froze the mandatory application feature set and was promote
 
 Gate 4 closes the production-delivery gap intentionally left outside Gate 3: production ASGI
 serving without Django `runserver`, `collectstatic`, Nginx reverse proxy/static serving,
-operational health/readiness, production smoke verification and release/runbook evidence.
+operational health/readiness, reusable production verification tooling and automated production
+smoke verification.
 
 See [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 
@@ -48,15 +49,16 @@ The authoritative Gate 3 acceptance map is
 
 ## Gate 4 ownership
 
-- Mahsa-Alipour — documentation QA, traceability, runbook and manual acceptance work;
-- amirrezaparvaneh — health/readiness/logging and production CI verification;
-- SARD-81 — production change control, ASGI/Nginx/static/security topology, optional real-time
-  integration, final acceptance/baselines/promotion.
+- Mahsa-Alipour — production preflight command/tests (#79) and reusable production HTTP/static
+  verifier (#82);
+- amirrezaparvaneh — health/readiness/logging (#80) and production CI verification (#83);
+- SARD-81 — production change control (#78), ASGI/Nginx/static/security topology (#81), optional
+  real-time integration (#41), and final acceptance/baselines/promotion (#84).
 
 All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
 
-Wave 1 starts in parallel with Issues #78, #79 and #80 so every team member has useful independent
-work immediately.
+Wave 1 starts with #78, #79 and #80 in parallel. #79 is deliberately isolated from production
+Nginx/Compose implementation so Mahsa can contribute development code without blocking #81.
 
 ## Runtime baseline entering Gate 4
 
@@ -266,24 +268,21 @@ in `pyproject.toml`.
 
 ## Workflow
 
-Normal development:
+Gate 4 development currently follows:
 
 ```text
-Issue → branch from dev → implementation/tests → PR to dev → required CI green → Team Lead Verification → squash merge to dev
+Issue → branch from dev → implementation/tests → PR to dev → required CI green → independent peer review → Team Lead verification → squash merge to dev
 ```
 
-Milestone promotion:
+Gate 4 does not silently extend the Gate 3-only CHG-0005 governance record. A later Gate 4-specific
+Change Record may supersede this rule explicitly.
 
-```text
-dev → PR to main → required CI green → Team Lead Verification → explicit Team Lead merge decision
-```
-
-Independent peer approval is optional under CHG-0005 and is not auto-requested merely to satisfy
-governance.
+Milestone promotion uses the same active Gate 4 review/verification requirements before explicit
+Team Lead merge decision.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md),
 [BL-ARCH-002](Documents/project-control/baselines/BL-ARCH-002.md), and
-[CHG-0005](Documents/project-control/change-records/CHG-0005.md).
+[Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 
 ## Foundation and verification documentation
 
