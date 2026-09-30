@@ -1,6 +1,6 @@
 # Project Gate Status
 
-Updated: 2026-09-29
+Updated: 2026-09-30
 
 ## GATE 0 — Scope & Architecture
 
@@ -114,10 +114,14 @@ dev
 - GATE 3 / Governance audit / PR #57: squash-merged into `dev` as an explicit governance exception. PR #57 had no independent peer `APPROVED` review at merge time; its review list was empty. CI run #120 was fully green with 240 passing tests, but CI evidence is not peer-review evidence. PR #57 documented earlier exceptions for PR #56 and PR #55 but is itself a separate exception. Resulting merge commit: `2d4718e053103637beee450ba1ce49253324e9f2`.
 - GATE 3 / Issue #33 / PR #59: squash-merged into `dev` as an explicit governance exception with team-lead authorization. PR #59 had no independent peer `APPROVED` review at merge time; its recorded review list was empty. Final CI run #131 was fully green with 276 passing tests, plus Ruff format/lint, Django system check, migration drift, and Docker Compose validation. CI and implementation verification are not peer-review evidence. Resulting merge commit: `9890f90e5da6add8b32b6f16c1fc6701507c5c6f`.
 - GATE 3 / Issue #36 / PR #60: squash-merged into `dev` as an explicit governance exception with team-lead authorization. PR #60 had no independent peer `APPROVED` review at merge time; its recorded review list was empty. Final CI run #144 was fully green with 302 passing tests, including the cache-delete recovery regression, plus Ruff format/lint, Django system check, migration drift, and Docker Compose validation. CI and implementation verification are not peer-review evidence. Resulting merge commit: `6635b2ab12fd553a649086023c87270353cf5492`.
+- GATE 3 / Governance audit follow-up / PR #58: independently approved by `amirrezaparvaneh`, CI #146 green, and squash-merged to `dev` as `f4874e8b4531a7acd44a439b7a16c7af94f7e20c`. PR #58 is the corrective audit record for the PR #57/#59/#60 governance exceptions and does not retroactively convert those merges into peer-reviewed merges.
+- GATE 3 / Issue #35 backend / PR #61: independently reviewed and squash-merged to `dev` after the requested backend corrections and green CI #156. Resulting merge commit: `5163a30d1b9f9a84accfbd60d2e34982b38929c8`.
+- GATE 3 / Issue #35 presentation / PR #63: squash-merged into `dev` as an explicit governance exception with team-lead authorization. PR #63 had no independent peer `APPROVED` review recorded before merge; its review list was empty. CI #159 was fully green for test, Ruff format/lint, Django system check, migration drift, and Docker Compose validation. CI and implementation verification are not peer-review evidence. Resulting merge commit: `1d8790a9089c966752544836e7d6973e997edb5b`. Two non-blocking hardening notes are carried to Issue #42: add an HTML end-to-end regression for `FREE` Process arbitrary-order completion, and refine UI wording to accurately describe temporary raw resume-token retention in session until first presentation.
 
 The GATE 2 owner merges above were explicit bootstrap/access exceptions, not a replacement for the
 peer-review policy. Collaborator write access is now available, so normal GATE 3 Pull Requests are
-expected to receive peer review.
+expected to receive peer review. Governance exceptions remain audit records and must not be treated
+as precedent or as completed peer review.
 
 ## Repository housekeeping
 
