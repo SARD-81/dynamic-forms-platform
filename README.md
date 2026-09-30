@@ -48,12 +48,10 @@ The authoritative Gate 3 acceptance map is
 
 ## Gate 4 ownership
 
-Work is intentionally distributed by difficulty:
-
-- Mahsa-Alipour — **LIGHT** documentation QA, traceability, runbook and manual acceptance work;
-- amirrezaparvaneh — **MEDIUM** health/readiness/logging and production CI verification;
-- SARD-81 — **HARD / CRITICAL** production change control, ASGI/Nginx/static/security topology,
-  optional real-time integration, final acceptance/baselines/promotion.
+- Mahsa-Alipour — documentation QA, traceability, runbook and manual acceptance work;
+- amirrezaparvaneh — health/readiness/logging and production CI verification;
+- SARD-81 — production change control, ASGI/Nginx/static/security topology, optional real-time
+  integration, final acceptance/baselines/promotion.
 
 All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
 
