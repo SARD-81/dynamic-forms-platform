@@ -1,17 +1,37 @@
 # Dynamic Forms Platform
 
 A private team project for building and managing dynamic forms, multi-step workflows, submissions,
-reporting, scheduled delivery, and real-time report updates with Django.
+reporting, and scheduled delivery with Django. Real-time report updates through Channels/WebSockets
+remain optional bonus scope and are not required for application correctness.
 
 ## Project status
 
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / AUTHORITATIVE
-- GATE 3 — **IN PROGRESS** — application feature implementation; no GATE 3 baseline is frozen yet
+- GATE 3 — **IN PROGRESS / CLOSURE CANDIDATE** — mandatory feature/runtime work through #40 is merged; #42 final verification/freeze remains
 
 Active GATE 3 development starts from `dev` and follows the Issue → branch → implementation/tests →
 PR → required CI green → Team Lead Verification → squash merge workflow defined by CHG-0005.
+
+## Implemented Gate 3 capabilities
+
+- Django account registration, email OTP activation, login and logout;
+- owner-scoped categories;
+- unlimited dynamic Forms with TEXT, NUMBER, SELECT and CHECKBOX questions;
+- Form publish/close lifecycle, PUBLIC/PRIVATE access and unique participant links;
+- anonymous and authenticated Form submissions with validated Answers;
+- LINEAR and FREE Processes composed from Forms;
+- anonymous token resume and authenticated Process resume;
+- Form analytics, response browsing and aggregate question reports;
+- Process analytics, ProcessRun browsing and completion metrics;
+- DRF API v1 with OpenAPI schema and Swagger UI;
+- Redis-backed participant/report caching with explicit invalidation and database fallback;
+- staff-managed WEEKLY/MONTHLY report subscriptions;
+- Celery/Beat scheduled EMAIL/API report delivery with bounded retry behavior.
+
+The authoritative Gate 3 acceptance map is
+[Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md).
 
 ## Runtime baseline
 
@@ -133,6 +153,9 @@ docker compose down
 ```
 
 A first clean bootstrap should complete in under 15 minutes, excluding image-download/network time.
+The CI `docker-smoke` job also performs a clean image build, starts the complete five-service
+development topology, verifies the Celery worker/task registry, and smoke-tests critical HTML/API
+routes on every PR to `dev` or `main`.
 
 ## Application layout
 
@@ -232,10 +255,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md),
 [BL-ARCH-002](Documents/project-control/baselines/BL-ARCH-002.md), and
 [CHG-0005](Documents/project-control/change-records/CHG-0005.md).
 
-## Foundation documentation
+## Foundation and verification documentation
 
-- [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen repository & engineering foundation
+- [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen historical Gate 2 repository & engineering foundation
 - [Project gate status](Documents/project-control/gate-status.md) — current gate execution status
+- [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md) — integrated closure-candidate evidence map
 - [Environment contract](Documents/deployment/environment-contract.md)
 - [Docker development](Documents/deployment/docker-development.md)
 - [Quality & test foundation](Documents/testing/quality-test-foundation.md)
@@ -247,6 +271,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md),
 - [PostgreSQL constraint verification](Documents/database/postgresql-constraint-verification.md)
 - [Rendered ERD](Documents/database/erd.svg)
 - [Authoritative ERD source](Documents/database/erd.nomnoml)
+
+After the #42 closure-candidate is merged, a separate freeze PR will create `BL-FOUNDATION-002` and
+`BL-APPLICATION-001` using the exact merged `dev` SHA. Previous frozen baselines are never edited in
+place.
 
 ## Configuration boundary
 
