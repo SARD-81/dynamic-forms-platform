@@ -46,4 +46,6 @@ def set_cached_process_report(*, payload, **revision):
             timeout=PROCESS_REPORT_CACHE_TIMEOUT_SECONDS,
         )
     except Exception:
-        logger.warning("Process report cache write failed; continuing without cache.", exc_info=True)
+        logger.warning(
+            "Process report cache write failed; continuing without cache.", exc_info=True
+        )
