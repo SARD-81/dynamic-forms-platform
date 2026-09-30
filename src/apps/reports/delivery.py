@@ -98,7 +98,9 @@ def _deliver_api(*, subscription, payload):
             request,
             timeout=settings.REPORT_API_DELIVERY_TIMEOUT_SECONDS,
         ) as response:
-            status_code = getattr(response, "status", response.getcode())
+            status_code = getattr(response, "status", None)
+            if status_code is None:
+                status_code = response.getcode()
     except HTTPError as exc:
         raise ReportDeliveryError(f"API delivery returned HTTP {exc.code}.") from exc
     except (URLError, TimeoutError, OSError) as exc:
