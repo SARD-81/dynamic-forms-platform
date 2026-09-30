@@ -31,7 +31,8 @@ A linked FormSubmission is exposed only as a safe reference with public ID, subm
 - Reporting reads live in `apps.processes.report_selectors`.
 - Run lists use annotations for progress counts and avoid per-run queries.
 - Run detail prefetches ordered step state, Form, and linked FormSubmission rows.
-- Summary cache keys are revisioned from authoritative database state: run count, latest run ID, completed-run count, completed-step count, and latest step completion time.
+- DRAFT Process summaries bypass the reporting cache because their step/Form schema remains mutable.
+- PUBLISHED/CLOSED summary cache keys are revisioned from authoritative database state: run count, latest run ID, completed-run count, completed-step count, and latest step completion time.
 - Starting a run or completing a step changes the revision, making stale cached summaries unreachable.
 - The database remains the source of truth.
 - Process `view_count` is read live outside the cached aggregate payload.
