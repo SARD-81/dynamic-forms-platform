@@ -88,10 +88,9 @@ A ProcessRun has exactly one identity mode:
 Anonymous raw resume tokens:
 
 - are returned/presented only where needed for participant continuation;
-- are never persisted as raw values;
+- are never stored on `ProcessRun`; only their hash is stored there;
+- may be retained temporarily in the participant session until first presentation and are then removed from that session payload;
 - are never placed in participant URLs;
-- may be held temporarily in browser session state until first presentation;
-- are removed from that temporary session payload after first display;
 - are compared using their stored digest/hash authority.
 
 Ambient login does not convert an anonymous run into an authenticated run.
