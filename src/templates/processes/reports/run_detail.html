@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Run · {{ report.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Process run · {{ run.status|title }}</p>
+        <h1>{{ report.title }}</h1>
+        <p>{{ run.respondent_type|title }} run · started {{ run.started_at }}</p>
+    </div>
+    <a class="button button--secondary" href="{% url 'processes:report_runs' report.id %}">Back to runs</a>
+</header>
+
+<section class="auth-card account-summary">
+    <dl class="account-details">
+        <div><dt>Run ID</dt><dd>{{ run.public_id }}</dd></div>
+        <div><dt>Identity type</dt><dd>{{ run.respondent_type|title }}</dd></div>
+        <div><dt>Status</dt><dd>{{ run.status|title }}</dd></div>
+        <div><dt>Started</dt><dd>{{ run.started_at }}</dd></div>
+        <div><dt>Completed</dt><dd>{{ run.completed_at|default:"—" }}</dd></div>
+    </dl>
+</section>
+
+<section class="dashboard-grid" aria-label="Run step states">
+    {% for step in run.steps %}
+        <article class="feature-card">
+            <div class="feature-card__meta">Step {{ step.order }} · {{ step.status|title }}</div>
+            <h2>{{ step.form_title }}</h2>
+            {% if step.submission %}
+                <p>Submitted {{ step.submission.submitted_at }} · {{ step.submission.respondent_type|title }}</p>
+                <div class="form-actions">
+                    <a class="button button--secondary"
+                       href="{% url 'forms:report_response_detail' step.form_id step.submission.public_id %}">
+                        View linked Form response
+                    </a>
+                </div>
+            {% elif step.status == "LOCKED" %}
+                <p>This step is still locked for this run.</p>
+            {% else %}
+                <p>No FormSubmission is linked to this step yet.</p>
+            {% endif %}
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}
