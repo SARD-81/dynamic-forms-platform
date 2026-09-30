@@ -27,23 +27,23 @@ Gate 4 consumes without rewriting:
 
 Any structural production-runtime change must use Change Control. Issue #78 owns `CHG-0006` before the production topology is implemented.
 
-## Difficulty-based ownership
+## Team ownership
 
-### Mahsa-Alipour — LIGHT
+### Mahsa-Alipour
 
 - #79 — production requirements traceability and release-evidence matrix;
 - #82 — production deployment runbook and manual release acceptance.
 
 Mahsa owns documentation QA, traceability and manual evidence. She does not own production architecture, Docker/Nginx implementation, security-critical configuration, or Django Template implementation.
 
-### amirrezaparvaneh — MEDIUM
+### amirrezaparvaneh
 
 - #80 — operational health/readiness diagnostics and runtime logging contract;
 - #83 — production topology CI smoke and operational regression.
 
 AmirReza owns bounded backend/operations/CI work that consumes the Team Lead-defined production architecture.
 
-### SARD-81 — HARD / CRITICAL
+### SARD-81
 
 - #78 — CHG-0006 production runtime authorization;
 - #81 — production ASGI/Nginx/collectstatic topology;
@@ -94,25 +94,25 @@ Mandatory dependency: #78–#83 complete. #41 is optional.
 ```text
 WAVE 1 (parallel)
 
-#78 CHG-0006 [SARD-81 / HARD] ───────────────┐
+#78 CHG-0006 [SARD-81] ──────────────────────┐
                                                ↓
                                       #81 Production runtime
-                                      [SARD-81 / HARD]
+                                      [SARD-81]
                                                │
                                                ├──────────────┐
                                                ↓              ↓
 #79 Requirements matrix                 #82 Runbook       #83 Production CI
-[Mahsa / LIGHT] ───────────────────────→ [Mahsa / LIGHT]  [AmirReza / MEDIUM]
+[Mahsa] ───────────────────────────────→ [Mahsa]          [AmirReza]
                                                               ↑
 #80 Health/readiness/logging ─────────────────────────────────┘
-[AmirReza / MEDIUM]
+[AmirReza]
 
-#81 ──→ optional #41 Real-time [SARD-81 / BONUS HARD]
+#81 ──→ optional #41 Real-time [SARD-81]
 
 #78 + #79 + #80 + #81 + #82 + #83
                     ↓
               #84 Gate 4 closure
-              [SARD-81 / HARD]
+              [SARD-81]
 ```
 
 ## Mandatory production contract target
