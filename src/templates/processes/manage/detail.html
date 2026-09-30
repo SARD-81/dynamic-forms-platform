@@ -44,6 +44,9 @@
         <a class="button button--secondary" href="{% url 'processes:builder' managed_process.id %}">
             {% if managed_process.status == "DRAFT" %}Build steps{% else %}View steps{% endif %}
         </a>
+        <a class="button button--secondary" href="{% url 'processes:report' managed_process.id %}">
+            View report
+        </a>
 
         {% if managed_process.status == "DRAFT" %}
             <a class="button button--secondary" href="{% url 'processes:update' managed_process.id %}">
