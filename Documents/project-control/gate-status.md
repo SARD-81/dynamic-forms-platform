@@ -1,6 +1,6 @@
 # Project Gate Status
 
-Updated: 2026-09-30
+Updated: 2026-10-01
 
 ## GATE 0 — Scope & Architecture
 
@@ -108,7 +108,7 @@ Final closure-candidate CI #183:
 - critical HTML/API/OpenAPI smoke — PASS;
 - mandatory runtime OpenAPI paths, including Form/Process reporting — PASS.
 
-PR #75 then froze `BL-FOUNDATION-002` and `BL-APPLICATION-001` without changing application/runtime behavior. It squash-merged to `dev` as `53695eba20c39da8913bed27fdd16fd0efff6b4d` with green CI #187.
+PR #75 froze `BL-FOUNDATION-002` and `BL-APPLICATION-001` without changing application/runtime behavior. It squash-merged to `dev` as `53695eba20c39da8913bed27fdd16fd0efff6b4d` with green CI #187.
 
 PR #76 promoted the closed/frozen Gate 3 state from `dev` to `main`. Final promotion CI #189 passed `lint`, `test` with 365 tests, `migration-check` and `docker-smoke`. The milestone was explicitly Team Lead authorized and squash-merged to `main` as `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
 
@@ -124,25 +124,15 @@ It is carried into Gate 4 as optional work. No mandatory capability depends on W
 
 - CHG-0003 — APPROVED / APPLIED for Redis cache and mandatory Celery worker/Beat runtime; optional Channels portion remains available for #41;
 - CHG-0004 — APPROVED / APPLIED for production email configuration contract;
-- CHG-0005 — APPROVED / APPLIED for Team Lead Verification merge governance.
+- CHG-0005 — APPROVED / APPLIED for Team Lead Verification merge governance **for the remainder of Gate 3**.
 
-## Active governance after Gate 3
+## Governance entering Gate 4
 
-Workflow under CHG-0005:
+CHG-0005 remains a historical Gate 3 governance decision and is not silently extended beyond its approved scope.
 
-```text
-Issue
-→ short-lived branch from current dev
-→ implementation + tests
-→ Pull Request
-→ required CI green
-→ Team Lead Verification
-→ explicit Team Lead merge decision
-```
+Until a Gate 4-specific governance record explicitly changes the rule, Gate 4 PRs use the repository's normal independent peer-review requirement together with required green CI and Team Lead verification/explicit merge decision.
 
-Independent peer `APPROVED` review is optional and is not a merge, Definition-of-Done, Issue-closure or Gate-closure prerequisite. Reviewers are not automatically requested merely to satisfy process.
-
-Team Lead Verification must confirm scope, integration state, required CI, architecture/frozen-baseline compatibility, migration intent, disposition of material findings, applicable security/privacy coverage and documentation synchronization.
+Material automated/manual findings must still be resolved or explicitly accepted with evidence.
 
 ## Stable CI entering Gate 4
 
@@ -153,7 +143,7 @@ The active Gate 3 verification jobs remain:
 - `migration-check` — Django system check, migration drift and Compose config;
 - `docker-smoke` — clean full development topology bootstrap plus Celery and critical HTTP/API/OpenAPI smoke checks.
 
-Gate 4 Issue #83 may add a production-oriented stable smoke job only after CHG-0006 authorizes the production runtime/quality boundary.
+Gate 4 Issue #83 must add a stable `production-smoke` job, or an explicitly equivalent required production-topology job named by #83/#84, after CHG-0006 authorizes the production runtime/quality boundary.
 
 ## GATE 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
@@ -165,7 +155,7 @@ Kickoff integration point: `dev@53695eba20c39da8913bed27fdd16fd0efff6b4d`
 
 ### Purpose
 
-Gate 4 closes the remaining production-delivery requirement intentionally left outside Gate 3. The mandatory target is a reproducible production-oriented runtime with real ASGI serving, `collectstatic`, Nginx reverse proxy/static serving, retained PostgreSQL/Redis/Celery behavior, operational diagnostics, production smoke verification and a documented release/runbook contract.
+Gate 4 closes the remaining production-delivery requirement intentionally left outside Gate 3. The mandatory target is a reproducible production-oriented runtime with real ASGI serving, `collectstatic`, Nginx reverse proxy/static serving, retained PostgreSQL/Redis/Celery behavior, operational diagnostics, reusable production verification tooling and mandatory production-smoke CI.
 
 The frozen Gate 3 application/data semantics remain authoritative inputs and must not be silently changed.
 
@@ -173,13 +163,15 @@ The frozen Gate 3 application/data semantics remain authoritative inputs and mus
 
 Mahsa-Alipour:
 
-- #79 production requirements traceability / release evidence matrix;
-- #82 production deployment runbook + manual acceptance.
+- #79 production preflight command + deployment-safety verification;
+- #82 reusable production HTTP/static smoke verifier.
+
+Mahsa's Gate 4 work is development tooling that directly supports #81/#83/#84 and is intentionally isolated from Nginx/Compose implementation to minimize file conflicts.
 
 amirrezaparvaneh:
 
 - #80 operational health/readiness + runtime logging;
-- #83 production topology CI smoke/regression.
+- #83 mandatory production topology CI smoke/regression.
 
 SARD-81:
 
@@ -192,13 +184,18 @@ All Django Template/HTML/presentation-specific JavaScript work remains owned by 
 
 ### Gate 4 execution order
 
-Wave 1 starts in parallel with #78, #79 and #80 so all three team members have independent work immediately.
+Wave 1 starts with #78, #79 and #80 scaffolding/tests in parallel.
 
-After #78, SARD-81 proceeds to #81 while Mahsa may prepare #82. After stable #80/#81 interfaces exist, AmirReza proceeds to #83 and Mahsa finalizes #82. #41 may run as optional bonus after production proxy integration is stable. #84 closes/freeze/promotes only after mandatory #78–#83 are complete.
+- #79 can complete independently because it adds application verification tooling rather than production topology.
+- after #78, SARD-81 proceeds to #81 and AmirReza may merge the runtime portion of #80.
+- after #79 stabilizes, Mahsa moves directly to #82; the verifier implementation can proceed without waiting for #81 internals, with final route/static expectations synchronized once #80/#81 interfaces are stable.
+- #81 does not wait for #82.
+- #83 reuses #79/#82 tooling against stable #80/#81 production runtime.
+- #84 closes/freezes/promotes only after mandatory #78–#83 are complete.
 
 ### Gate 4 baseline/change-control target
 
-- #78 owns `CHG-0006` before production topology changes are applied;
+- #78 owns `CHG-0006` before production topology/runtime changes are applied;
 - applied/verified production foundation is expected to require `BL-FOUNDATION-003` before Gate 4 closure;
 - Gate 4 release acceptance is proposed as `BL-RELEASE-001`;
 - `BL-APPLICATION-001` remains authoritative unless application semantics actually change through explicit control.
@@ -239,7 +236,7 @@ Historical entries are not rewritten when governance changes later.
 - GATE 3 / baseline freeze / PR #75: Team Lead Verification; CI #187 green. Squash merge `53695eba20c39da8913bed27fdd16fd0efff6b4d`.
 - GATE 3 milestone / PR #76: `dev → main`; Team Lead Verification; CI #189 green with 365 tests plus docker-smoke. Squash merge `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
 
-All entries before CHG-0005's effective merge retain their historical classification. After CHG-0005 is effective, absence of independent peer approval is not a Governance Exception by itself.
+CHG-0005 classifications remain historical Gate 3 records; they do not by themselves define Gate 4 governance.
 
 ## Repository housekeeping
 
@@ -253,8 +250,8 @@ Stale stacked Draft PR #62 was closed as superseded on 2026-09-30 because its in
 
 Wave 1 is ready to run in parallel:
 
-- #78 — SARD-81;
-- #79 — Mahsa;
-- #80 — AmirReza.
+- #78 — SARD-81 — CHG-0006;
+- #79 — Mahsa — production preflight development tooling;
+- #80 — AmirReza — health/readiness/logging scaffolding/tests, with runtime merge gated by #78.
 
 Gate 4 work starts from current `dev` and treats the frozen/promoted Gate 3 state as authoritative input.
