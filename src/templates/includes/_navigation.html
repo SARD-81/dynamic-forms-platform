@@ -3,6 +3,7 @@
 {% url 'core:category_list' as categories_url %}
 {% url 'forms:list' as forms_url %}
 {% url 'processes:list' as processes_url %}
+{% url 'reports:list' as reports_url %}
 {% url 'accounts:login' as login_url %}
 {% url 'accounts:register' as register_url %}
 {% url 'accounts:logout' as logout_url %}
@@ -39,6 +40,9 @@
                     <a href="{{ categories_url }}">Categories</a>
                     <a href="{{ forms_url }}">Forms</a>
                     <a href="{{ processes_url }}">Processes</a>
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="{{ reports_url }}">Reports</a>
+                    {% endif %}
                 {% endif %}
             </div>
 
