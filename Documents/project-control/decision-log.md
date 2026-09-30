@@ -99,3 +99,26 @@ Historical merges that occurred before CHG-0005 became effective remain classifi
 **Change-control classification:** Structural repository-governance change for Gate 3 only.
 
 Tracked by CHG-0005. No architecture, data, runtime, or settings baseline is changed.
+
+## 2026-09-30 — Gate 3 technical freeze and baseline activation
+
+**Context:** Issue #42 after closure-candidate PR #74 was reviewed, corrected and squash-merged.
+
+**Decision:** Freeze the verified mandatory Gate 3 technical state at:
+
+`dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
+
+Two baselines record different aspects of the same verified state:
+
+- `BL-FOUNDATION-002` supersedes BL-FOUNDATION-001 only for the active engineering/runtime foundation and captures the applied CHG-0003/CHG-0004 state plus active CI/runtime governance;
+- `BL-APPLICATION-001` freezes mandatory Gate 3 application behavior and acceptance semantics.
+
+BL-FOUNDATION-001 remains immutable historical Gate 2 evidence. BL-ARCH-002 and BL-DATA-002 remain authoritative architecture/data dependencies.
+
+Issue #41 real-time Channels/WebSocket reporting is explicitly deferred as BONUS/STRETCH scope and does not block Gate 3 closure. HTTP reporting remains authoritative.
+
+**Evidence:** PR #74 final CI #183 passed all four required jobs, including 365 tests and clean five-service Docker/OpenAPI smoke verification. The final runtime OpenAPI coverage finding was resolved before merge.
+
+**Change-control classification:** Documentation-only baseline freeze / Gate closure. No application/runtime behavior is introduced by the freeze PR.
+
+After the documentation-only freeze is merged to `dev`, the remaining milestone action is a separate `dev → main` PR with green required CI and Team Lead Verification.

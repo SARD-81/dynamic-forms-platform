@@ -1,9 +1,10 @@
 # Environment Contract
 
-**Gate:** 2C — Settings & Environment Foundation  
+**Historical origin:** Gate 2C — Settings & Environment Foundation  
 **Status:** ACTIVE FOUNDATION RECORD  
-**Target baseline:** BL-FOUNDATION-001
-**Applied extension:** CHG-0004 via Issue #26; superseding BL-FOUNDATION-002 remains pending Gate 3 closure
+**Target baseline:** BL-FOUNDATION-002  
+**Historical baseline:** BL-FOUNDATION-001  
+**Applied extensions:** CHG-0003 (Redis cache + Celery runtime) and CHG-0004 (production email configuration)
 
 ## Rule
 
@@ -81,7 +82,8 @@ The current settings layer actively consumes:
 - `CELERY_BROKER_URL` through Celery.
 
 `CHANNEL_LAYER_URL` remains reserved in the environment contract and Docker/CI runtime for the
-Channels Redis wiring authorized by the relevant later feature gate.
+optional Channels Redis wiring authorized by CHG-0003 if bonus Issue #41 is implemented later.
+Issue #41 is explicitly deferred from mandatory Gate 3 closure.
 
 Test settings replace the Redis cache backend with deterministic Django `LocMemCache`, so tests do
 not depend on Redis availability.
@@ -117,7 +119,7 @@ The environment-specific email behavior is:
 - test → Django local-memory email backend;
 - production → Django SMTP email backend configured only through the settings/environment boundary.
 
-Application Services and later Celery tasks use Django's email abstraction and do not read SMTP
+Application Services and Celery tasks use Django's email abstraction and do not read SMTP
 environment variables directly.
 
 ## Test settings
