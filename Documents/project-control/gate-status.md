@@ -22,7 +22,7 @@ Status: **CLOSED**
 
 Status: **CLOSED**
 
-Baseline: `BL-FOUNDATION-001` — **FROZEN / AUTHORITATIVE HISTORICAL BASELINE**
+Historical baseline: `BL-FOUNDATION-001` — **FROZEN / AUTHORITATIVE HISTORICAL BASELINE**
 
 Subgates:
 
@@ -41,73 +41,88 @@ GATE 2 was promoted from `dev` to `main` through milestone PR #22.
 
 ## GATE 3 — Application Feature Implementation
 
-Status: **IN PROGRESS / CLOSURE CANDIDATE**
+Status: **CLOSED / FROZEN**
 
 Execution tracker: GitHub Issue #25  
 Execution plan: `Documents/project-control/gate3-execution-plan.md`  
 Acceptance verification: `Documents/testing/gate3-acceptance-verification.md`
 
-Current mandatory implementation base before the #42 closure-candidate branch:
+Technical freeze point:
 
-`dev@255d95b2150c89a07819d8a772cdc7742910d0fe`
+`dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
-All mandatory feature/runtime Issues through #40 are merged. Issue #42 is the remaining mandatory closure path.
+Active Gate 3 baselines:
 
-Implemented mandatory scope includes:
+- `BL-FOUNDATION-002` — **FROZEN / AUTHORITATIVE** — active engineering/runtime foundation;
+- `BL-APPLICATION-001` — **FROZEN / AUTHORITATIVE** — integrated mandatory application feature baseline.
 
-- accounts, authentication, email OTP and session login;
+Historical baselines remain immutable:
+
+- `BL-ARCH-002` — architecture authority;
+- `BL-DATA-002` — data/domain authority;
+- `BL-FOUNDATION-001` — Gate 2 foundation history superseded for active foundation state by BL-FOUNDATION-002.
+
+### Mandatory scope completed
+
+The frozen Gate 3 application includes:
+
+- accounts, registration, email OTP activation and session authentication;
 - categories;
 - dynamic Forms with TEXT/NUMBER/SELECT/CHECKBOX questions and options;
-- Form lifecycle, PUBLIC/PRIVATE participant access, unique links and view counting;
+- Form lifecycle, PUBLIC/PRIVATE access, unique links and view counting;
 - anonymous/authenticated submissions and validated Answers;
-- LINEAR/FREE Process authoring and execution;
-- anonymous token resume and authenticated resume;
-- Form and Process reporting;
+- LINEAR/FREE Process authoring and transactional execution;
+- anonymous resume-token and authenticated resume semantics;
+- Form and Process reporting/browsing;
 - DRF API v1, OpenAPI and Swagger UI;
-- Redis-backed cache behavior/invalidation;
+- Redis-backed participant/report caching with explicit correctness/invalidation rules;
 - staff WEEKLY/MONTHLY report subscriptions;
-- Celery/Beat scheduled EMAIL/API report delivery.
+- Celery/Beat scheduled EMAIL/API report delivery;
+- final browser FREE-flow and one-time raw-resume-token hardening;
+- clean full five-service Docker bootstrap/runtime smoke verification.
 
-### Issue #42 closure-candidate state
+### Gate 3 closure evidence
 
-The #42 closure-candidate branch must keep Gate 3 IN PROGRESS and must not freeze a guessed pre-merge SHA.
+Issue #42 closure candidate PR #74 was Team Lead reviewed, corrected for the final OpenAPI runtime-coverage finding and squash-merged.
 
-It adds/finalizes:
+PR #74 produced the technical freeze commit:
 
-- FREE Process browser arbitrary-order regression coverage;
-- precise one-time anonymous resume-token presentation wording and session-removal regression coverage;
-- cross-domain OpenAPI acceptance assertions;
-- a `docker-smoke` CI job that builds and starts `web`, `postgres`, `redis`, `celery-worker`, and `celery-beat`, checks Celery worker/task registration, and smoke-tests critical HTML/API/OpenAPI routes;
-- integrated acceptance evidence and synchronized README/execution documentation.
+`72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
-After the Team Lead reviews and merges this candidate, a separate documentation-only freeze PR must use the exact resulting `dev` SHA to create:
+Final closure-candidate CI #183:
 
-- `BL-FOUNDATION-002` — applied Gate 3 runtime/configuration baseline;
-- `BL-APPLICATION-001` — Gate 3 application feature baseline.
+- `lint` — SUCCESS;
+- `test` — SUCCESS, **365 passed**;
+- `migration-check` — SUCCESS;
+- `docker-smoke` — SUCCESS;
+- five-service topology — PASS;
+- Celery worker ping/task registration — PASS;
+- critical HTML/API/OpenAPI smoke — PASS;
+- mandatory runtime OpenAPI paths, including Form/Process reporting — PASS.
 
-Only that freeze PR may change Gate 3 status to CLOSED.
+The follow-up documentation-only freeze PR creates/activates BL-FOUNDATION-002 and BL-APPLICATION-001 without changing application/runtime behavior.
 
 ### Bonus state
 
-Issue #41 — Channels/WebSockets real-time reporting — is **DEFERRED FROM GATE 3 CLOSURE** as optional bonus/stretch scope. The Issue remains open for possible future implementation. HTTP reporting remains authoritative and complete without it.
+Issue #41 — Channels/WebSockets real-time reporting — is **DEFERRED FROM GATE 3** as optional BONUS/STRETCH scope.
+
+It remains open for possible later implementation. No mandatory Gate 3 capability depends on WebSockets; HTTP reporting is authoritative.
 
 ### Applied Gate 3 Change Records
 
-- CHG-0003 — APPROVED / APPLIED for Redis cache and mandatory Celery worker/Beat development runtime; optional Channels portion remains unapplied while #41 is deferred.
-- CHG-0004 — APPROVED / APPLIED for production email configuration contract.
-- CHG-0005 — APPROVED / APPLIED; Team Lead Verification is the active prospective merge gate.
+- CHG-0003 — APPROVED / APPLIED for Redis cache and mandatory Celery worker/Beat runtime; optional Channels portion remains unapplied with #41 deferred;
+- CHG-0004 — APPROVED / APPLIED for production email configuration contract;
+- CHG-0005 — APPROVED / APPLIED for Team Lead Verification merge governance.
 
-BL-FOUNDATION-001 remains immutable historical evidence. CHG-0003 requires a superseding foundation baseline after the mandatory runtime extension is implemented, so `BL-FOUNDATION-002` is part of the final #42 freeze step.
+## Gate 3 active governance
 
-## Gate 3 merge workflow
-
-Active workflow under CHG-0005:
+Workflow under CHG-0005:
 
 ```text
 Issue
 → short-lived branch from current dev
 → implementation + tests
-→ Pull Request to dev
+→ Pull Request
 → required CI green
 → Team Lead Verification
 → explicit Team Lead merge decision
@@ -115,56 +130,62 @@ Issue
 
 Independent peer `APPROVED` review is optional and is not a merge, Definition-of-Done, Issue-closure, or Gate-closure prerequisite. Reviewers are not automatically requested merely to satisfy process.
 
-Team Lead Verification must confirm scope, current integration state, green required checks, architecture/frozen-baseline compatibility, migration intent where relevant, disposition of material findings, applicable security/privacy coverage, documentation synchronization, and explicit merge authorization.
+Team Lead Verification must confirm scope, integration state, required CI, architecture/frozen-baseline compatibility, migration intent, disposition of material findings, applicable security/privacy coverage and documentation synchronization.
 
-Milestone promotion after Gate 3 freeze:
+## Required CI after Gate 3 freeze
 
-```text
-dev
-→ Pull Request to main
-→ full Gate 3 closure verification + required CI green
-→ Team Lead Verification
-→ explicit Team Lead merge decision
-```
-
-## Required closure CI
-
-The #42 closure-candidate and final milestone are expected to run:
+The stable required jobs are:
 
 - `lint` — Ruff format/lint;
 - `test` — full pytest suite;
 - `migration-check` — Django system check, migration drift and Compose config;
 - `docker-smoke` — clean full development topology bootstrap plus Celery and critical HTTP/API/OpenAPI smoke checks.
 
+## Gate 3 milestone promotion
+
+Gate 3 closure/freeze on `dev` and promotion to `main` are separate control points.
+
+After the documentation-only freeze PR is reviewed and merged, promotion is:
+
+```text
+dev
+→ Pull Request to main
+→ full required CI including docker-smoke
+→ Team Lead Verification
+→ explicit Team Lead merge decision
+```
+
+Gate 3 being CLOSED means the mandatory feature set and baselines are frozen on `dev`; release/milestone promotion is complete only after the separate `dev → main` PR is explicitly merged.
+
 ## Merge governance audit trail
 
 Historical entries are not rewritten when governance changes later.
 
-- GATE 2A / PR #2: merged by repository owner as an explicitly documented bootstrap exception while collaborator invitations were pending.
-- GATE 2B / PR #4: merged by repository owner because collaborator invitations were still pending. Runtime verification was completed successfully before merge.
-- GATE 2C / PR #6: merged by repository owner while collaborator access was still pending. Development and test settings checks passed before merge.
-- GATE 2D / PR #8: merged by repository owner while collaborator invitations were still pending. Frozen model/migration review and migration-drift verification completed before merge.
-- GATE 2E / PR #10: merged by repository owner while collaborator invitations were still pending. PostgreSQL migration and 23 database-constraint tests passed before merge.
-- GATE 2F / PR #12: merged by repository owner while collaborator invitations were still pending. Ruff, pytest, coverage execution, and migration-drift verification passed before merge.
-- GATE 2G / PR #14: merged by repository owner while collaborator invitations were pending. Final GitHub Actions run passed lint, test, and migration-check before merge; native branch protection was unavailable on the private-repository plan and was explicitly waived through CHG-0002.
-- GATE 2H / PR #16: merged by repository owner into `dev`. Docker build/runtime, PostgreSQL/Redis health, migrations, Django checks, tests, HTTP/Daphne response, autoreload, and CI passed.
-- GATE 2I / PR #18: merged by repository owner into `dev` after clean-bootstrap verification.
-- GATE 2J / PR #20: merged into `dev` as the documentation-only BL-FOUNDATION-001 freeze and GATE 2 closure step.
-- GATE 2 milestone / PR #22: merged `dev` into `main`, promoting the completed foundation.
+- GATE 2A / PR #2: repository-owner bootstrap exception while collaborator invitations were pending.
+- GATE 2B / PR #4: repository-owner exception while collaborator invitations were pending; runtime verification passed.
+- GATE 2C / PR #6: repository-owner exception while collaborator access was pending; settings checks passed.
+- GATE 2D / PR #8: repository-owner exception while collaborator invitations were pending; frozen model/migration review passed.
+- GATE 2E / PR #10: PostgreSQL migration + 23 database-constraint tests passed before owner merge.
+- GATE 2F / PR #12: Ruff, pytest, coverage execution and migration-drift verification passed before owner merge.
+- GATE 2G / PR #14: CI green; unavailable native private-repo branch protection explicitly waived by CHG-0002.
+- GATE 2H / PR #16: Docker/runtime verification and CI passed before merge.
+- GATE 2I / PR #18: merged after clean-bootstrap verification.
+- GATE 2J / PR #20: documentation-only BL-FOUNDATION-001 freeze / Gate 2 closure.
+- GATE 2 milestone / PR #22: `dev → main` promotion.
 - GATE 3 / Issue #34 backend / PR #54: merged after independent approval and green CI.
-- GATE 3 / Issue #34 presentation / PR #56: squash-merged as a Governance Exception under the then-active peer-review rule; CI #106 green with 200 tests. Merge `3a34ab1496eef0a590ded36a7b62409620fe8648`.
-- GATE 3 / Issue #32 / PR #55: Governance Exception under then-active peer-review rule; CI #118 green with 240 tests. Merge `dea2d73ae633a2631457570ab703cc0b8bb21d10`.
+- GATE 3 / Issue #34 presentation / PR #56: Governance Exception under then-active peer-review rule; CI #106 green with 200 tests. Merge `3a34ab1496eef0a590ded36a7b62409620fe8648`.
+- GATE 3 / Issue #32 / PR #55: Governance Exception; CI #118 green with 240 tests. Merge `dea2d73ae633a2631457570ab703cc0b8bb21d10`.
 - GATE 3 / Governance audit / PR #57: Governance Exception; CI #120 green with 240 tests. Merge `2d4718e053103637beee450ba1ce49253324e9f2`.
-- GATE 3 / Issue #33 / PR #59: Governance Exception; CI #131 green with 276 tests plus Ruff/Django/migration/Compose checks. Merge `9890f90e5da6add8b32b6f16c1fc6701507c5c6f`.
-- GATE 3 / Issue #36 / PR #60: Governance Exception; CI #144 green with 302 tests plus required checks. Merge `6635b2ab12fd553a649086023c87270353cf5492`.
-- GATE 3 / Governance corrective audit / PR #58: independently APPROVED, CI #146 green. Merge `f4874e8b4531a7acd44a439b7a16c7af94f7e20c`.
+- GATE 3 / Issue #33 / PR #59: Governance Exception; CI #131 green with 276 tests. Merge `9890f90e5da6add8b32b6f16c1fc6701507c5c6f`.
+- GATE 3 / Issue #36 / PR #60: Governance Exception; CI #144 green with 302 tests. Merge `6635b2ab12fd553a649086023c87270353cf5492`.
+- GATE 3 / Governance corrective audit / PR #58: independently APPROVED; CI #146 green. Merge `f4874e8b4531a7acd44a439b7a16c7af94f7e20c`.
 - GATE 3 / Issue #35 backend / PR #61: independently APPROVED; CI #156 green. Merge `5163a30d1b9f9a84accfbd60d2e34982b38929c8`.
 - GATE 3 / Issue #35 presentation / PR #63: Governance Exception under then-active rule; CI #159 green. Merge `1d8790a9089c966752544836e7d6973e997edb5b`.
-- GATE 3 / Issue #37 / PR #65: Governance Exception under then-active rule; material DRAFT-cache finding fixed before merge; CI #167 green with 342 tests. Merge `ea9e75b19d8ae5b68cd708aecb7cf51b1fbc7c88`.
-- GATE 3 / CHG-0005 / Issue #66 / PR #69: prospective governance transition completed; CI #169 green. Merge `179fd6ecee8cbd0904cdd4b6a5cfee402c1bc3cd`.
-- GATE 3 / Issue #38 / PR #70: Team Lead Verification passed; CI #174 green with 352 tests. Merge `cf10d45b357215b7e6f19cda9be8accadb33a926`.
-- GATE 3 / Issue #40 / PR #72: Team Lead Verification passed; CI #179 green with 361 tests plus Ruff, Django system check, migration drift and Compose validation. Merge `255d95b2150c89a07819d8a772cdc7742910d0fe`.
-- GATE 3 / Issue #42: closure candidate in progress. No merge/freeze/closure is recorded until Team Lead review and explicit merge action.
+- GATE 3 / Issue #37 / PR #65: Governance Exception under then-active rule; material DRAFT-cache finding fixed; CI #167 green with 342 tests. Merge `ea9e75b19d8ae5b68cd708aecb7cf51b1fbc7c88`.
+- GATE 3 / CHG-0005 / Issue #66 / PR #69: governance transition; CI #169 green. Merge `179fd6ecee8cbd0904cdd4b6a5cfee402c1bc3cd`.
+- GATE 3 / Issue #38 / PR #70: Team Lead Verification; CI #174 green with 352 tests. Merge `cf10d45b357215b7e6f19cda9be8accadb33a926`.
+- GATE 3 / Issue #40 / PR #72: Team Lead Verification; CI #179 green with 361 tests. Merge `255d95b2150c89a07819d8a772cdc7742910d0fe`.
+- GATE 3 / Issue #42 closure candidate / PR #74: Team Lead reviewed; final OpenAPI smoke finding resolved; CI #183 green with 365 tests and full docker-smoke. Squash merge `72d5af1b5f26d9d3b8ba67605d96a69605878dcc` — technical freeze point for BL-FOUNDATION-002 and BL-APPLICATION-001.
 
 All entries before CHG-0005's effective merge retain their historical classification. After CHG-0005 is effective, absence of independent peer approval is not a Governance Exception by itself.
 
@@ -178,3 +199,9 @@ Completed on 2026-09-22:
 - Issue #23 closed as completed; status synchronization was delivered by PR #24.
 
 A temporary accidental Issue #73 created during #42 tooling was immediately closed as `not_planned` without implementation impact.
+
+## Current control point
+
+**GATE 3 mandatory application work is CLOSED/FROZEN at `dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`.**
+
+The remaining repository control action after activation of this documentation-only freeze is the separate Team Lead reviewed `dev → main` milestone promotion.
