@@ -115,8 +115,8 @@ def deliver_report_subscription(*, subscription_id, as_of=None):
 
     The database row lock intentionally spans the bounded external delivery attempt. This keeps the
     Gate 3 implementation simple and prevents two workers from sending the same subscription at the
-    same time. Delivery is at-least-once across process/database failures; API receivers also receive
-    a deterministic Idempotency-Key for the subscription/reporting period.
+    same time. Delivery is at-least-once across process/database failures; API receivers also
+    receive a deterministic Idempotency-Key for the subscription/reporting period.
     """
 
     subscription = ReportSubscription.objects.select_for_update().get(pk=subscription_id)
