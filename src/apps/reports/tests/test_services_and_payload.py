@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -95,7 +95,7 @@ def test_update_and_deactivate_never_touch_last_sent_at(staff_user):
 
 
 def test_weekly_and_monthly_boundaries_are_completed_calendar_periods():
-    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=dt_timezone.utc)
+    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
     with timezone.override("UTC"):
         weekly_start, weekly_end = report_period_bounds(
             frequency=ReportSubscription.Frequency.WEEKLY,
@@ -105,24 +105,24 @@ def test_weekly_and_monthly_boundaries_are_completed_calendar_periods():
             frequency=ReportSubscription.Frequency.MONTHLY,
             as_of=as_of,
         )
-    assert weekly_start == datetime(2026, 9, 21, 0, 0, tzinfo=dt_timezone.utc)
-    assert weekly_end == datetime(2026, 9, 28, 0, 0, tzinfo=dt_timezone.utc)
-    assert monthly_start == datetime(2026, 8, 1, 0, 0, tzinfo=dt_timezone.utc)
-    assert monthly_end == datetime(2026, 9, 1, 0, 0, tzinfo=dt_timezone.utc)
+    assert weekly_start == datetime(2026, 9, 21, 0, 0, tzinfo=UTC)
+    assert weekly_end == datetime(2026, 9, 28, 0, 0, tzinfo=UTC)
+    assert monthly_start == datetime(2026, 8, 1, 0, 0, tzinfo=UTC)
+    assert monthly_end == datetime(2026, 9, 1, 0, 0, tzinfo=UTC)
 
 
 @pytest.mark.django_db
 def test_payload_counts_period_activity_and_excludes_sensitive_data(staff_user):
-    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=dt_timezone.utc)
+    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
     with timezone.override("UTC"):
         form = Form.objects.create(owner=staff_user, title="Weekly form", view_count=11)
         Form.objects.filter(pk=form.pk).update(
-            created_at=datetime(2026, 9, 23, 10, 0, tzinfo=dt_timezone.utc),
+            created_at=datetime(2026, 9, 23, 10, 0, tzinfo=UTC),
             status=Form.Status.PUBLISHED,
         )
         submission = FormSubmission.objects.create(form=form, respondent=staff_user)
         FormSubmission.objects.filter(pk=submission.pk).update(
-            submitted_at=datetime(2026, 9, 24, 10, 0, tzinfo=dt_timezone.utc)
+            submitted_at=datetime(2026, 9, 24, 10, 0, tzinfo=UTC)
         )
         process = Process.objects.create(
             owner=staff_user,
@@ -131,14 +131,14 @@ def test_payload_counts_period_activity_and_excludes_sensitive_data(staff_user):
             view_count=7,
         )
         Process.objects.filter(pk=process.pk).update(
-            created_at=datetime(2026, 9, 23, 11, 0, tzinfo=dt_timezone.utc),
+            created_at=datetime(2026, 9, 23, 11, 0, tzinfo=UTC),
             status=Process.Status.PUBLISHED,
         )
         run = ProcessRun.objects.create(process=process, respondent=staff_user)
         ProcessRun.objects.filter(pk=run.pk).update(
-            started_at=datetime(2026, 9, 24, 11, 0, tzinfo=dt_timezone.utc),
+            started_at=datetime(2026, 9, 24, 11, 0, tzinfo=UTC),
             status=ProcessRun.Status.COMPLETED,
-            completed_at=datetime(2026, 9, 25, 11, 0, tzinfo=dt_timezone.utc),
+            completed_at=datetime(2026, 9, 25, 11, 0, tzinfo=UTC),
         )
         payload = generate_periodic_report_payload(
             frequency=ReportSubscription.Frequency.WEEKLY,
@@ -160,7 +160,7 @@ def test_payload_counts_period_activity_and_excludes_sensitive_data(staff_user):
 
 @pytest.mark.django_db
 def test_empty_period_and_due_selector_excludes_inactive(staff_user):
-    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=dt_timezone.utc)
+    as_of = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
     with timezone.override("UTC"):
         payload = generate_periodic_report_payload(
             frequency=ReportSubscription.Frequency.WEEKLY,
