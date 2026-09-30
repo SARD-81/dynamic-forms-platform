@@ -83,3 +83,19 @@ silently change the foundation contract.
 **Change-control classification:** Structural settings/environment extension.
 
 Tracked by CHG-0004.
+
+## 2026-09-30 — Gate 3 Team Lead Verification replaces mandatory peer approval
+
+**Context:** Issue #66 / CHG-0005, after repeated Gate 3 merges required Governance Exceptions solely because an independent peer `APPROVED` review was absent despite green CI and explicit Team Lead authorization.
+
+**Decision:** For the remainder of Gate 3, independent peer review is optional rather than a mandatory merge/DoD gate. The required governance gate is **Team Lead Verification** backed by green CI, scope/architecture review, resolution or explicit acceptance of material findings, and explicit Team Lead merge authorization.
+
+The same rule applies to the final `dev → main` Gate 3 milestone PR. Reviewers are not automatically requested merely to satisfy process.
+
+Historical merges that occurred before CHG-0005 became effective remain classified according to the policy in force at their merge time; PR #63 and PR #65 therefore remain historical Governance Exceptions.
+
+**Reason:** The small active team made mandatory peer approval a recurring process bottleneck and generated repetitive exception/audit work without changing the technical verification path. Team Lead Verification preserves explicit accountability while retaining CI, architecture, security, migration, documentation, and regression requirements.
+
+**Change-control classification:** Structural repository-governance change for Gate 3 only.
+
+Tracked by CHG-0005. No architecture, data, runtime, or settings baseline is changed.
