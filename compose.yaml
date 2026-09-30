@@ -30,6 +30,56 @@ services:
         condition: service_healthy
     init: true
 
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery --workdir=src -A config worker --loglevel=INFO
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://127.0.0.1:8000,http://localhost:8000}
+      POSTGRES_DB: ${POSTGRES_DB:-dynamic_forms}
+      POSTGRES_USER: ${POSTGRES_USER:-dynamic_forms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_CACHE_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CHANNEL_LAYER_URL: redis://redis:6379/2
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    init: true
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery --workdir=src -A config beat --loglevel=INFO --schedule=/tmp/celerybeat-schedule
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://127.0.0.1:8000,http://localhost:8000}
+      POSTGRES_DB: ${POSTGRES_DB:-dynamic_forms}
+      POSTGRES_USER: ${POSTGRES_USER:-dynamic_forms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      REDIS_CACHE_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CHANNEL_LAYER_URL: redis://redis:6379/2
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    init: true
+
   postgres:
     image: postgres:16-alpine
     environment:

@@ -90,13 +90,21 @@ def get_platform_report_activity(*, period_start, period_end):
     }
 
 
+def is_report_subscription_due(*, subscription, as_of=None):
+    if not subscription.is_active:
+        return False
+    _, period_end = report_period_bounds(
+        frequency=subscription.frequency,
+        as_of=as_of,
+    )
+    if subscription.created_at >= period_end:
+        return False
+    return subscription.last_sent_at is None or subscription.last_sent_at < period_end
+
+
 def get_due_report_subscriptions(*, as_of=None):
-    due = []
-    for subscription in get_report_subscriptions().filter(is_active=True):
-        _, period_end = report_period_bounds(
-            frequency=subscription.frequency,
-            as_of=as_of,
-        )
-        if subscription.last_sent_at is None or subscription.last_sent_at < period_end:
-            due.append(subscription)
-    return due
+    return [
+        subscription
+        for subscription in get_report_subscriptions().filter(is_active=True)
+        if is_report_subscription_due(subscription=subscription, as_of=as_of)
+    ]
