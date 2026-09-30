@@ -463,7 +463,11 @@ def participant_process_step(request, public_id, run_public_id, step_id):
         )
 
     step_run = next(
-        (candidate for candidate in _ordered_step_runs(run) if candidate.process_step_id == step_id),
+        (
+            candidate
+            for candidate in _ordered_step_runs(run)
+            if candidate.process_step_id == step_id
+        ),
         None,
     )
     if step_run is None:
