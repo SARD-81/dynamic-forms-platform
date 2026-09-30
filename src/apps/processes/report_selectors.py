@@ -2,7 +2,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import Count, Max, Prefetch, Q
 
-from .models import ProcessRun, ProcessStepRun
+from .models import Process, ProcessRun, ProcessStepRun
 from .report_cache import get_cached_process_report, set_cached_process_report
 from .selectors import get_process_for_owner
 
@@ -112,10 +112,14 @@ def get_process_report_summary(*, owner, process_id):
         return None
 
     revision = _process_report_revision(process=process)
-    aggregate = get_cached_process_report(**revision)
+    aggregate = None
+    if process.status != Process.Status.DRAFT:
+        aggregate = get_cached_process_report(**revision)
+
     if aggregate is None:
         aggregate = _build_process_aggregate(process=process, revision=revision)
-        set_cached_process_report(payload=aggregate, **revision)
+        if process.status != Process.Status.DRAFT:
+            set_cached_process_report(payload=aggregate, **revision)
 
     return {
         "id": process.pk,
