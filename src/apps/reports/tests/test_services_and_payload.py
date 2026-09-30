@@ -172,13 +172,17 @@ def test_empty_period_and_due_selector_excludes_inactive(staff_user):
             delivery_method=ReportSubscription.DeliveryMethod.EMAIL,
             email="active@example.com",
         )
-        create_report_subscription(
+        inactive = create_report_subscription(
             actor=staff_user,
             frequency=ReportSubscription.Frequency.WEEKLY,
             delivery_method=ReportSubscription.DeliveryMethod.EMAIL,
             email="inactive@example.com",
             is_active=False,
         )
+        ReportSubscription.objects.filter(pk__in=[active.pk, inactive.pk]).update(
+            created_at=datetime(2026, 9, 20, 12, 0, tzinfo=UTC)
+        )
+        active.refresh_from_db()
         due = get_due_report_subscriptions(as_of=as_of)
 
     assert payload["activity"]["forms"]["created"] == 0
