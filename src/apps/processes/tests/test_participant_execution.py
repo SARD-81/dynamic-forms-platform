@@ -8,9 +8,23 @@ from apps.core.participant_access import grant_participant_access
 from apps.forms.models import Form, Question
 from apps.processes.models import Process, ProcessRun, ProcessStepRun
 from apps.processes.participant_selectors import RESOURCE_TYPE
-from apps.processes.services import create_process, create_process_step, publish_process
+from apps.processes.services import (
+    close_process,
+    create_process,
+    create_process_step,
+    publish_process,
+)
 
 User = get_user_model()
+
+
+def _get_unlock_url(public_id):
+    for name in ["unlock", "process-unlock", "process_unlock"]:
+        try:
+            return reverse(f"processes_participant_api:{name}", kwargs={"public_id": public_id})
+        except Exception:
+            pass
+    raise ValueError(f"Could not resolve unlock url for {public_id}")
 
 
 class ParticipantProcessExecutionAPITests(TestCase):
@@ -121,7 +135,7 @@ class ParticipantProcessExecutionAPITests(TestCase):
         res_wrong = self.client.get(detail_url, HTTP_X_RESUME_TOKEN="invalid-token")
         self.assertEqual(res_wrong.status_code, status.HTTP_403_FORBIDDEN)
 
-        # درخواست با توکن صحیح ۲ run را با موفقیت برمی‌گرداند
+        # درخواست با توکن صحیح run را با موفقیت برمی‌گرداند
         res_valid = self.client.get(detail_url, HTTP_X_RESUME_TOKEN=token)
         self.assertEqual(res_valid.status_code, status.HTTP_200_OK)
         self.assertEqual(res_valid.json()["public_id"], str(run_public_id))
@@ -220,3 +234,133 @@ class ParticipantProcessExecutionAPITests(TestCase):
 
         res_granted = self.client.post(url)
         self.assertEqual(res_granted.status_code, status.HTTP_201_CREATED)
+
+    def test_private_closed_process_fresh_session_unlock_and_resume(self):
+        """تست رگرسیون: امکان آنلاک پروسه خصوصی CLOSED در سشن تازه و ادامه ران قبلی."""
+        priv_proc = create_process(
+            owner=self.owner,
+            title="Private Closed Flow",
+            process_type=Process.ProcessType.LINEAR,
+            visibility=Process.Visibility.PRIVATE,
+            access_password="SecretPass123",
+        )
+        priv_step = create_process_step(process=priv_proc, owner=self.owner, form_id=self.form1.pk)
+        publish_process(process=priv_proc, owner=self.owner)
+
+        unlock_url = _get_unlock_url(priv_proc.public_id)
+
+        # 1. آنلاک و شروع ران
+        unlock_res = self.client.post(unlock_url, data={"password": "SecretPass123"}, format="json")
+        self.assertEqual(unlock_res.status_code, status.HTTP_204_NO_CONTENT)
+
+        start_url = reverse(
+            "processes_participant_api:run-start",
+            kwargs={"public_id": priv_proc.public_id},
+        )
+        start_res = self.client.post(start_url)
+        self.assertEqual(start_res.status_code, status.HTTP_201_CREATED)
+        token = start_res.json()["resume_token"]
+        run_public_id = start_res.json()["public_id"]
+
+        # 2. بستن پروسه توسط مالک
+        close_process(process=priv_proc, owner=self.owner)
+        priv_proc.refresh_from_db()
+        self.assertEqual(priv_proc.status, Process.Status.CLOSED)
+
+        # 3. سشن تازه (بدون دسترسی/Grant قبلی)
+        fresh_client = APIClient()
+        detail_url = reverse(
+            "processes_participant_api:run-detail",
+            kwargs={
+                "public_id": priv_proc.public_id,
+                "run_public_id": run_public_id,
+            },
+        )
+
+        # دسترسی بدون آنلاک با 403 متوقف می‌شود
+        detail_no_grant = fresh_client.get(detail_url, HTTP_X_RESUME_TOKEN=token)
+        self.assertEqual(detail_no_grant.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(detail_no_grant.json()["error_code"], "PARTICIPANT_ACCESS_REQUIRED")
+
+        # تلاش برای شروع ران جدید روی پروسه CLOSED باید 404 بدهد
+        start_closed_res = fresh_client.post(start_url)
+        self.assertEqual(start_closed_res.status_code, status.HTTP_404_NOT_FOUND)
+
+        # 4. آنلاک موفق پروسه CLOSED در سشن تازه با پسورد
+        fresh_unlock = fresh_client.post(
+            unlock_url, data={"password": "SecretPass123"}, format="json"
+        )
+        self.assertEqual(fresh_unlock.status_code, status.HTTP_204_NO_CONTENT)
+
+        # 5. مشاهده موفق ران قبلی
+        res_detail = fresh_client.get(detail_url, HTTP_X_RESUME_TOKEN=token)
+        self.assertEqual(res_detail.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_detail.json()["public_id"], str(run_public_id))
+
+        # 6. تکمیل استپ در پروسه CLOSED با استفاده از priv_step معتبر
+        step1_url = reverse(
+            "processes_participant_api:step-complete",
+            kwargs={
+                "public_id": priv_proc.public_id,
+                "run_public_id": run_public_id,
+                "step_id": priv_step.pk,
+            },
+        )
+        step_res = fresh_client.post(
+            step1_url,
+            data={"answers": [{"question_id": self.q1.pk, "text_value": "Resume Worked"}]},
+            format="json",
+            HTTP_X_RESUME_TOKEN=token,
+        )
+        self.assertEqual(step_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(step_res.json()["steps"][0]["status"], ProcessStepRun.Status.COMPLETED)
+
+    def test_anonymous_run_resume_when_subsequently_authenticated(self):
+        """تست رگرسیون: شرکت‌کننده‌ای که ران را ناشناس شروع کرده و بعداً لاگین می‌کند."""
+        # 1. شروع ران ناشناس
+        start_url = reverse(
+            "processes_participant_api:run-start",
+            kwargs={"public_id": self.process.public_id},
+        )
+        start_res = self.client.post(start_url)
+        self.assertEqual(start_res.status_code, status.HTTP_201_CREATED)
+        token = start_res.json()["resume_token"]
+        run_public_id = start_res.json()["public_id"]
+
+        # 2. کاربر بعداً لاگین می‌کند
+        self.client.force_login(self.participant)
+
+        # 3. مشاهده ران با توکن معتبر در حالت لاگین
+        detail_url = reverse(
+            "processes_participant_api:run-detail",
+            kwargs={
+                "public_id": self.process.public_id,
+                "run_public_id": run_public_id,
+            },
+        )
+        detail_res = self.client.get(detail_url, HTTP_X_RESUME_TOKEN=token)
+        self.assertEqual(detail_res.status_code, status.HTTP_200_OK)
+
+        # 4. تکمیل استپ با توکن معتبر نباید ارور Identity Mismatch بدهد
+        step1_url = reverse(
+            "processes_participant_api:step-complete",
+            kwargs={
+                "public_id": self.process.public_id,
+                "run_public_id": run_public_id,
+                "step_id": self.step1.pk,
+            },
+        )
+        res_step = self.client.post(
+            step1_url,
+            data={"answers": [{"question_id": self.q1.pk, "text_value": "Auth Anon"}]},
+            format="json",
+            HTTP_X_RESUME_TOKEN=token,
+        )
+        self.assertEqual(res_step.status_code, status.HTTP_200_OK)
+
+        # سابمیشن ثبت‌شده باید همچنان ناشناس (None) باشد
+        step_run = ProcessStepRun.objects.get(
+            process_run__public_id=run_public_id, process_step=self.step1
+        )
+        self.assertEqual(step_run.status, ProcessStepRun.Status.COMPLETED)
+        self.assertIsNone(step_run.submission.respondent)

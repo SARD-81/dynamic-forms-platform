@@ -294,12 +294,16 @@ class ParticipantProcessStepCompleteAPIView(GenericAPIView):
         if step_run is None:
             raise Http404
 
+        # اگر ران ناشناس باشد، سابمیشن همواره ناشناس (None) ثبت می‌شود
+        # حتی اگر کاربر در زمان ادامه دادن لاگین کرده باشد
+        respondent = None if run.respondent_id is None else request.user
+
         try:
             complete_process_step_run(
                 process_run=run,
                 step_run_id=step_run.pk,
                 answers=serializer.validated_data["answers"],
-                respondent=request.user if request.user.is_authenticated else None,
+                respondent=respondent,
             )
         except DjangoValidationError as exc:
             errors = exc.message_dict if hasattr(exc, "message_dict") else {"detail": exc.messages}
