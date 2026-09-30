@@ -159,3 +159,80 @@ jobs:
 
       - name: Validate Docker Compose development config
         run: docker compose --env-file .env.example config --quiet
+
+  docker-smoke:
+    name: docker-smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Prepare smoke environment
+        run: |
+          cp .env.example .env
+          sed -i 's/^DJANGO_SECRET_KEY=.*/DJANGO_SECRET_KEY=ci-docker-smoke-secret-key/' .env
+          sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-docker-smoke-password/' .env
+
+      - name: Build and start full development topology
+        run: docker compose --env-file .env up --build -d
+
+      - name: Wait for containerized Django readiness
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/api/v1/ > /tmp/api-root.json; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose --env-file .env ps
+          docker compose --env-file .env logs web
+          exit 1
+
+      - name: Verify all five development services are running
+        run: |
+          running_services="$(docker compose --env-file .env ps --services --status running)"
+          for service in web postgres redis celery-worker celery-beat; do
+            echo "$running_services" | grep -Fxq "$service"
+          done
+
+      - name: Verify Celery worker and scheduled-report task registration
+        run: |
+          docker compose --env-file .env exec -T celery-worker \
+            celery --workdir=src -A config inspect ping --timeout=10
+          docker compose --env-file .env exec -T celery-worker \
+            celery --workdir=src -A config inspect registered --timeout=10 \
+            | grep -q "apps.reports.tasks.dispatch_due_report_subscriptions"
+
+      - name: Smoke critical HTML, API and OpenAPI routes
+        run: |
+          curl --fail --silent http://127.0.0.1:8000/accounts/login/ > /dev/null
+          curl --fail --silent 'http://127.0.0.1:8000/api/schema/?format=json' > /tmp/schema.json
+          python - <<'PY'
+          import json
+
+          with open('/tmp/api-root.json', encoding='utf-8') as handle:
+              api_root = json.load(handle)
+          with open('/tmp/schema.json', encoding='utf-8') as handle:
+              schema = json.load(handle)
+
+          assert api_root['version'] == '1.0.0'
+          required_paths = {
+              '/api/v1/accounts/login/',
+              '/api/v1/categories/',
+              '/api/v1/forms/',
+              '/api/v1/processes/',
+              '/api/v1/reports/subscriptions/',
+              '/api/v1/public/forms/{public_id}/submissions/',
+              '/api/v1/public/processes/{public_id}/runs/',
+          }
+          missing = required_paths.difference(schema['paths'])
+          assert not missing, f'Missing OpenAPI paths: {sorted(missing)}'
+          PY
+
+      - name: Show full topology status
+        run: docker compose --env-file .env ps
+
+      - name: Tear down smoke topology
+        if: always()
+        run: docker compose --env-file .env down -v --remove-orphans
