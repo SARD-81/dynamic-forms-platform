@@ -169,19 +169,19 @@ Gate 4 closes the remaining production-delivery requirement intentionally left o
 
 The frozen Gate 3 application/data semantics remain authoritative inputs and must not be silently changed.
 
-### Team allocation by difficulty
+### Team allocation
 
-Mahsa-Alipour — **LIGHT only**:
+Mahsa-Alipour:
 
 - #79 production requirements traceability / release evidence matrix;
 - #82 production deployment runbook + manual acceptance.
 
-amirrezaparvaneh — **MEDIUM**:
+amirrezaparvaneh:
 
 - #80 operational health/readiness + runtime logging;
 - #83 production topology CI smoke/regression.
 
-SARD-81 — **HARD / CRITICAL**:
+SARD-81:
 
 - #78 CHG-0006 production-runtime authorization;
 - #81 production ASGI/Nginx/collectstatic topology;
@@ -253,8 +253,8 @@ Stale stacked Draft PR #62 was closed as superseded on 2026-09-30 because its in
 
 Wave 1 is ready to run in parallel:
 
-- #78 — SARD-81 / HARD;
-- #79 — Mahsa / LIGHT;
-- #80 — AmirReza / MEDIUM.
+- #78 — SARD-81;
+- #79 — Mahsa;
+- #80 — AmirReza.
 
 Gate 4 work starts from current `dev` and treats the frozen/promoted Gate 3 state as authoritative input.
