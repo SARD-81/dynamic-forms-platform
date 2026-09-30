@@ -6,7 +6,6 @@ import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.utils import timezone
 
 from apps.reports.delivery import ReportDeliveryError, deliver_report_subscription
 from apps.reports.models import ReportSubscription
