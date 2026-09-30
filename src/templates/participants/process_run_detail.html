@@ -12,9 +12,9 @@
 {% if resume_token_once %}
     <section class="auth-card" role="status">
         <h2>Save your resume token</h2>
-        <p>This token is shown only once. Keep it somewhere safe if you want to continue this anonymous run from another browser or session.</p>
+        <p>This raw token is shown only once. It is held temporarily in your current session only until this first display, then removed from the session. Save it somewhere safe if you want to continue this anonymous run from another browser or session.</p>
         <p><code id="resume-token-once">{{ resume_token_once }}</code></p>
-        <p>The platform stores only a hash of this token.</p>
+        <p>The ProcessRun stores only a one-way hash of this token. The raw token is never stored on the ProcessRun and is never placed in the URL.</p>
     </section>
 {% endif %}
 
