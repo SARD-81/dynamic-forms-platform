@@ -1,138 +1,119 @@
 # GATE 3 — Application Feature Implementation Execution Plan
 
-**Status:** IN PROGRESS  
+**Status:** CLOSURE CANDIDATE / IN PROGRESS  
 **Tracker:** GitHub Issue #25  
 **Integration branch:** `dev`  
+**Current mandatory implementation base:** `255d95b2150c89a07819d8a772cdc7742910d0fe`  
 **Applies after:** BL-ARCH-002, BL-DATA-002, BL-FOUNDATION-001  
-**Active governance extension:** CHG-0005 after its transition PR is merged
+**Active governance:** CHG-0005
 
 ## Objective
 
-Deliver the complete mandatory application feature set for the Dynamic Forms Platform while preserving the frozen architecture, data model, and engineering foundation.
+Deliver and verify the complete mandatory application feature set for the Dynamic Forms Platform while preserving the frozen architecture, data model, and historical baselines.
 
-Gate 3 uses small Issue-linked branches and Pull Requests to `dev`. No long-lived feature branch is used.
+Gate 3 uses short-lived Issue-linked branches and Pull Requests to `dev`. No long-lived feature branch is used.
 
-## Source requirement coverage
+## Mandatory scope coverage
 
-Gate 3 covers:
+All mandatory implementation/runtime work through Issue #40 is merged to `dev`:
 
-- Django authentication and OTP;
-- categories;
-- dynamic Forms with TEXT/NUMBER/SELECT/CHECKBOX questions;
-- public/private Forms and Processes;
-- unique participant links and view counting;
-- Form submissions and response browsing;
-- LINEAR and FREE Process execution/resume;
-- Form and Process reporting;
-- weekly/monthly admin reporting payloads/subscriptions;
-- Email/API scheduled delivery;
-- DRF/OpenAPI;
-- caching;
-- automated tests;
-- existing Docker/environment engineering contract.
+- #26 — authentication + email OTP activation;
+- #27 — shared Django Template shell/navigation/dashboard;
+- #28 — API v1 + OpenAPI/Swagger foundation;
+- #29 — categories;
+- #30 — Form lifecycle / visibility;
+- #31 — dynamic question builder and options;
+- #32 — participant access, unique links, view counting and Redis cache;
+- #33 — transactional Form submissions and Answer validation;
+- #34 — Process definition and step authoring;
+- #35 — LINEAR/FREE Process execution + browser/API resume;
+- #36 — Form analytics and response browsing;
+- #37 — Process analytics and ProcessRun reporting;
+- #38 — ReportSubscription management + WEEKLY/MONTHLY payload;
+- #39 — CHG-0003 runtime-extension authorization;
+- #40 — Celery/Beat scheduled EMAIL/API delivery;
+- #47 — CHG-0004 production email configuration authorization;
+- #66 — CHG-0005 Team Lead Verification governance transition.
 
-Real-time reporting through Channels/WebSockets is bonus/stretch scope and is not a mandatory Gate 3 exit criterion.
+## Current work — Issue #42
 
-## Team ownership — current plan
+Issue #42 is the final mandatory Gate 3 closure path. It owns:
 
-### SARD-81 — Team Lead / heavy-feature / presentation / integration owner
+- integrated regression/hardening;
+- final OpenAPI/cache/runtime verification;
+- clean Docker bootstrap smoke verification;
+- final documentation synchronization;
+- application/runtime baseline freeze;
+- Gate 3 closure;
+- `dev → main` milestone promotion preparation.
 
-Owns:
+### Closure-candidate phase
 
-- #26 Authentication + email OTP activation;
-- #27 shared Django Template/UI shell;
-- #29 Categories;
-- #30 Form lifecycle;
-- #31 Dynamic Question/QuestionOption builder;
-- #32 participant access/links/view count/cache;
-- #33 transactional Form submissions;
-- #35 all participant HTML/Template/browser execution/resume presentation and integration;
-- #36 Form reporting;
-- #37 complete Process reporting feature;
-- #38 primary feature ownership: report payload/generation/integration, REST integration, admin HTML/UI/UX, E2E/tests/docs;
-- #39 CHG-0003 runtime-extension governance;
-- #41 BONUS real-time reporting;
-- #42 final integration, regression, hardening, baselines, Gate closure, and milestone promotion;
-- #47 CHG-0004 production email settings governance;
-- #66 CHG-0005 Gate 3 merge-governance transition.
+The first #42 PR must:
 
-All remaining UI/UX, Django Template, HTML, CSS, browser rendering, and presentation-specific JavaScript belongs exclusively to SARD-81.
+- add any missing final regression coverage;
+- verify all mandatory acceptance scenarios through existing or new executable tests;
+- add a clean five-service Docker smoke gate;
+- synchronize README, Gate status and verification documentation;
+- keep Gate 3 explicitly IN PROGRESS;
+- not create a frozen baseline with a guessed pre-merge SHA.
 
-### amirrezaparvaneh — bounded backend/runtime lane
+### Freeze phase
 
-Owns or supports:
+After the closure-candidate is reviewed and merged by the Team Lead, read the exact resulting `dev` SHA and open a small documentation-only freeze PR that:
 
-- #28 API v1 + OpenAPI foundation;
-- #34 Process lifecycle/visibility/step backend;
-- #35 Process execution Service/Selector/REST backend;
-- #38 isolated ReportSubscription CRUD/validation/backend-permission support only;
-- #40 Celery/Beat scheduled EMAIL/API delivery backend/runtime and backend tests.
+- creates `BL-FOUNDATION-002` for the applied CHG-0003/CHG-0004 runtime/configuration state;
+- creates `BL-APPLICATION-001` for the verified Gate 3 application state;
+- records final CI evidence and exact freeze commit;
+- updates Gate status to CLOSED;
+- records #41 as deferred bonus.
 
-No UI/UX, Django Template, HTML, CSS, or presentation-specific JavaScript is assigned to amirrezaparvaneh.
+This two-stage approach is required because the repository uses squash merge and the authoritative post-merge `dev` SHA is not knowable before merge.
 
-## Execution waves
+## Bonus scope
 
-### Completed foundation/application work
+Issue #41 — real-time report refresh using Channels/WebSockets — is BONUS/STRETCH and is explicitly deferred from Gate 3 closure.
 
-- #26, #27, #28, #29, #30, #31, #32, #33, #34, #35, #36, #37, #39 and #47 are implemented/merged.
-
-### Remaining mandatory path
-
-- #38 — ReportSubscription + delivery-neutral periodic report payload;
-- #40 — Celery/Beat scheduled Email/API delivery;
-- #42 — final integration/regression/hardening/docs/baselines and `dev → main` promotion.
-
-### Parallelization
-
-To minimize pending time:
-
-- SARD-81 owns #38 integration-heavy work;
-- amirrezaparvaneh may implement isolated #38 CRUD/validation backend support without touching presentation;
-- after the #38 payload/delivery contract is stable, amirrezaparvaneh implements #40;
-- while #40 is in progress, SARD-81 may advance #41 bonus work and #42 preparation where non-conflicting;
-- final #42 closure waits for all mandatory #26–#40 work.
-
-### Bonus
-
-- #41 — real-time reporting after #36/#37/#39; may be completed or explicitly deferred without blocking Gate 3 closure.
-
-## Dependency graph
-
-```text
-Forms path completed:
-#29 → #30 → #31 → #33 → #36 ✅
-
-Process path completed:
-#34 → #32 → #35 → #37 ✅
-
-Reporting/delivery remaining:
-#36 + #37 → #38 → #40 → #42
-
-#39 → #40
-#47 → #40
-#39 → #41 (BONUS)
-
-Mandatory work → #42 → GATE 3 CLOSED → dev → main
-```
+The Issue remains open for possible future implementation. HTTP reporting remains authoritative and no mandatory feature depends on WebSockets.
 
 ## Architecture rules
 
-All Issues must preserve:
+All Gate 3 work preserves:
 
 1. write flow: presentation/API → Service → ORM;
 2. reusable read flow: presentation/API → Selector → ORM;
-3. transaction boundaries belong in Services;
-4. post-commit side effects use `transaction.on_commit(...)`;
-5. Forms must never import Processes;
-6. frozen cross-table Service-only invariants require explicit tests;
-7. environment variables are read only by settings/configuration;
-8. Redis is accessed through Django/Celery/Channels abstractions, not ad-hoc clients;
-9. model/schema changes require explicit migration review and must not silently violate BL-DATA-002;
-10. frozen-foundation changes require a Change Record.
+3. transaction boundaries in Services;
+4. transaction-dependent side effects through `transaction.on_commit(...)`;
+5. Forms never importing Processes;
+6. explicit tests for frozen Service-only invariants;
+7. environment variables read only by settings/configuration;
+8. Redis accessed only through Django/Celery/Channels framework abstractions;
+9. explicit migration review for any model/schema change;
+10. frozen historical baselines never edited in place.
 
-## Gate 3 Pull Request workflow — CHG-0005
+## Runtime state after #40
 
-After CHG-0005 becomes effective, the normal workflow is:
+The mandatory development topology is:
+
+```text
+web
+postgres
+redis
+celery-worker
+celery-beat
+```
+
+Redis logical separation remains:
+
+```text
+DB 0 → Django cache
+DB 1 → Celery broker
+DB 2 → Channels layer only if #41 is implemented later
+```
+
+Development scheduled reports use Django's console email backend. Production email configuration follows CHG-0004 and is not a production-deployment design.
+
+## Pull Request workflow — CHG-0005
 
 ```text
 Issue
@@ -141,74 +122,52 @@ Issue
 → PR to dev
 → required CI green
 → Team Lead Verification
-→ squash merge to dev
+→ explicit Team Lead merge decision
 ```
 
 Independent peer review is optional. It is not required for merge, Definition of Done, Issue closure, or Gate 3 closure.
 
 No reviewer is automatically requested solely to satisfy governance.
 
-### Team Lead Verification
+## Required CI gates
 
-Before merge, verify as applicable:
+Gate 3 closure-candidate and milestone work must pass:
 
-- PR scope matches its Issue/slice;
-- branch is synchronized with current `dev` when final integration state matters;
-- required CI is green;
-- Ruff format/lint, pytest, Django system check, migration drift, and Docker/config checks pass where applicable;
-- architecture/frozen-baseline boundaries remain intact;
-- model/migration changes are explicitly intentional and reviewed when present;
-- material automated/manual review findings are resolved or documented as accepted non-blocking limitations;
-- security/privacy-sensitive paths have appropriate regression coverage;
-- docs/contracts are synchronized;
-- Team Lead explicitly authorizes merge.
+- `lint` — Ruff format and lint;
+- `test` — full pytest suite;
+- `migration-check` — Django system check, migration drift, Compose config;
+- `docker-smoke` — clean build/start of all five development services, Celery worker/task verification, and critical HTML/API/OpenAPI smoke routes.
 
-## Shared Definition of Done
-
-A feature Issue is Done only when:
-
-- stated acceptance criteria are implemented;
-- success and important failure paths are tested;
-- Service/Selector boundaries are respected;
-- required HTML and/or REST surfaces work;
-- permission/ownership cases are tested;
-- no secrets are committed;
-- `ruff format --check .` passes;
-- `ruff check .` passes;
-- `pytest` passes;
-- `python src/manage.py makemigrations --check --dry-run` passes;
-- docs are updated when behavior/contracts change;
-- PR targets `dev`;
-- required CI is green;
-- Team Lead Verification is complete and merge is explicitly authorized.
-
-An independent peer `APPROVED` review is additional evidence when present, not a mandatory DoD item.
+The detailed acceptance map is maintained in `Documents/testing/gate3-acceptance-verification.md`.
 
 ## Gate 3 exit criteria
 
 Gate 3 may close only when:
 
-- all mandatory Issues #26–#40 are completed and merged;
-- Issue #42 end-to-end scenarios pass;
-- OpenAPI matches implemented REST endpoints;
-- cache behavior/invalidation is verified;
-- all frozen Service-only invariants have tests;
-- scheduled Email/API reporting works;
-- Docker development bootstrap remains valid;
-- applied CHG-0003 and CHG-0004 foundation changes are captured in a superseding foundation baseline;
-- full regression suite and CI are green;
+- all mandatory Issues #26–#40 are merged;
+- Issue #42 integrated acceptance scenarios pass;
+- OpenAPI matches mandatory REST surfaces;
+- cache correctness/invalidation and database fallback are verified;
+- scheduled EMAIL/API reporting is verified;
+- the full five-service Docker bootstrap smoke check passes;
+- full regression suite, Ruff, Django check and migration drift are green;
 - application/developer/governance documentation is synchronized;
-- `BL-APPLICATION-001` is verified and frozen;
+- `BL-FOUNDATION-002` is frozen at the exact verified `dev` commit;
+- `BL-APPLICATION-001` is frozen at the exact verified `dev` commit;
 - Gate status is updated to CLOSED;
-- milestone PR `dev → main` is green, passes Team Lead Verification, is explicitly authorized, and is merged.
+- Issue #41 is either completed or explicitly deferred as bonus;
+- milestone PR `dev → main` passes its own CI and Team Lead Verification before merge.
 
-Issue #41 may be completed or explicitly deferred as a bonus without blocking Gate closure.
+## Promotion
 
-## Coordination rules
+After the freeze PR is merged and Gate 3 is CLOSED:
 
-- Start dependent implementation only after prerequisites are merged unless work is demonstrably isolated/non-conflicting.
-- Coordinate before parallel edits to shared settings, root URLs, base templates, Compose, or shared API configuration.
-- Rebase/merge latest `dev` before final verification of a long-running branch when integration state has changed.
-- Keep PRs scoped to their Issue; unrelated cleanup belongs separately.
-- Do not auto-request reviewers merely to satisfy governance.
-- Automated review tools may be used as verification input; material findings still require disposition before merge.
+```text
+dev
+→ Pull Request to main
+→ full CI including docker-smoke
+→ Team Lead Verification
+→ explicit Team Lead merge decision
+```
+
+Production deployment, Nginx topology, Kubernetes, GraphQL and social login remain outside Gate 3 scope.
