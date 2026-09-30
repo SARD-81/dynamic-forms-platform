@@ -1,21 +1,22 @@
 # GATE 3 — Application Feature Implementation Execution Plan
 
-**Status:** CLOSURE CANDIDATE / IN PROGRESS  
+**Status:** CLOSED / FROZEN  
 **Tracker:** GitHub Issue #25  
 **Integration branch:** `dev`  
-**Current mandatory implementation base:** `255d95b2150c89a07819d8a772cdc7742910d0fe`  
-**Applies after:** BL-ARCH-002, BL-DATA-002, BL-FOUNDATION-001  
+**Technical freeze point:** `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`  
+**Architecture baseline:** BL-ARCH-002  
+**Data baseline:** BL-DATA-002  
+**Active foundation baseline:** BL-FOUNDATION-002  
+**Application baseline:** BL-APPLICATION-001  
 **Active governance:** CHG-0005
 
 ## Objective
 
-Deliver and verify the complete mandatory application feature set for the Dynamic Forms Platform while preserving the frozen architecture, data model, and historical baselines.
+Gate 3 delivered and verified the complete mandatory application feature set for the Dynamic Forms Platform while preserving frozen architecture/data decisions and applying authorized runtime/configuration changes through explicit change control.
 
-Gate 3 uses short-lived Issue-linked branches and Pull Requests to `dev`. No long-lived feature branch is used.
+The mandatory feature/runtime state is frozen at `dev@72d5af1b5f26d9d3b8ba67605d96a69605878dcc`.
 
-## Mandatory scope coverage
-
-All mandatory implementation/runtime work through Issue #40 is merged to `dev`:
+## Completed mandatory scope
 
 - #26 — authentication + email OTP activation;
 - #27 — shared Django Template shell/navigation/dashboard;
@@ -32,68 +33,69 @@ All mandatory implementation/runtime work through Issue #40 is merged to `dev`:
 - #38 — ReportSubscription management + WEEKLY/MONTHLY payload;
 - #39 — CHG-0003 runtime-extension authorization;
 - #40 — Celery/Beat scheduled EMAIL/API delivery;
+- #42 — final integrated hardening, verification and baseline freeze;
 - #47 — CHG-0004 production email configuration authorization;
 - #66 — CHG-0005 Team Lead Verification governance transition.
 
-## Current work — Issue #42
+## Issue #42 closure result
 
-Issue #42 is the final mandatory Gate 3 closure path. It owns:
+The closure sequence was deliberately split into two stages.
 
-- integrated regression/hardening;
-- final OpenAPI/cache/runtime verification;
-- clean Docker bootstrap smoke verification;
-- final documentation synchronization;
-- application/runtime baseline freeze;
-- Gate 3 closure;
-- `dev → main` milestone promotion preparation.
+### Stage 1 — closure candidate
 
-### Closure-candidate phase
+PR #74:
 
-The first #42 PR must:
+- added final FREE Process browser arbitrary-order regression coverage;
+- verified one-time raw resume-token presentation/removal behavior;
+- aligned UI wording with actual token persistence/session semantics;
+- added cross-domain OpenAPI acceptance coverage;
+- added clean five-service `docker-smoke` CI verification;
+- synchronized runtime/governance/developer documentation;
+- kept Gate 3 IN PROGRESS and did not invent a freeze SHA before merge.
 
-- add any missing final regression coverage;
-- verify all mandatory acceptance scenarios through existing or new executable tests;
-- add a clean five-service Docker smoke gate;
-- synchronize README, Gate status and verification documentation;
-- keep Gate 3 explicitly IN PROGRESS;
-- not create a frozen baseline with a guessed pre-merge SHA.
+A final review finding identified a mismatch between unit-level and containerized OpenAPI required-path assertions. The missing Form and Process reporting routes were added to the runtime smoke assertion, CI was rerun, and the finding was resolved.
 
-### Freeze phase
+PR #74 squash-merged to:
 
-After the closure-candidate is reviewed and merged by the Team Lead, read the exact resulting `dev` SHA and open a small documentation-only freeze PR that:
+`72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
 
-- creates `BL-FOUNDATION-002` for the applied CHG-0003/CHG-0004 runtime/configuration state;
-- creates `BL-APPLICATION-001` for the verified Gate 3 application state;
-- records final CI evidence and exact freeze commit;
-- updates Gate status to CLOSED;
-- records #41 as deferred bonus.
+This commit is the technical freeze point.
 
-This two-stage approach is required because the repository uses squash merge and the authoritative post-merge `dev` SHA is not knowable before merge.
+### Stage 2 — documentation-only freeze
+
+The follow-up freeze PR:
+
+- creates `BL-FOUNDATION-002` from the actually applied runtime/configuration state;
+- creates `BL-APPLICATION-001` from the integrated mandatory application state;
+- records exact freeze commit and CI evidence;
+- marks Gate 3 CLOSED/FROZEN;
+- records #41 as deferred bonus;
+- introduces no application/runtime behavior change.
 
 ## Bonus scope
 
-Issue #41 — real-time report refresh using Channels/WebSockets — is BONUS/STRETCH and is explicitly deferred from Gate 3 closure.
+Issue #41 — real-time report refresh using Channels/WebSockets — is BONUS/STRETCH and is explicitly deferred from Gate 3.
 
 The Issue remains open for possible future implementation. HTTP reporting remains authoritative and no mandatory feature depends on WebSockets.
 
-## Architecture rules
+## Architecture rules preserved
 
-All Gate 3 work preserves:
+Gate 3 preserves:
 
 1. write flow: presentation/API → Service → ORM;
 2. reusable read flow: presentation/API → Selector → ORM;
 3. transaction boundaries in Services;
-4. transaction-dependent side effects through `transaction.on_commit(...)`;
+4. transaction-dependent side effects through `transaction.on_commit(...)` where applicable;
 5. Forms never importing Processes;
 6. explicit tests for frozen Service-only invariants;
 7. environment variables read only by settings/configuration;
-8. Redis accessed only through Django/Celery/Channels framework abstractions;
-9. explicit migration review for any model/schema change;
-10. frozen historical baselines never edited in place.
+8. Redis accessed through framework abstractions rather than ad-hoc domain clients;
+9. explicit migration review for model/schema changes;
+10. frozen historical baselines are superseded, never rewritten.
 
-## Runtime state after #40
+## Frozen runtime state
 
-The mandatory development topology is:
+Mandatory development topology:
 
 ```text
 web
@@ -103,7 +105,7 @@ celery-worker
 celery-beat
 ```
 
-Redis logical separation remains:
+Redis role separation:
 
 ```text
 DB 0 → Django cache
@@ -111,7 +113,7 @@ DB 1 → Celery broker
 DB 2 → Channels layer only if #41 is implemented later
 ```
 
-Development scheduled reports use Django's console email backend. Production email configuration follows CHG-0004 and is not a production-deployment design.
+Development scheduled reports use Django's console email backend. Production email settings follow CHG-0004; production deployment remains outside Gate 3 scope.
 
 ## Pull Request workflow — CHG-0005
 
@@ -119,53 +121,67 @@ Development scheduled reports use Django's console email backend. Production ema
 Issue
 → short-lived branch from current dev
 → implementation + tests
-→ PR to dev
+→ PR
 → required CI green
 → Team Lead Verification
 → explicit Team Lead merge decision
 ```
 
-Independent peer review is optional. It is not required for merge, Definition of Done, Issue closure, or Gate 3 closure.
+Independent peer review is optional. It is not required for merge, Definition of Done, Issue closure, Gate closure or milestone promotion.
 
 No reviewer is automatically requested solely to satisfy governance.
 
 ## Required CI gates
 
-Gate 3 closure-candidate and milestone work must pass:
+The active stable jobs are:
 
 - `lint` — Ruff format and lint;
 - `test` — full pytest suite;
-- `migration-check` — Django system check, migration drift, Compose config;
-- `docker-smoke` — clean build/start of all five development services, Celery worker/task verification, and critical HTML/API/OpenAPI smoke routes.
+- `migration-check` — Django system check, migration drift and Compose config;
+- `docker-smoke` — clean build/start of all five development services, Celery worker/task verification and critical HTML/API/OpenAPI smoke routes.
 
 The detailed acceptance map is maintained in `Documents/testing/gate3-acceptance-verification.md`.
 
-## Gate 3 exit criteria
+## Gate 3 closure evidence
 
-Gate 3 may close only when:
+Closure-candidate CI #183 on the reviewed final PR #74 head passed:
 
-- all mandatory Issues #26–#40 are merged;
-- Issue #42 integrated acceptance scenarios pass;
-- OpenAPI matches mandatory REST surfaces;
-- cache correctness/invalidation and database fallback are verified;
-- scheduled EMAIL/API reporting is verified;
-- the full five-service Docker bootstrap smoke check passes;
-- full regression suite, Ruff, Django check and migration drift are green;
-- application/developer/governance documentation is synchronized;
-- `BL-FOUNDATION-002` is frozen at the exact verified `dev` commit;
-- `BL-APPLICATION-001` is frozen at the exact verified `dev` commit;
-- Gate status is updated to CLOSED;
-- Issue #41 is either completed or explicitly deferred as bonus;
-- milestone PR `dev → main` passes its own CI and Team Lead Verification before merge.
+- Ruff format/lint;
+- 365/365 pytest tests;
+- Django system check;
+- migration drift check;
+- Compose validation;
+- clean five-service Docker bootstrap;
+- Celery worker ping and scheduled-report task registration;
+- critical HTTP/API/OpenAPI routes;
+- containerized mandatory OpenAPI route assertions including Form and Process reporting.
 
-## Promotion
+## Exit criteria result
 
-After the freeze PR is merged and Gate 3 is CLOSED:
+- all mandatory Issues #26–#40 — COMPLETE;
+- integrated HTML/REST flows — VERIFIED;
+- mandatory OpenAPI surfaces — VERIFIED;
+- cache correctness/invalidation/database fallback — VERIFIED;
+- scheduled EMAIL/API reporting — VERIFIED;
+- five-service Docker bootstrap smoke — VERIFIED;
+- full regression suite / Ruff / Django / migration drift — GREEN;
+- documentation — SYNCHRONIZED;
+- #35 carried-forward hardening — COMPLETED;
+- `BL-FOUNDATION-002` — FROZEN at exact technical state;
+- `BL-APPLICATION-001` — FROZEN at exact technical state;
+- #41 — explicitly DEFERRED BONUS;
+- Gate 3 — CLOSED / FROZEN.
+
+## Milestone promotion
+
+Gate closure on `dev` is separate from promotion to `main`.
+
+After the documentation-only freeze PR is reviewed and merged:
 
 ```text
 dev
 → Pull Request to main
-→ full CI including docker-smoke
+→ full required CI including docker-smoke
 → Team Lead Verification
 → explicit Team Lead merge decision
 ```
