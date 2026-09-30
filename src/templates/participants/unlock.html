@@ -17,6 +17,9 @@
     {% endif %}
     <form method="post" action="{% url unlock_url public_id %}" novalidate>
         {% csrf_token %}
+        {% if unlock_next %}
+            <input type="hidden" name="next" value="{{ unlock_next }}">
+        {% endif %}
         <div class="form-field">
             <label for="participant-password">Access password</label>
             <input
