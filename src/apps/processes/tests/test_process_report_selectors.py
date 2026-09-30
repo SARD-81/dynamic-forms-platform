@@ -123,6 +123,41 @@ def test_process_report_cache_revision_refreshes_after_new_run(linear_process, u
 
 
 @pytest.mark.django_db
+def test_process_report_cache_revision_refreshes_after_completion(
+    linear_process,
+    published_form,
+    user,
+):
+    cache.clear()
+    step = linear_process.steps.get()
+    run = _run(process=linear_process, token="completion-refresh")
+    step_run = ProcessStepRun.objects.create(
+        process_run=run,
+        process_step=step,
+        status=ProcessStepRun.Status.AVAILABLE,
+    )
+
+    before = get_process_report_summary(owner=user, process_id=linear_process.pk)
+    assert before["completed_runs"] == 0
+    assert before["steps"][0]["completed_count"] == 0
+
+    completed_at = timezone.now()
+    submission = FormSubmission.objects.create(form=published_form)
+    step_run.submission = submission
+    step_run.status = ProcessStepRun.Status.COMPLETED
+    step_run.completed_at = completed_at
+    step_run.save(update_fields=["submission", "status", "completed_at"])
+    run.status = ProcessRun.Status.COMPLETED
+    run.completed_at = completed_at
+    run.save(update_fields=["status", "completed_at"])
+
+    after = get_process_report_summary(owner=user, process_id=linear_process.pk)
+    assert after["completed_runs"] == 1
+    assert after["steps"][0]["completed_count"] == 1
+    assert after["completion_rate"] == 100
+
+
+@pytest.mark.django_db
 def test_process_report_owner_isolation(linear_process):
     other = User.objects.create_user(username="other-report-owner", password="password123")
 
