@@ -32,11 +32,24 @@ Gate 4 production-runtime changes require #78 / CHG-0006 before implementation i
 
 ## Current Gate 4 state
 
-- #79 production preflight — completed through PR #88;
+- #79 production preflight — **completed through PR #88**;
+- #82 reusable production HTTP/static verifier — **completed through PR #94**;
 - #80 health/readiness/logging — Draft PR #87, blocked from merge until #78 / CHG-0006;
 - #89 / CHG-0007 — governance transition;
-- #78 / CHG-0006 — next mandatory production-runtime authorization;
-- #41 — optional real-time reporting bonus.
+- #78 / CHG-0006 — next mandatory production-runtime authorization; Draft PR #91 prepared;
+- #81 production topology — starts after #78;
+- #83 production-smoke CI — consumes #79/#82 plus stable #80/#81 runtime;
+- #84 final integrated production acceptance/baseline/promotion;
+- #41 optional real-time reporting bonus.
+
+## Reusable Gate 4 verification tooling
+
+Gate 4 already contains two reusable verification interfaces on `dev`:
+
+- `python src/manage.py production_preflight` from #79 — internal application/settings/database/cache/runtime preflight;
+- `python scripts/verify_production.py ...` from #82 — bounded external HTTP/static verification with deterministic failure and secret-safe diagnostics.
+
+#83 and #84 must reuse these tools rather than duplicating their logic. Final health/static paths are supplied after #80/#81 stabilize the production public contract.
 
 ## Primary foundation documents
 
