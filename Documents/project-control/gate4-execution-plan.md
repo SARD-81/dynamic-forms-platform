@@ -3,7 +3,7 @@
 **Status:** CLOSED / FROZEN ON DEV — milestone promotion pending  
 **Tracker:** #77 (open until promotion)  
 **Closeout:** #84 (open until promotion)  
-**Technical freeze:** `dev@df5609b17f8238661b7cc464228f5837ce7f4537`  
+**Technical freeze:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Gate 3 promotion:** `main@419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
 
 ## Purpose and requirements
@@ -29,6 +29,7 @@ BL-FOUNDATION-003 and a release acceptance baseline BL-RELEASE-001.
 | Runtime | SARD-81: #81 | PR #97 production Daphne/Nginx/collectstatic topology merged |
 | CI | amirrezaparvaneh: #83 | PR #98 mandatory production-smoke merged |
 | Final code | AmirReza tasks #95/#96 | PR #100 completed/verified under the final Team Lead closeout instruction |
+| Final hardening | #84 acceptance findings | PR #102 verified and merged; all material threads resolved |
 | Acceptance | SARD-81: #84 | Integrated security/regression/runtime audit and freeze on dev; promotion remains pending |
 
 The Work session finished the remaining mandatory implementation under explicit
@@ -69,9 +70,9 @@ production-smoke. Each must finish successfully on the final HEAD. Pending,
 cancelled or skipped jobs are insufficient.
 
 [Acceptance evidence](../testing/gate4-acceptance-verification.md) records final
-implementation CI, 502 tests, production bootstrap/static/security/outage evidence
+implementation CI, 509 tests, production bootstrap/static/security/outage evidence
 and the fresh integrated dev run. The exact technical freeze SHA was obtained
-AFTER #80/#81/#83/#95/#96 merges and verified from GitHub.
+AFTER #80/#81/#83/#95/#96 and #102 merges and verified from GitHub.
 
 - BL-FOUNDATION-003 freezes the verified development/production engineering state.
 - BL-RELEASE-001 accepts the same technical SHA on dev.

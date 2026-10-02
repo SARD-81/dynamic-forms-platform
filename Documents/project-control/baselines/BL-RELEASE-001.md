@@ -2,7 +2,7 @@
 
 **Status:** FROZEN / ACCEPTED ON DEV — milestone promotion pending  
 **Verified:** 2026-10-02 UTC  
-**Technical acceptance SHA:** `dev@df5609b17f8238661b7cc464228f5837ce7f4537`  
+**Technical acceptance SHA:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Foundation:** BL-FOUNDATION-003 at the same exact SHA  
 **Application:** BL-APPLICATION-001 (unchanged)  
 **Architecture/data:** BL-ARCH-002 / BL-DATA-002  
@@ -31,7 +31,8 @@ acceptance and material-finding disposition.
 
 - Final #83 HEAD CI [37062061257](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37062061257): all five required jobs SUCCESS, 487 tests.
 - Final #95/#96 HEAD CI [37064542544](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37064542544): all five required jobs SUCCESS, 502 tests.
-- Fresh exact technical SHA CI [37064806581](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37064806581): all five required jobs SUCCESS, 502 tests.
+- Final acceptance correction #102 CI [37066499042](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37066499042): all five required jobs SUCCESS, 509 tests.
+- Fresh exact technical SHA CI [37066868098](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37066868098): all five required jobs SUCCESS, 509 tests.
 - Ruff format/lint, Django check/migration drift, existing development docker-smoke
   and actual production-smoke completed successfully.
 - Production init/migrations/static/preflight, public login/home/API/OpenAPI/health/

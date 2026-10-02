@@ -62,7 +62,8 @@ migrations, collected project/admin assets, internal ports/dependency health,
 worker response/task registration and Beat state. It reuses #79 preflight and #82
 HTTP/static verification with `--require-all`; no competing HTTP verifier exists.
 
-Additional acceptance covers exact project CSS bytes, home/login/API/OpenAPI,
+Additional acceptance covers exact project CSS bytes, replacement of stale/future-
+dated CSS and removal of obsolete assets on a retained static volume, home/login/API/OpenAPI,
 private/source-file denial, separate PostgreSQL/Redis outages returning bounded
 503 while liveness remains 200, and secure redirects despite forged forwarded
 protocol input. The HTTP smoke override is explicit; secure cookies remain on.
@@ -132,7 +133,7 @@ Detailed current gate/audit status is maintained in `Documents/project-control/g
 ## Gate 4 freeze and authorized closeout
 
 Gate 4 is CLOSED/FROZEN on dev at technical freeze point
-`df5609b17f8238661b7cc464228f5837ce7f4537`; [acceptance evidence](../testing/gate4-acceptance-verification.md)
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`; [acceptance evidence](../testing/gate4-acceptance-verification.md)
 records the verified CI and security/runtime checks. Documentation activation is
 a separate dev merge. Issue #84 and Tracker #77 remain open until main promotion.
 

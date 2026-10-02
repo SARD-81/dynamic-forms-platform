@@ -149,13 +149,13 @@ Remaining technical implementation was completed through #80 PR #87, #81 PR #97
 and #83 PR #98 under the owner's explicit Team Lead Work-session override.
 
 **Decision:** Freeze the actual verified implementation at
-`dev@df5609b17f8238661b7cc464228f5837ce7f4537`. BL-FOUNDATION-003 supersedes the
+`dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. BL-FOUNDATION-003 supersedes the
 active engineering/runtime foundation only; BL-RELEASE-001 accepts the same SHA.
 Earlier baselines remain immutable and BL-APPLICATION-001 stays authoritative.
 Operational health/runtime changes do not warrant BL-APPLICATION-002.
 
-**Evidence:** Final #83 CI 37062061257, #95/#96 CI 37064542544 and fresh integrated dev CI 37064806581
-completed all five required jobs SUCCESS; final post-polish dev has 502 passing
+**Evidence:** Final #83 CI 37062061257, #95/#96 CI 37064542544, final correction CI 37066499042 and fresh integrated dev CI 37066868098
+completed all five required jobs SUCCESS; final corrected dev has 509 passing
 tests and actual production
 bootstrap/static/internal/public/outage/proxy acceptance. See the Gate 4
 acceptance record for precise findings, evidence and operating limits.

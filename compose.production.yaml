@@ -41,7 +41,7 @@ services:
       - -ec
       - |
         python src/manage.py migrate --noinput
-        python src/manage.py collectstatic --noinput
+        python src/manage.py collectstatic --noinput --clear
         python src/manage.py production_preflight
     volumes:
       - static_data:/app/staticfiles

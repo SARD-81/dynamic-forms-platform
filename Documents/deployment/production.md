@@ -20,7 +20,10 @@ configuration is built into its own image. `static_data` is writable only in
 `app-init` and read-only in Nginx/web. Its sole content is Django-collected assets;
 source, templates, environment files and database files are never copied there.
 
-`app-init` uses `sh -ec`: migration, collection or preflight failure stops the
+`app-init` uses `sh -ec` and `collectstatic --noinput --clear`: the collected static
+destination is cleared before collection, so retained volumes cannot keep obsolete
+or future-dated assets during an update or rollback. Migration, collection or
+preflight failure stops the
 remaining sequence and prevents web/worker/Beat startup through Compose's
 `service_completed_successfully` dependency. PostgreSQL and Redis must first pass
 their finite healthchecks. Do not run multiple Beat instances against one database.
@@ -119,7 +122,7 @@ update/rollback command. CI always tears down its own isolated smoke project.
 ## Frozen acceptance and release status
 
 BL-FOUNDATION-003 and BL-RELEASE-001 freeze the implemented topology at
-`df5609b17f8238661b7cc464228f5837ce7f4537`. Mandatory production-smoke runs alongside
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. Mandatory production-smoke runs alongside
 the existing development job and verifies initialization, internal services,
 public routes/static, outages and proxy security. See the
 [acceptance record](../testing/gate4-acceptance-verification.md) for exact run IDs

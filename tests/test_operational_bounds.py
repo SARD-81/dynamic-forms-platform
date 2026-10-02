@@ -283,3 +283,31 @@ def test_url_userinfo_token_without_password_delimiter_is_redacted():
     cleaned = scrub_sensitive_text("https://userinfo-private@example.test/api")
     assert "userinfo-private" not in cleaned
     assert "https://[REDACTED]@example.test/api" in cleaned
+
+
+@pytest.mark.parametrize(
+    ("scheme", "username", "password"),
+    [
+        ("postgres", "private-user", "private-password"),
+        ("redis", "private-user", "private-password"),
+        ("smtp", "private-user", "private-password"),
+        ("smtp", "private-user@example.invalid", "private-password"),
+        ("smtp", "private-user", ""),
+        ("smtp", "private-user@example.invalid", ""),
+    ],
+)
+def test_url_username_and_password_are_both_redacted(scheme, username, password):
+    cleaned = scrub_sensitive_text(f"{scheme}://{username}:{password}@example.test/service")
+    assert username not in cleaned
+    assert "private-password" not in cleaned
+    assert cleaned == f"{scheme}://[REDACTED]:[REDACTED]@example.test/service"
+
+
+def test_long_log_words_do_not_cause_quadratic_redaction():
+    messages = ["a" * 8000, "password" * 1000, "a" * 8000 + "=value"]
+    started = time.monotonic()
+    for message in messages:
+        assert scrub_sensitive_text(message) == message
+    assignment = "prefix_" + "token" * 2000 + "=private-value"
+    assert scrub_sensitive_text(assignment).endswith("=[REDACTED]")
+    assert time.monotonic() - started < 2, "Long log tokens must not exhaust a worker"

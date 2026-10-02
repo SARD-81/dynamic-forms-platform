@@ -12,7 +12,7 @@ runtime. Development and production have separate Docker Compose entrypoints.
 
 Gate 3's mandatory application behavior is complete and frozen. Gate 4 is
 **CLOSED / FROZEN on `dev`**, with production acceptance recorded at technical
-freeze point `df5609b17f8238661b7cc464228f5837ce7f4537` and **502 passing tests**.
+freeze point `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00` and **509 passing tests**.
 The final `dev → main` milestone remains pending the Team Lead's manual merge;
 [Tracker #77](https://github.com/SARD-81/dynamic-forms-platform/issues/77) and
 [Issue #84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) stay open until that promotion.

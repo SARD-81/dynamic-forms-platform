@@ -3,7 +3,7 @@
 **Status:** FROZEN / AUTHORITATIVE ON DEV  
 **Verified:** 2026-10-02 UTC  
 **Gate:** Gate 4 — Production Readiness  
-**Technical freeze point:** `dev@df5609b17f8238661b7cc464228f5837ce7f4537`  
+**Technical freeze point:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Supersedes for active foundation:** BL-FOUNDATION-002  
 **Dependencies:** BL-ARCH-002, BL-DATA-002, BL-APPLICATION-001  
 **Applied authorization:** CHG-0006 and CHG-0007
@@ -11,7 +11,7 @@
 ## Decision and activation
 
 Freeze the engineering/runtime foundation actually implemented and verified after
-#80/#81/#83 and final #95/#96 integration. The SHA above is the final technical merge, not the
+#80/#81/#83/#95/#96 and final #102 acceptance correction integration. The SHA above is the final technical merge, not the
 subsequent documentation activation commit. This baseline activates when the
 verified #84 closure/freeze PR is Squash merged into dev under the owner's explicit
 Team Lead authorization. Main promotion remains pending and separately authorized.
@@ -30,7 +30,9 @@ semantics. No domain schema/migration or application baseline change is introduc
   celery-beat, postgres, redis. Production images are built from repository
   files; application image copies only src and runs as UID 10001. No source binds.
 - Init runs migrate --noinput, collectstatic --noinput and production_preflight;
-  successful completion gates web/worker/Beat. Persistent PostgreSQL/Redis and
+  successful completion gates web/worker/Beat. Static is cleared before collection
+  to replace future-dated assets and remove obsolete files on preserved volumes.
+  Persistent PostgreSQL/Redis and
   collected static use named volumes; static is read-only outside init.
 - Production ASGI uses Daphne and config.settings.production, never runserver.
 - Only Nginx publishes an HTTP port, loopback 8080 by default; Postgres/Redis/
@@ -49,7 +51,8 @@ semantics. No domain schema/migration or application baseline change is introduc
   safe generic failure 503, UUID probe keys and cleanup. HEAD is bodyless;
   unsupported methods are 405 without probing.
 - Console logging redacts credentials/tokens including parameterized exceptions/
-  stack text; Celery retains configured logging. Raw unsafe participant URL logs
+  stack text; key/URI matching is bounded against long-token rescanning; Celery
+  retains configured logging. Raw unsafe participant URL logs
   are avoided at Nginx/Daphne.
 - Redis DB 0 cache, DB 1 broker; DB 2 remains reserved for optional Channels.
   Worker response, scheduled dispatch task registration and one Beat verified;
@@ -64,8 +67,8 @@ semantics. No domain schema/migration or application baseline change is introduc
 
 [Gate 4 acceptance](../../testing/gate4-acceptance-verification.md) records exact
 PR/merge/CI/jobs, security/failure/static/runtime coverage and limitations.
-Integrated technical SHA CI [37064806581](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37064806581)
-completed all five jobs SUCCESS with **502 tests**. Full production build/init,
+Integrated technical SHA CI [37066868098](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37066868098)
+completed all five jobs SUCCESS with **509 tests**. Full production build/init,
 public checks, separate DB/Redis outages, proxy spoof resistance and cleanup passed.
 
 No previous baseline blob changed. This baseline is engineering acceptance on

@@ -6,7 +6,7 @@ The root [README](../README.md) explains how to use, run and verify the applicat
 ## Current release state
 
 Gate 4 is **CLOSED / FROZEN on dev — milestone promotion pending**. Its technical
-freeze point is `df5609b17f8238661b7cc464228f5837ce7f4537`, after #80/#81/#83 and #95/#96 were
+freeze point is `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`, after #80/#81/#83, #95/#96 and final #102 were
 integrated and verified. #84 and Tracker #77 remain open until the separately
 reviewed `dev → main` promotion. The freeze documentation commit is not the
 technical freeze point.

@@ -2,14 +2,14 @@
 
 **Status:** ACCEPTED / FROZEN ON DEV — milestone promotion pending  
 **Verified:** 2026-10-02 UTC  
-**Technical freeze point:** `dev@df5609b17f8238661b7cc464228f5837ce7f4537`  
+**Technical freeze point:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Issues:** #77 / #84  
 **Baselines:** BL-FOUNDATION-003 and BL-RELEASE-001 at the same implementation SHA
 
 ## Evidence boundary
 
 The SHA above was obtained from live dev AFTER the verified Squash merges for
-#80/#81/#83 and final #95/#96. A fresh push CI run tested that exact implementation state. The later
+#80/#81/#83, final #95/#96 and acceptance corrections #102. A fresh push CI run tested that exact implementation state. The later
 closure documentation merge activates acceptance on dev and is not substituted
 for the technical freeze point. Acceptance does not assert a public hosting
 provider, certificate or real mail/report destination has been provisioned.
@@ -22,11 +22,12 @@ provider, certificate or real mail/report destination has been provisioned.
 | #81 | #97 / `0ae8ac7575ced7f3a73d6ddef01276ccb5273e41` | `e4a563ae0f63a720f045178113a5a9a271da4465` | [37061108231](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37061108231): four jobs SUCCESS, 476 tests; [37061108305](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37061108305): real topology candidate SUCCESS |
 | #83 | #98 / `948066bebf71f26e9d1cc1ccec383704ffaa8b8f` | `2a5cea20f5cf3237645f35c8e89dab3665d77ac7` | [37062061257](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37062061257): all five jobs SUCCESS, 487 tests |
 | #95/#96 | #100 / `3c6e1c267a7092a9b0d8bd1cb8eb2e8b0205c386` | `df5609b17f8238661b7cc464228f5837ce7f4537` | [37064542544](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37064542544): all five jobs SUCCESS, 502 tests |
-| Integrated dev | exact technical freeze SHA above | same SHA | [37064806581](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37064806581): all five jobs SUCCESS, 502 tests |
+| Final correction | #102 / `64b12b69606fa86b22e98071cecf15edb11dace4` | `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00` | [37066499042](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37066499042): all five jobs SUCCESS, 509 tests |
+| Integrated dev | exact technical freeze SHA above | same SHA | [37066868098](https://github.com/SARD-81/dynamic-forms-platform/actions/runs/37066868098): all five jobs SUCCESS, 509 tests |
 
-Exact integrated dev jobs: lint 111029872088; test 111029872156;
-migration-check 111029873068; docker-smoke 111029872319;
-production-smoke 111029871807. Check Runs completed SUCCESS; no pending/cancelled
+Exact integrated dev jobs: lint 111036822043; test 111036821978;
+migration-check 111036822082; docker-smoke 111036822163;
+production-smoke 111036821814. Check Runs completed SUCCESS; no pending/cancelled
 job was counted as green. Empty legacy status contexts were not treated as a
 failed Actions check. Final closure and milestone PR evidence is maintained in
 live #84/#77 after each action, rather than guessing future PR/merge identifiers.
@@ -57,15 +58,15 @@ ownership remains in src/config. No new runtime dependency is introduced.
 | Initialization | Clean Compose config/build/up succeeded; init exited 0 after migrate, collectstatic and production_preflight. Applied migration graph has no pending nodes; failing init blocks downstream startup by dependency contract |
 | Runtime | Seven exact roles; production settings active; Daphne command verified, no runserver; only Nginx host port; no bind mounts; PostgreSQL/Redis/web healthy; worker/Beat running |
 | Scheduled reports | Worker ping returned pong; apps.reports.tasks.dispatch_due_report_subscriptions registered; Beat process present; frozen hourly dispatch/delivery tests pass; no delivery task invoked by smoke |
-| Static | STATIC_ROOT=/app/staticfiles, init writable and web/Nginx read-only shared volume; project/admin assets collected; exact project CSS SHA256 verified via Nginx; admin CSS publicly reached |
+| Static | STATIC_ROOT=/app/staticfiles, init writable and web/Nginx read-only shared volume; project/admin assets collected; exact project CSS SHA256 verified via Nginx; admin CSS publicly reached; preserved-volume update seeds stale future-dated CSS and an obsolete asset, reruns actual init, verifies restored exact CSS hash and obsolete asset 404 |
 | Exposure | /static/.env, /static/config/settings/production.py, /.env and /src/manage.py return 404 through Nginx; static root contains only collected assets, no private/source directory mount |
 | Public behavior | Home, login, API root, OpenAPI, liveness, readiness and static routes succeed through Nginx using reusable #82 verifier with --require-all |
 | Dependency failure | Separate stopped PostgreSQL and Redis produce readiness 503 within public verifier timeout 5s while liveness remains 200; dependencies restored and readiness reverified 200 |
 | Probe reliability | Silent TCP peers exercise real connect/read bounds; disposable DB probe options leave business sessions unchanged; UUID cache keys avoid concurrent collisions; timeout configuration invalid inputs fail safely |
-| Failure privacy/logging | Generic readiness JSON omits hosts/passwords/URLs. Parameterized/quoted/bytes logs, exceptions, multi-handler tracebacks and stack text redact passwords, Bearer/API/OTP, SMTP user/password, access/resume secrets, URI userinfo and query tokens |
+| Failure privacy/logging | Generic readiness JSON omits hosts/passwords/URLs. Parameterized/quoted/bytes logs, exceptions, multi-handler tracebacks and stack text redact passwords, Bearer/API/OTP, SMTP user/password, access/resume secrets, both URI username/password (including email usernames) and query tokens |
 | Log transport | Container console Django/Celery handlers retained; Celery does not hijack root; Nginx access omits args/referer; unsafe raw Nginx request errors and Daphne access logging disabled |
 | Tool reuse | #79 preflight used in init and runtime verification; #82 owns public HTTP/static assertions; #83 supplies finalized inputs, not a competing verifier |
-| Regression | 502 tests pass, including auth/OTP/participant/security/form/process/report contracts; Ruff format/lint, Django check and migration drift pass; full five-service Gate 3 docker-smoke and mandatory production-smoke succeed |
+| Regression | 509 tests pass, including auth/OTP/participant/security/form/process/report contracts; Ruff format/lint, Django check and migration drift pass; full five-service Gate 3 docker-smoke and mandatory production-smoke succeed |
 
 The integrated production job printed PASS for config/runtime, production
 settings/applied migrations/collected assets, Production preflight passed, worker
@@ -80,10 +81,15 @@ closed unmerged and replaced by clean PR #100. Its superseded branch was restore
 to the complete dev snapshot by a non-destructive fast-forward commit. No such
 deletions reached dev or the final freeze.
 
-Material findings were fixed and reverified before merge: stale readiness timeout
+Late automated findings on #87/#97 and final #102 were resolved through the
+verified final acceptance correction before baseline activation. Material findings
+were fixed and reverified: stale readiness timeout
 ownership, probe session mutation risk, silent dependency hangs, quoted/bytes and
 SMTP/userinfo log secrets, unsafe raw request logging, narrow proxy trust,
-Docker upstream DNS changes on web replacement, static verification and private
+non-empty/empty-password URI username disclosure, quadratic log-key/URI matching,
+stale collected assets on preserved volumes, real-CSRF 403 instead of the health 405 method
+contract (fixed only on public method-guarded health views), Docker upstream DNS
+changes on web replacement, static verification and private
 file exposure coverage. No material unresolved review thread remained. Teammate
 PR #87 history was preserved; no force push was used. Baseline files were not
 rewritten and tests were not weakened.
@@ -117,7 +123,7 @@ explicit authorized Squash merge. Activation evidence is recorded in #84/#77.
 
 **#41 is deferred optional BONUS scope; HTTP reporting remains authoritative.**
 #95/#96 final code tasks are completed through PR #100, including GET/HEAD
-status parity, empty HEAD bodies, unsupported methods, safe cancellation and real
+status parity, empty HEAD bodies, unsupported methods under enforced CSRF, safe cancellation and real
 SIGINT/exit-130 tests. #41 is closed not_planned without claiming implementation.
 
 The separate dev-to-main milestone must have all five checks completed SUCCESS

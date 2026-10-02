@@ -79,9 +79,9 @@ Closeout: [#84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) —
 [Execution record](gate4-execution-plan.md)  
 [Acceptance evidence](../testing/gate4-acceptance-verification.md)
 
-**Technical freeze point:** `dev@df5609b17f8238661b7cc464228f5837ce7f4537`
+**Technical freeze point:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`
 
-This is the verified final #95/#96 merge, after #80/#81/#83 were integrated.
+This is the verified final #102 acceptance correction, after #80/#81/#83/#95/#96.
 The subsequent documentation merge activates the freeze and does not replace
 this technical SHA. Gate 4 closure on dev is distinct from completing the full
 milestone DoD, which still requires manual promotion to main.
@@ -98,6 +98,7 @@ milestone DoD, which still requires manual promotion to main.
 | #81 production runtime/static/proxy | #97 | `e4a563ae0f63a720f045178113a5a9a271da4465` |
 | #83 mandatory production-smoke | #98 | `2a5cea20f5cf3237645f35c8e89dab3665d77ac7` |
 | #95/#96 final code tasks | #100 | `df5609b17f8238661b7cc464228f5837ce7f4537` |
+| Final acceptance corrections | #102 | `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00` |
 
 #78/#79/#80/#81/#82/#83/#95/#96 are completed. PR #87 was audited and advanced without
 rewriting teammate history. No obsolete CHG blocker remains.
@@ -115,7 +116,7 @@ rewriting teammate history. No obsolete CHG blocker remains.
 - Readiness dependency behavior is bounded and generic; liveness is independent.
   Python/Django/Celery logs redact named credentials/tokens and exception text.
 - #79/#82 tools are reused by production-smoke. Private/source paths are denied.
-- Full regression: 502 tests, Ruff, Django check, migration drift, development and
+- Full regression: 509 tests, Ruff, Django check, migration drift, development and
   production topology checks pass. Evidence is linked in the acceptance record.
 
 ### Baselines and optional scope
@@ -165,7 +166,8 @@ Gate 4:
   candidate 37061108305 SUCCESS;
 - PR #98/#83 — final CI 37062061257 SUCCESS, all five jobs, 487 tests;
 - PR #100/#95/#96 — final CI 37064542544 SUCCESS, all five jobs, 502 tests;
-- technical freeze dev CI 37064806581 — all five jobs SUCCESS, 502 tests;
+- PR #102 final acceptance correction — CI 37066499042 SUCCESS, all five jobs, 509 tests;
+- technical freeze dev CI 37066868098 — all five jobs SUCCESS, 509 tests;
 - #84 closure/freeze documentation — activation requires its own final green CI
   and explicit authorized Squash merge; its PR/checks/merge evidence is recorded
   in Issue #84 and Tracker #77.
