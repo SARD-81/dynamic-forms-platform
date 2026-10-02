@@ -1,6 +1,7 @@
 import importlib
 import logging
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from django.urls import reverse
@@ -95,46 +96,67 @@ def test_check_redis_unit_failure(monkeypatch):
     assert check_redis() is False
 
 
-def test_sensitive_data_filter_redacts_credentials():
+def test_check_redis_concurrent_probes_do_not_interfere():
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        results = list(executor.map(lambda _: check_redis(), range(10)))
+    assert all(results)
+    assert len(results) == 10
+
+
+def test_sensitive_data_filter_redacts_credentials_plain_msg():
     log_filter = SensitiveDataFilter()
+    msg = (
+        "Failed auth with redis://:my_uri_secret_pass@cache:6379/0 and "
+        'password="secret pass with spaces" and '
+        "token='another secret with spaces'"
+    )
     record = logging.LogRecord(
         name="test_logger",
         level=logging.INFO,
         pathname="test.py",
         lineno=10,
-        msg="User login failed with password=super_secret_password and token=tok_abc123456",
+        msg=msg,
         args=(),
         exc_info=None,
     )
     assert log_filter.filter(record) is True
-    assert "super_secret_password" not in record.msg
-    assert "tok_abc123456" not in record.msg
-    assert "[REDACTED]" in record.msg
+    assert "my_uri_secret_pass" not in record.msg
+    assert "secret pass with spaces" not in record.msg
+    assert "another secret with spaces" not in record.msg
+    assert "redis://:[REDACTED]@cache:6379/0" in record.msg
+    assert 'password="[REDACTED]"' in record.msg
+    assert "token='[REDACTED]'" in record.msg
 
 
 def test_sensitive_data_filter_redacts_parameterized_logging():
     log_filter = SensitiveDataFilter()
-    secret_value = "super_secret_cleartext_password"
+    uri_val = "redis://:param_secret_pass@redis:6379/1"
+    quoted_val = "secret phrase with spaces"
     record = logging.LogRecord(
         name="test_logger",
         level=logging.INFO,
         pathname="test.py",
         lineno=12,
-        msg="Login attempt with password=%s and token=%s",
-        args=(secret_value, "Bearer secret_api_token_123"),
+        msg='Connecting to %s with password="%s" and token=%s',
+        args=(uri_val, quoted_val, "secret_token_123"),
         exc_info=None,
     )
     assert log_filter.filter(record) is True
-    assert secret_value not in record.msg
-    assert "secret_api_token_123" not in record.msg
+    assert "param_secret_pass" not in record.msg
+    assert "secret phrase with spaces" not in record.msg
+    assert "secret_token_123" not in record.msg
     assert record.args == ()
-    assert "[REDACTED]" in record.msg
+    assert "redis://:[REDACTED]@redis:6379/1" in record.msg
+    assert 'password="[REDACTED]"' in record.msg
+    assert "token=[REDACTED]" in record.msg
 
 
 def test_sensitive_data_filter_redacts_exception_traceback():
     log_filter = SensitiveDataFilter()
     try:
-        raise ValueError("Failed connecting to redis://user:hidden_auth_pwd@redis:6379/0")
+        raise ValueError(
+            'Failed connecting to redis://:tb_secret_pwd@redis:6379/0 with password="err space pwd"'
+        )
     except ValueError:
         exc_info = sys.exc_info()
 
@@ -143,21 +165,29 @@ def test_sensitive_data_filter_redacts_exception_traceback():
         level=logging.ERROR,
         pathname="test.py",
         lineno=20,
-        msg="Unexpected error occurred",
+        msg="Database exception occurred",
         args=(),
         exc_info=exc_info,
     )
     assert log_filter.filter(record) is True
-    assert "hidden_auth_pwd" not in record.exc_text
-    assert "[REDACTED]" in record.exc_text
+    assert "tb_secret_pwd" not in record.exc_text
+    assert "err space pwd" not in record.exc_text
+    assert "redis://:[REDACTED]@redis:6379/0" in record.exc_text
+    assert 'password="[REDACTED]"' in record.exc_text
 
 
 def test_sensitive_data_scrubbing_functions():
-    sample_text = "Bearer eyJhbGciOiJIUzI1Ni.secret redis://user:secret123@redis:6379/0 otp: 654321"
+    sample_text = (
+        "Bearer eyJhbGciOiJIUzI1Ni.secret redis://:secret123@redis:6379/0 "
+        'password="spaced password" otp: 654321'
+    )
     cleaned = scrub_sensitive_text(sample_text)
     assert "secret123" not in cleaned
+    assert "spaced password" not in cleaned
     assert "654321" not in cleaned
     assert "Bearer [REDACTED]" in cleaned
+    assert "redis://:[REDACTED]@redis:6379/0" in cleaned
+    assert 'password="[REDACTED]"' in cleaned
 
 
 def test_logging_configuration_imports_cleanly(monkeypatch):

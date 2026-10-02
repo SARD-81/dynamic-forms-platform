@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from django.core.cache import cache
 from django.db import connection
@@ -28,15 +29,15 @@ def check_redis() -> bool:
     """
     Verifies Redis connectivity via Django Cache abstraction.
     Performs a lightweight, non-destructive probe (set, get, delete)
-    on DB0 without creating direct Redis client instances.
+    using an isolated unique key per check to prevent collisions during concurrent probes.
     """
-    probe_key = "health:ready:probe"
-    probe_val = "1"
+    probe_token = uuid.uuid4().hex
+    probe_key = f"health:ready:probe:{probe_token}"
     try:
-        cache.set(probe_key, probe_val, timeout=5)
+        cache.set(probe_key, probe_token, timeout=5)
         val = cache.get(probe_key)
         cache.delete(probe_key)
-        return val == probe_val
+        return val == probe_token
     except Exception:
         logger.warning("Redis readiness check failed", exc_info=False)
         return False
