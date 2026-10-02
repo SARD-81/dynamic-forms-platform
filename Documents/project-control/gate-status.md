@@ -80,7 +80,7 @@ Status: **IN PROGRESS**
 
 Tracker: GitHub Issue #77  
 Execution plan: `Documents/project-control/gate4-execution-plan.md`  
-Current integration state at control-plane repair: `dev@4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a`  
+Current integration state at control-plane repair: `dev@e37edbe063e46cf8dac9f2e57ca8f4f555801384`  
 Gate 3 promoted baseline source: `main@419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
 
 ### Requirement framing
@@ -102,12 +102,12 @@ Structural production-runtime changes require #78 / CHG-0006 before implementati
 
 ### Current Wave 1 state
 
-- #79 — **COMPLETED** through PR #88; merged to `dev` as `4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a`; CI #200 SUCCESS;
+- #79 — **COMPLETED** through PR #88; merge `4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a`; CI #200 SUCCESS;
+- #82 — **COMPLETED** through PR #94; merge `e37edbe063e46cf8dac9f2e57ca8f4f555801384`; CI #209 SUCCESS; reusable external verifier is now present on `dev`;
 - #80 — implementation exists in Draft PR #87; runtime/settings/URL changes remain **BLOCKED FROM MERGE** until #78 / CHG-0006 is approved/applied and the branch is synchronized with current `dev`;
-- #78 — next mandatory production-runtime authorization task owned by SARD-81;
-- #82 — may proceed from the stable #79 interface and finalize against stable #80/#81 public contracts;
+- #78 — next mandatory production-runtime authorization task owned by SARD-81; draft PR #91 exists and waits for the CHG-0007 transition;
 - #85 — stale Gate 4 kickoff PR, closed as superseded;
-- #86 — stale #79 documentation draft, closed as superseded;
+- #86 — stale documentation draft, closed as superseded;
 - #89 / CHG-0007 — current Gate 4 governance transition.
 
 ### Team allocation
@@ -115,7 +115,7 @@ Structural production-runtime changes require #78 / CHG-0006 before implementati
 Mahsa-Alipour:
 
 - [x] #79 production preflight command + deployment-safety verification;
-- [ ] #82 reusable production HTTP/static verifier.
+- [x] #82 reusable production HTTP/static verifier.
 
 amirrezaparvaneh:
 
@@ -137,8 +137,8 @@ All Django Template/HTML/presentation-specific JavaScript work remains owned by 
 1. complete #89 / CHG-0007 control-plane transition;
 2. complete #78 / CHG-0006 production runtime authorization;
 3. after #78, start/merge #81 and allow #80 to resynchronize/finalize;
-4. #82 develops reusable external HTTP/static verification from the #79 interface and stable #80/#81 public contracts;
-5. #83 adds mandatory production-smoke CI by reusing #79/#82 tooling;
+4. consume completed #79/#82 tooling in the stable production runtime;
+5. #83 adds mandatory production-smoke CI by reusing #79/#82 rather than duplicating checks;
 6. optionally implement or explicitly defer #41;
 7. #84 performs integrated production/security acceptance, freezes verified Gate 4 baselines and prepares milestone promotion.
 
@@ -178,7 +178,7 @@ Issue #41 remains optional/non-blocking. If implemented, it must remain additive
 
 Historical entries are never rewritten when governance changes later.
 
-Key Gate 2/Gate 3 records remain preserved in prior baselines, execution records and repository history. Important Gate 3 closeout records are:
+Important Gate 3 closeout records:
 
 - PR #69 / CHG-0005 — Gate 3 governance transition; CI #169; merge `179fd6ecee8cbd0904cdd4b6a5cfee402c1bc3cd`;
 - PR #70 / #38 — Team Lead Verification; CI #174; merge `cf10d45b357215b7e6f19cda9be8accadb33a926`;
@@ -189,26 +189,27 @@ Key Gate 2/Gate 3 records remain preserved in prior baselines, execution records
 
 Gate 4 transition records:
 
-- PR #85 — stale kickoff/control-plane branch; closed unmerged as superseded after `dev` advanced;
-- PR #86 — stale #79 documentation draft; closed unmerged as superseded after #88 delivered the implementation;
-- PR #88 / #79 — merged before CHG-0007 became effective; CI #200 SUCCESS; no independent peer APPROVED review. Under the provisional Gate 4 rule, this remains a one-time historical Governance Exception and is not retroactively reclassified;
+- PR #85 — stale kickoff/control-plane branch; closed unmerged as superseded;
+- PR #86 — stale documentation draft; closed unmerged as superseded;
+- PR #88 / #79 — merged before CHG-0007 became effective; CI #200 SUCCESS; no independent peer APPROVED review; historical Gate 4 Governance Exception;
+- PR #94 / #82 — merged before CHG-0007 became effective; CI #209 SUCCESS; no independent peer APPROVED review; historical Gate 4 Governance Exception;
 - PR #87 / #80 — held Draft pending #78 / CHG-0006 and synchronization with current `dev`.
 
 ## Repository housekeeping
 
-Historical cleanup remains recorded in prior Gate documents and Git history. Accidental Issue #73 was closed `not_planned` during Gate 3. Stale Gate 4 PRs #85 and #86 are now closed as superseded rather than merged.
+Historical cleanup remains recorded in prior Gate documents and Git history. Accidental Issue #73 was closed `not_planned` during Gate 3. Stale Gate 4 PRs #85 and #86 are closed as superseded rather than merged.
 
 ## Current control point
 
 **GATE 4 — IN PROGRESS.**
 
-#79 is complete. The current mandatory Team Lead path is:
+#79 and #82 are complete. The current mandatory Team Lead path is:
 
 ```text
 #89 / CHG-0007 governance transition
 → #78 / CHG-0006 production runtime authorization
-→ #81 production topology + synchronized #80/#82
-→ #83 production-smoke
+→ #81 production topology + synchronized #80
+→ #83 production-smoke using #79/#82
 → #84 final Gate 4 acceptance/freeze/promotion
 ```
 
