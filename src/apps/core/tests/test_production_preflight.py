@@ -218,3 +218,25 @@ def test_email_backend_failure_is_secret_safe(healthy, monkeypatch):
 
     assert "FAIL email" in output.getvalue()
     assert "private-email-secret" not in output.getvalue()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_real_backends_without_database_writes(settings):
+    from django.db import connection, transaction
+
+    settings.DEBUG = False
+    settings.ALLOWED_HOSTS = ["example.test"]
+    settings.STATIC_URL = "/static/"
+    settings.STATIC_ROOT = "/unused-preflight-static"
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+    output = StringIO()
+
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute("SET TRANSACTION READ ONLY")
+
+        call_command("production_preflight", stdout=output)
+
+    assert "Production preflight passed." in output.getvalue()
+    assert "FAIL" not in output.getvalue()
