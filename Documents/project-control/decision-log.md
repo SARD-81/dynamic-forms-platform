@@ -122,3 +122,21 @@ Issue #41 real-time Channels/WebSocket reporting is explicitly deferred as BONUS
 **Change-control classification:** Documentation-only baseline freeze / Gate closure. No application/runtime behavior is introduced by the freeze PR.
 
 After the documentation-only freeze is merged to `dev`, the remaining milestone action is a separate `dev → main` PR with green required CI and Team Lead Verification.
+
+## 2026-10-02 — Gate 4 Team Lead Verification governance
+
+**Context:** Issue #89 / CHG-0007 during Gate 4 control-plane synchronization after #79 / PR #88 entered `dev`.
+
+**Decision:** Gate 4 receives its own explicit Team Lead Verification governance record rather than silently extending Gate 3-only CHG-0005. After the CHG-0007 transition PR is manually merged, independent peer `APPROVED` review is optional and reviewer requests are not required merely to satisfy process.
+
+The mandatory human merge gate remains Team Lead Verification backed by green applicable CI, scope/architecture/frozen-baseline review, migration intent, production/runtime/security implications, material-finding disposition, documentation synchronization and explicit Team Lead merge authorization.
+
+Automation/assistant work may prepare and verify Gate 4 PRs but does not merge them unless the repository owner gives an explicit per-merge override to the standing no-assistant-merge rule.
+
+PR #88 / Issue #79 remains a historical Gate 4 Governance Exception because it merged before CHG-0007 became effective without the independent peer approval required by the provisional Gate 4 rule. PR #94 / Issue #82 subsequently merged under the same still-provisional rule before CHG-0007 became effective and is likewise retained as a historical Gate 4 Governance Exception. Both technical interfaces remain accepted inputs to downstream Gate 4 integration after their green CI evidence. PR #85 and PR #86 are superseded. PR #87 remains Draft/merge-blocked until #78 / CHG-0006 authorizes its runtime/foundation boundary.
+
+**Reason:** Preserve explicit Team Lead accountability and all technical verification controls without reintroducing mandatory reviewer-request churn that the repository owner rejected.
+
+**Change-control classification:** Structural repository-governance change for Gate 4 only.
+
+Tracked by CHG-0007. No architecture, data, application, runtime or settings baseline is changed by this decision.
