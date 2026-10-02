@@ -26,13 +26,13 @@ See [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 ## Current Gate 4 state
 
 - #79 production preflight command/tests — **COMPLETED**, merged through PR #88; CI #200 green;
+- #82 reusable production HTTP/static verifier — **COMPLETED**, merged through PR #94; CI #209 green;
 - #80 health/readiness/logging — implementation exists in Draft PR #87 but runtime changes are
   blocked from merge until #78 / CHG-0006 and branch synchronization;
 - #89 / CHG-0007 — Gate 4 Team Lead Verification governance transition;
-- #78 / CHG-0006 — next mandatory production-runtime authorization task;
+- #78 / CHG-0006 — next mandatory production-runtime authorization task; Draft PR #91 is prepared and intentionally waits for CHG-0007;
 - #81 — production ASGI/Nginx/collectstatic implementation after #78;
-- #82 — reusable external production HTTP/static verifier;
-- #83 — mandatory production-smoke CI;
+- #83 — mandatory production-smoke CI that reuses #79/#82 tooling;
 - #84 — final production acceptance, baseline freeze and milestone promotion;
 - #41 — optional real-time reporting bonus.
 
@@ -61,7 +61,7 @@ The authoritative Gate 3 acceptance map is
 
 ## Gate 4 ownership
 
-- Mahsa-Alipour — #79 production preflight (done) and #82 reusable production HTTP/static verifier;
+- Mahsa-Alipour — #79 production preflight and #82 reusable production HTTP/static verifier — both completed;
 - amirrezaparvaneh — #80 health/readiness/logging and #83 production CI verification;
 - SARD-81 — #89 governance, #78 production change control, #81 ASGI/Nginx/static/security topology,
   optional #41 real-time integration, and #84 final acceptance/baselines/promotion.
@@ -89,7 +89,7 @@ implementation and a superseding baseline.
 ## Quick Start — Docker development
 
 This remains the recommended development path. The production-oriented Gate 4 runtime is not
-claimed complete until #78–#83 are implemented and verified.
+claimed complete until the mandatory Gate 4 runtime/verification work is implemented and verified.
 
 Prerequisite: Docker Engine/Desktop with Docker Compose v2.
 
@@ -149,7 +149,8 @@ The stable CI `docker-smoke` job performs a clean build, starts the five-service
 verifies Celery worker/task registration and smoke-tests critical HTML/API/OpenAPI routes.
 
 Gate 4 #83 adds a separate production-topology `production-smoke`; it does not replace this
-development check.
+development check. #83 must reuse the completed #79 `production_preflight` command and #82
+`scripts/verify_production.py` external verifier rather than duplicating their checks in workflow YAML.
 
 Stop the development stack with:
 
@@ -224,6 +225,9 @@ dev → PR to main → all required Gate 4 CI green → Team Lead Verification �
 
 Independent peer approval is optional and no reviewer is auto-requested merely to satisfy process.
 Material automated/manual findings must still be resolved or explicitly accepted with evidence.
+
+Automation/assistant work may prepare and verify PRs but does not merge them unless the repository
+owner gives an explicit per-merge override.
 
 CHG-0005 remains the historical Gate 3 governance record; CHG-0007 explicitly governs Gate 4 only
 after its transition PR is merged.
