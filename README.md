@@ -1,21 +1,40 @@
 # Dynamic Forms Platform
 
 A private team project for building and managing dynamic forms, multi-step workflows, submissions,
-reporting, and scheduled delivery with Django. Real-time report updates through Channels/WebSockets
-remain optional bonus scope and are not required for application correctness.
+reporting, scheduled delivery, and production-ready Django deployment. Real-time report updates
+through Channels/WebSockets remain optional bonus scope and are not required for application
+correctness or Gate 4 closure.
 
 ## Project status
 
 - GATE 0 — **CLOSED** — BL-ARCH-002 FROZEN / AUTHORITATIVE
 - GATE 1 — **CLOSED** — BL-DATA-002 FROZEN / AUTHORITATIVE
 - GATE 2 — **CLOSED** — BL-FOUNDATION-001 FROZEN / HISTORICAL FOUNDATION
-- GATE 3 — **CLOSED / FROZEN** — BL-FOUNDATION-002 + BL-APPLICATION-001 at technical freeze `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`
+- GATE 3 — **CLOSED / FROZEN / PROMOTED TO MAIN** — BL-FOUNDATION-002 + BL-APPLICATION-001; technical freeze `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`; milestone main commit `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
+- GATE 4 — **IN PROGRESS** — Production Readiness, Release Hardening & Bonus Enhancements; tracker #77
 
-Gate 3 development followed the Issue → branch → implementation/tests → PR → required CI green →
-Team Lead Verification → explicit merge workflow defined by CHG-0005.
+Gate 3 delivered and froze the mandatory application feature set and was promoted from `dev` to
+`main` through milestone PR #76.
 
-The separate `dev → main` milestone promotion remains a release/control action after Gate 3 freeze
-and uses the same required CI + Team Lead Verification model.
+Gate 4 closes the production-delivery gap intentionally left outside Gate 3. The original project
+brief requires production-mode settings, a real production web-server path, production static-file
+collection, Dockerization and environment-owned configuration. This repository deliberately selects
+Nginx as the Gate 4 reverse-proxy/static-serving topology; Nginx itself is treated as the selected
+architecture, not misrepresented as a mandatory wording of the original brief.
+
+Current Gate 4 integration state:
+
+- #79 production preflight command/tests — merged through PR #88;
+- #78 / CHG-0006 production runtime authorization — next mandatory control task;
+- #80 health/readiness/logging — PR #87 open, runtime merge blocked until #78 is effective;
+- #81 production ASGI/Nginx/collectstatic topology — starts after #78;
+- #82 reusable production HTTP/static verifier — follows the stable #79 interface and finalizes
+  against #80/#81 public contracts;
+- #83 mandatory `production-smoke` CI — follows stable #79/#80/#81/#82 interfaces;
+- #84 final production acceptance/baselines/promotion — closes Gate 4;
+- #41 Channels/WebSockets real-time reporting — optional BONUS/STRETCH.
+
+See [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 
 ## Implemented Gate 3 capabilities
 
@@ -35,13 +54,23 @@ and uses the same required CI + Team Lead Verification model.
 - final browser FREE-flow and one-time resume-token hardening;
 - clean five-service Docker bootstrap/runtime smoke verification in CI.
 
-Issue #41 real-time reporting through Channels/WebSockets is explicitly deferred BONUS/STRETCH scope.
-HTTP reporting remains authoritative.
+Issue #41 real-time reporting through Channels/WebSockets is carried into Gate 4 as explicitly
+optional BONUS/STRETCH scope. HTTP reporting remains authoritative.
 
 The authoritative Gate 3 acceptance map is
 [Gate 3 acceptance verification](Documents/testing/gate3-acceptance-verification.md).
 
-## Runtime baseline
+## Gate 4 ownership
+
+- Mahsa-Alipour — production preflight command/tests (#79, merged) and reusable production HTTP/static
+  verifier (#82);
+- amirrezaparvaneh — health/readiness/logging (#80) and production CI verification (#83);
+- SARD-81 — production change control (#78), ASGI/Nginx/static/security topology (#81), optional
+  real-time integration (#41), and final acceptance/baselines/promotion (#84).
+
+All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
+
+## Runtime baseline entering Gate 4
 
 - Python 3.12
 - Django 5.2 LTS
@@ -55,9 +84,14 @@ The authoritative Gate 3 acceptance map is
 - GitHub Actions
 - Docker Compose
 
+The active frozen Gate 3 foundation is `BL-FOUNDATION-002`. Gate 4 production-runtime changes must
+first be authorized by #78 / CHG-0006 and may only become a new active foundation after verified
+implementation and a superseding baseline.
+
 ## Quick Start — Docker development
 
-This is the recommended first-time path.
+This is the recommended first-time development path. The production-oriented Gate 4 runtime is not
+claimed as complete until the corresponding Gate 4 Issues are implemented and verified.
 
 Prerequisite: Docker Engine/Desktop with Docker Compose v2.
 
@@ -104,7 +138,7 @@ docker compose up --build -d
 docker compose ps
 ```
 
-Expected state:
+Expected development state:
 
 - `postgres` — healthy
 - `redis` — healthy
@@ -124,7 +158,7 @@ The Django admin remains available at:
 http://localhost:8000/admin/login/
 ```
 
-### 4. Verify the foundation and scheduled-report runtime
+### 4. Verify the development foundation and scheduled-report runtime
 
 ```bash
 docker compose exec web python src/manage.py check
@@ -147,6 +181,10 @@ prevents duplicate WEEKLY/MONTHLY delivery inside a completed period. Developmen
 uses Django's console backend, so scheduled EMAIL reports appear in `celery-worker` logs without
 requiring SMTP credentials.
 
+The Gate 4 `production_preflight` command is now available on `dev` through #79. Its production-topology
+execution becomes part of the later #81/#83/#84 verification path; it does not by itself claim that
+the production topology is already complete.
+
 To run only the application dependencies and Celery processes explicitly:
 
 ```bash
@@ -161,9 +199,9 @@ docker compose down
 ```
 
 A first clean bootstrap should complete in under 15 minutes, excluding image-download/network time.
-The CI `docker-smoke` job also performs a clean image build, starts the complete five-service
-development topology, verifies the Celery worker/task registry, and smoke-tests critical HTML/API
-and mandatory OpenAPI routes on every PR to `dev` or `main`.
+The CI `docker-smoke` job performs a clean image build, starts the complete five-service development
+topology, verifies the Celery worker/task registry, and smoke-tests critical HTML/API and mandatory
+OpenAPI routes on every PR to `dev` or `main`.
 
 ## Application layout
 
@@ -244,27 +282,28 @@ in `pyproject.toml`.
 
 ## Workflow
 
-Normal development:
+The Gate 4 control-plane transition is tracked by #92 / CHG-0007. Once its transition PR is manually
+merged to `dev`, Gate 4 development uses:
 
 ```text
-Issue → branch from dev → implementation/tests → PR to dev → required CI green → Team Lead Verification → squash merge to dev
+Issue → branch from current dev → implementation/tests → PR to dev → required CI green → material findings resolved/accepted → Team Lead Verification → explicit Team Lead merge decision
 ```
 
-Milestone promotion:
+Independent peer approval remains welcome but optional. Reviewer requests are not required merely to
+satisfy governance. Automation/assistant work may prepare and verify PRs but does not merge them
+unless the repository owner gives an explicit per-merge override.
 
-```text
-dev → PR to main → required CI green → Team Lead Verification → explicit Team Lead merge decision
-```
-
-Independent peer approval is optional under CHG-0005 and is not auto-requested merely to satisfy
-governance.
+Milestone promotion uses the same Gate 4 verification requirements for the explicit `dev → main` PR.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md),
-[BL-ARCH-002](Documents/project-control/baselines/BL-ARCH-002.md), and
-[CHG-0005](Documents/project-control/change-records/CHG-0005.md).
+[BL-ARCH-002](Documents/project-control/baselines/BL-ARCH-002.md),
+[CHG-0007](Documents/project-control/change-records/CHG-0007.md), and
+[Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md).
 
 ## Foundation and verification documentation
 
+- [Gate 4 execution plan](Documents/project-control/gate4-execution-plan.md) — active production-readiness execution plan
+- [CHG-0007](Documents/project-control/change-records/CHG-0007.md) — Gate 4 Team Lead Verification transition
 - [BL-FOUNDATION-001](Documents/project-control/baselines/BL-FOUNDATION-001.md) — frozen historical Gate 2 repository & engineering foundation
 - [BL-FOUNDATION-002](Documents/project-control/baselines/BL-FOUNDATION-002.md) — active frozen Gate 3 engineering/runtime foundation
 - [BL-APPLICATION-001](Documents/project-control/baselines/BL-APPLICATION-001.md) — frozen mandatory Gate 3 application feature baseline
