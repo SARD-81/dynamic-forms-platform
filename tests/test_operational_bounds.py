@@ -265,3 +265,13 @@ def test_settings_map_timeout_environment_and_preserve_celery_logging():
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize(
+    "value", ["password=b'bytes-private'", "Bearer 'quoted-private'", 'Bearer b"bytes-private"']
+)
+def test_bytes_and_quoted_authorization_values_are_redacted(value):
+    cleaned = scrub_sensitive_text(value)
+    assert "bytes-private" not in cleaned
+    assert "quoted-private" not in cleaned
+    assert "[REDACTED]" in cleaned

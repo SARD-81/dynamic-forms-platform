@@ -17,6 +17,14 @@ SECURE_SSL_REDIRECT = env_bool(
     default=True,
 )
 
+STATIC_ROOT = BASE_DIR.parent / "staticfiles"  # noqa: F405
+# Opt in only behind Nginx, which overwrites this header and is the sole ingress.
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+    if env_bool("DJANGO_TRUST_NGINX_PROXY", default=False)
+    else None
+)
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = required_env("DJANGO_EMAIL_HOST")
 EMAIL_PORT = required_positive_int_env("DJANGO_EMAIL_PORT")
