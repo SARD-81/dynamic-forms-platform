@@ -295,6 +295,19 @@ jobs:
               --login-path / --liveness-path /health/live/ --readiness-path /health/ready/ \
               --static-path "$private_path" --static-status 404 --timeout 5 --require-all
           done
+      - name: Verify static replacement on a preserved volume
+        run: |
+          docker compose --env-file .env.production -f compose.production.yaml run --rm --no-deps app-init \
+            python -c "from pathlib import Path; import os; p=Path('/app/staticfiles/core/app.css'); p.write_text('stale asset'); os.utime(p,(2000000000,2000000000)); Path('/app/staticfiles/core/obsolete-gate4.css').write_text('obsolete asset')"
+          timeout 60 docker compose --env-file .env.production -f compose.production.yaml up \
+            --no-deps --force-recreate --abort-on-container-exit --exit-code-from app-init app-init
+          asset_sha="$(sha256sum src/apps/core/static/core/app.css | cut -d ' ' -f 1)"
+          python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+            --liveness-path /health/live/ --readiness-path /health/ready/ \
+            --static-path /static/core/app.css --static-sha256 "$asset_sha" --timeout 5 --require-all
+          python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+            --liveness-path /health/live/ --readiness-path /health/ready/ \
+            --static-path /static/core/obsolete-gate4.css --static-status 404 --timeout 5 --require-all
       - name: Verify bounded readiness when PostgreSQL is unavailable
         run: |
           docker compose --env-file .env.production -f compose.production.yaml stop postgres

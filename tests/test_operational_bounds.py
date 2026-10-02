@@ -301,3 +301,13 @@ def test_url_username_and_password_are_both_redacted(scheme, username, password)
     assert username not in cleaned
     assert "private-password" not in cleaned
     assert cleaned == f"{scheme}://[REDACTED]:[REDACTED]@example.test/service"
+
+
+def test_long_log_words_do_not_cause_quadratic_redaction():
+    messages = ["a" * 8000, "password" * 1000, "a" * 8000 + "=value"]
+    started = time.monotonic()
+    for message in messages:
+        assert scrub_sensitive_text(message) == message
+    assignment = "prefix_" + "token" * 2000 + "=private-value"
+    assert scrub_sensitive_text(assignment).endswith("=[REDACTED]")
+    assert time.monotonic() - started < 2, "Long log tokens must not exhaust a worker"
