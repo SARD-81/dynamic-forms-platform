@@ -1,8 +1,0 @@
-<section class="state-panel state-panel--error" role="alert">
-    <div class="state-panel__icon" aria-hidden="true">!</div>
-    <h1>{{ state_title|default:"Something went wrong" }}</h1>
-    <p>{{ state_message|default:"The requested page could not be displayed." }}</p>
-    {% if state_action_url and state_action_label %}
-        <a class="button button--primary" href="{{ state_action_url }}">{{ state_action_label }}</a>
-    {% endif %}
-</section>
