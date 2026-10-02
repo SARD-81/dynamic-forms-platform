@@ -1,8 +1,8 @@
 # GATE 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
-**Status:** CLOSED / FROZEN ON DEV — milestone promotion pending  
-**Tracker:** #77 (open until promotion)  
-**Closeout:** #84 (open until promotion)  
+**Status:** CLOSED / FROZEN — promotion state recorded in PR #103  
+**Tracker:** #77 (closes after verified promotion)  
+**Closeout:** #84 (closes after verified promotion)  
 **Technical freeze:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Gate 3 promotion:** `main@419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
 
@@ -30,7 +30,7 @@ BL-FOUNDATION-003 and a release acceptance baseline BL-RELEASE-001.
 | CI | amirrezaparvaneh: #83 | PR #98 mandatory production-smoke merged |
 | Final code | AmirReza tasks #95/#96 | PR #100 completed/verified under the final Team Lead closeout instruction |
 | Final hardening | #84 acceptance findings | PR #102 verified and merged; all material threads resolved |
-| Acceptance | SARD-81: #84 | Integrated security/regression/runtime audit and freeze on dev; promotion remains pending |
+| Acceptance | SARD-81: #84 | Integrated acceptance/freeze; final brief/contract audit and promotion through PR #103 |
 
 The Work session finished the remaining mandatory implementation under explicit
 Team Lead per-scope authorization. Historical contributor ownership is preserved;
@@ -119,8 +119,10 @@ APPROVED review is optional. Material automated/manual findings require resoluti
 or evidence-backed disposition. Current-dev synchronization, fully green checks,
 clean scope and captured expected HEAD SHA precede every authorized dev merge.
 
-The Work-session override authorizes verified Squash merges for #80/#81/#83/#84
-into dev only. It never authorizes dev-to-main merge or auto-merge.
+The initial Work-session override authorized the verified dev merges. The owner
+subsequently explicitly authorized main promotion through PR #103 after a fresh
+complete audit of all mandatory requirements and contracts, fixing any blockers
+and obtaining all five green checks on the final HEAD. No auto-merge is authorized.
 
 - [x] #78–#83 mandatory work complete
 - [x] integrated production/runtime/security/regression acceptance complete
@@ -130,8 +132,9 @@ into dev only. It never authorizes dev-to-main merge or auto-merge.
 - [x] #41 explicitly deferred
 - [x] README/contracts/acceptance synchronized on closure activation
 - [x] Gate 4 CLOSED/FROZEN on dev on closure activation
-- [ ] separate dev-to-main milestone manually merged by Team Lead
-- [ ] #84 and Tracker #77 closed after verified promotion
+- [x] separate dev-to-main milestone PR #103 prepared and reviewed
+- Promotion is complete only when PR #103 is merged and its resulting main SHA is verified.
+- #84 and Tracker #77 close after that verified promotion; their live state records completion.
 
 Final closure and promotion PR numbers/HEAD/check/merge evidence are maintained
 in the live Tracker #77 and Issue #84 to avoid inventing future merge SHAs.

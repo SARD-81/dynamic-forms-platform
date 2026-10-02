@@ -5,15 +5,16 @@ The root [README](../README.md) explains how to use, run and verify the applicat
 
 ## Current release state
 
-Gate 4 is **CLOSED / FROZEN on dev — milestone promotion pending**. Its technical
-freeze point is `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`, after #80/#81/#83, #95/#96 and final #102 were
-integrated and verified. #84 and Tracker #77 remain open until the separately
-reviewed `dev → main` promotion. The freeze documentation commit is not the
-technical freeze point.
+Gate 4 is **CLOSED / FROZEN** at technical freeze point
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`, after #80/#81/#83, #95/#96 and final #102
+were integrated and verified. [Milestone PR #103](https://github.com/SARD-81/dynamic-forms-platform/pull/103)
+records the final promotion state, CI and main commit; #84 and Tracker #77 close
+after verified promotion. Later documentation commits do not replace the technical freeze point.
 
 - [Gate status](project-control/gate-status.md)
 - [Gate 4 execution and closeout](project-control/gate4-execution-plan.md)
 - [Gate 4 acceptance evidence](testing/gate4-acceptance-verification.md)
+- [Final project requirements and contract audit](testing/final-project-requirements-audit.md)
 - [CHG-0006: applied production runtime authorization](project-control/change-records/CHG-0006.md)
 - [CHG-0007: effective Gate 4 governance](project-control/change-records/CHG-0007.md)
 - [Decision log](project-control/decision-log.md)
