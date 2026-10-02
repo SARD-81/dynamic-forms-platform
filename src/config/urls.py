@@ -2,10 +2,15 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.core.health import health_live, health_ready
+
 handler403 = "apps.core.views.permission_denied"
 handler404 = "apps.core.views.page_not_found"
 
 urlpatterns = [
+    # Operational health endpoints
+    path("health/live/", health_live, name="health_live"),
+    path("health/ready/", health_ready, name="health_ready"),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.accounts.urls")),
     path("forms/", include("apps.forms.urls")),

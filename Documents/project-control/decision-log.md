@@ -122,3 +122,87 @@ Issue #41 real-time Channels/WebSocket reporting is explicitly deferred as BONUS
 **Change-control classification:** Documentation-only baseline freeze / Gate closure. No application/runtime behavior is introduced by the freeze PR.
 
 After the documentation-only freeze is merged to `dev`, the remaining milestone action is a separate `dev → main` PR with green required CI and Team Lead Verification.
+
+## 2026-10-02 — Gate 4 Team Lead Verification governance
+
+**Context:** Issue #89 / CHG-0007 during Gate 4 control-plane synchronization after #79 / PR #88 entered `dev`.
+
+**Decision:** Gate 4 receives its own explicit Team Lead Verification governance record rather than silently extending Gate 3-only CHG-0005. After the CHG-0007 transition PR is manually merged, independent peer `APPROVED` review is optional and reviewer requests are not required merely to satisfy process.
+
+The mandatory human merge gate remains Team Lead Verification backed by green applicable CI, scope/architecture/frozen-baseline review, migration intent, production/runtime/security implications, material-finding disposition, documentation synchronization and explicit Team Lead merge authorization.
+
+Automation/assistant work may prepare and verify Gate 4 PRs but does not merge them unless the repository owner gives an explicit per-merge override to the standing no-assistant-merge rule.
+
+PR #88 / Issue #79 remains a historical Gate 4 Governance Exception because it merged before CHG-0007 became effective without the independent peer approval required by the provisional Gate 4 rule. PR #94 / Issue #82 subsequently merged under the same still-provisional rule before CHG-0007 became effective and is likewise retained as a historical Gate 4 Governance Exception. Both technical interfaces remain accepted inputs to downstream Gate 4 integration after their green CI evidence. PR #85 and PR #86 are superseded. PR #87 remains Draft/merge-blocked until #78 / CHG-0006 authorizes its runtime/foundation boundary.
+
+**Reason:** Preserve explicit Team Lead accountability and all technical verification controls without reintroducing mandatory reviewer-request churn that the repository owner rejected.
+
+**Change-control classification:** Structural repository-governance change for Gate 4 only.
+
+Tracked by CHG-0007. No architecture, data, application, runtime or settings baseline is changed by this decision.
+
+
+## 2026-10-02 UTC — Gate 4 applied runtime acceptance and freeze on dev
+
+**Context:** #78 / CHG-0006 and #89 / CHG-0007 are effective through PR #91/#90.
+Remaining technical implementation was completed through #80 PR #87, #81 PR #97
+and #83 PR #98 under the owner's explicit Team Lead Work-session override.
+
+**Decision:** Freeze the actual verified implementation at
+`dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. BL-FOUNDATION-003 supersedes the
+active engineering/runtime foundation only; BL-RELEASE-001 accepts the same SHA.
+Earlier baselines remain immutable and BL-APPLICATION-001 stays authoritative.
+Operational health/runtime changes do not warrant BL-APPLICATION-002.
+
+**Evidence:** Final #83 CI 37062061257, #95/#96 CI 37064542544, final correction CI 37066499042 and fresh integrated dev CI 37066868098
+completed all five required jobs SUCCESS; final corrected dev has 509 passing
+tests and actual production
+bootstrap/static/internal/public/outage/proxy acceptance. See the Gate 4
+acceptance record for precise findings, evidence and operating limits.
+
+**Activation:** The documentation-only #84 freeze PR requires its own green CI
+and authorized Squash merge into synchronized dev. Its merge SHA activates the
+documentation and is not the technical freeze point. Gate 4 becomes CLOSED/FROZEN
+on dev; #84/#77 remain open pending separately reviewed manual main promotion.
+No auto-merge or main merge is authorized in this Work session.
+
+**Optional scope:** #41 is deferred optional BONUS scope; HTTP reporting remains
+authoritative. #95/#96 were initially reserved as small optional code tasks for AmirReza.
+The Team Lead's subsequent instruction requested their completion in this Work
+session; PR #100 implements and verifies them before the final technical freeze.
+#41 is closed not_planned after the explicit optional-scope deferral.
+
+**Change-control classification:** Documentation/baseline activation of verified
+CHG-0006 runtime and CHG-0007 governance; no new application/domain semantics.
+
+
+## 2026-10-02 UTC / 2026-10-03 Asia/Tehran — Final brief audit and main promotion authorization
+
+**Context:** Gate 4 is CLOSED/FROZEN on dev. PR #101 activated the documentation
+at `d52426a123734b1b3df16a4b8ff8c9a2631b83cc`; technical acceptance remains
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. An ancestry-only synchronization at
+`241cc0f57f8e4a737a07f4384662ebb8c61dcb73` preserves the exact accepted tree.
+The initial instruction intentionally left milestone PR #103 open.
+
+**Subsequent Team Lead decision:** The owner explicitly requested a meticulous
+complete re-audit against the original mandatory project brief and initial/team
+contracts, excluding bonus requirements, then authorized the assistant to fix
+blockers if found and merge the final dev-to-main PR after green verification.
+This later instruction supersedes the prior main-merge prohibition for PR #103
+only. No auto-merge or general future main-merge authority is granted.
+
+**Evidence:** The final requirements audit maps the PDF requirements to code and
+regression tests. A separate 294-blob candidate snapshot was verified against live
+GitHub. Local Ruff, all three Django settings checks and 129 focused tests passed.
+Full PostgreSQL-backed tests plus both actual topologies are checked on fresh
+GitHub Actions runners. Final PR HEAD/run/results/expected SHA and the verified
+main merge commit belong in PR #103 and #84/#77; no future SHA is invented here.
+
+**Scope:** Promotion housekeeping and additional verification evidence only.
+No runtime, application, architecture/data semantic or existing frozen baseline
+is changed. Status documents link the live promotion evidence so they do not
+continue asserting that the milestone is unmerged after it is promoted.
+
+**Closure:** Squash merge only after synchronized behind_by=0, five completed
+SUCCESS checks, clean intended scope and no unresolved material review. Re-fetch
+the resulting commit/ref/tree, then close #84/#77 completed with evidence.

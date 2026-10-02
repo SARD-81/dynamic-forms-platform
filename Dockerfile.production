@@ -1,0 +1,20 @@
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DJANGO_SETTINGS_MODULE=config.settings.production \
+    PYTHONPATH=/app/src
+
+WORKDIR /app
+COPY requirements/base.txt ./requirements/base.txt
+RUN python -m pip install --no-cache-dir -r requirements/base.txt \
+    && groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid app --no-create-home app \
+    && mkdir /app/staticfiles \
+    && chown app:app /app/staticfiles
+
+COPY src/ ./src/
+USER app
+EXPOSE 8000
+CMD ["daphne", "--access-log", "/dev/null", "-b", "0.0.0.0", "-p", "8000", "config.asgi:application"]

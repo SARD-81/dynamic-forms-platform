@@ -1,44 +1,69 @@
 # Project Documentation
 
 This directory is the version-controlled engineering record for the project.
+The root [README](../README.md) explains how to use, run and verify the application.
 
-## Structure
+## Current release state
 
-- `architecture/` — ADRs, architecture rationale, and shared presentation contracts
-- `database/` — ERD source/render, data dictionary, model mapping, and constraint verification
-- `project-control/` — gate status, execution plans, frozen baselines, decision log, and change records
-- `deployment/` — environment, Docker, CI, bootstrap, and deployment records
-- `testing/` — quality/test and integrated acceptance verification
-- `api/` — versioned API contracts and OpenAPI documentation
+Gate 4 is **CLOSED / FROZEN** at technical freeze point
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`, after #80/#81/#83, #95/#96 and final #102
+were integrated and verified. [Milestone PR #103](https://github.com/SARD-81/dynamic-forms-platform/pull/103)
+records the final promotion state, CI and main commit; #84 and Tracker #77 close
+after verified promotion. Later documentation commits do not replace the technical freeze point.
 
-## Current execution / control
+- [Gate status](project-control/gate-status.md)
+- [Gate 4 execution and closeout](project-control/gate4-execution-plan.md)
+- [Gate 4 acceptance evidence](testing/gate4-acceptance-verification.md)
+- [Final project requirements and contract audit](testing/final-project-requirements-audit.md)
+- [CHG-0006: applied production runtime authorization](project-control/change-records/CHG-0006.md)
+- [CHG-0007: effective Gate 4 governance](project-control/change-records/CHG-0007.md)
+- [Decision log](project-control/decision-log.md)
 
-- [GATE 3 Application Execution Plan](project-control/gate3-execution-plan.md)
-- [Project Gate Status](project-control/gate-status.md)
-- [Gate 3 Acceptance Verification](testing/gate3-acceptance-verification.md)
+## Active baselines
 
-## Authoritative active baselines
+| Baseline | Authority |
+| --- | --- |
+| [BL-ARCH-002](project-control/baselines/BL-ARCH-002.md) | Architecture |
+| [BL-DATA-002](project-control/baselines/BL-DATA-002.md) | Domain/data |
+| [BL-FOUNDATION-003](project-control/baselines/BL-FOUNDATION-003.md) | Verified development and production engineering/runtime foundation |
+| [BL-APPLICATION-001](project-control/baselines/BL-APPLICATION-001.md) | Frozen mandatory application semantics; unchanged by Gate 4 |
+| [BL-RELEASE-001](project-control/baselines/BL-RELEASE-001.md) | Gate 4 production/release acceptance at the same technical SHA |
 
-- [BL-ARCH-002](project-control/baselines/BL-ARCH-002.md) — architecture
-- [BL-DATA-002](project-control/baselines/BL-DATA-002.md) — domain/data
-- [BL-FOUNDATION-002](project-control/baselines/BL-FOUNDATION-002.md) — active engineering/runtime foundation after Gate 3
-- [BL-APPLICATION-001](project-control/baselines/BL-APPLICATION-001.md) — frozen mandatory Gate 3 application behavior
+BL-FOUNDATION-003 supersedes BL-FOUNDATION-002 for the active foundation.
+[BL-FOUNDATION-002](project-control/baselines/BL-FOUNDATION-002.md) and
+[BL-FOUNDATION-001](project-control/baselines/BL-FOUNDATION-001.md) remain immutable
+historical records. No BL-APPLICATION-002 is created: operational endpoints and
+runtime hardening do not change frozen form/process/report semantics.
 
-`BL-FOUNDATION-001` remains frozen historical Gate 2 evidence and is superseded only for the active foundation state; it is not rewritten.
-
-## Primary foundation documents
+## Operating and verifying
 
 - [Environment contract](deployment/environment-contract.md)
+- [Production deployment, HTTPS trust, start/update/cleanup](deployment/production.md)
+- [Health, dependency bounds and logging](deployment/health-and-logging.md)
 - [Docker development](deployment/docker-development.md)
 - [CI and branch governance](deployment/ci-and-branch-governance.md)
-- [Foundation bootstrap verification](deployment/foundation-bootstrap-verification.md)
+- [Verification scripts](../scripts/README.md)
 - [Quality and test foundation](testing/quality-test-foundation.md)
-- [Shared presentation template contract](architecture/presentation-template-contract.md)
-- [Authentication and email OTP contract](architecture/authentication-otp-contract.md)
-- [Rendered ERD](database/erd.svg)
-- [Authoritative ERD source](database/erd.nomnoml)
 
-## Change-control rule
+The production topology and mandatory `production-smoke` reuse #79
+`production_preflight` and #82 `scripts/verify_production.py`. Neither smoke
+verification path sends real mail or external reports.
 
-Frozen files are historical engineering records. Never rewrite a frozen baseline to hide a later
-decision. Record the change and supersede the baseline when required.
+## Application and historical records
+
+- [API conventions](api/api-conventions.md)
+- [Authentication and email OTP](architecture/authentication-otp-contract.md)
+- [Participant access/cache](architecture/participant-access-cache-contract.md)
+- [Shared presentation templates](architecture/presentation-template-contract.md)
+- [Rendered ERD](database/erd.svg) and [source](database/erd.nomnoml)
+- [Gate 3 execution plan](project-control/gate3-execution-plan.md)
+- [Gate 3 acceptance](testing/gate3-acceptance-verification.md)
+- [Foundation bootstrap verification](deployment/foundation-bootstrap-verification.md)
+
+## Remaining work and change control
+
+#41 is deferred optional BONUS scope; HTTP reporting remains authoritative.
+The two final code tasks #95/#96 are completed: health HEAD support and safe
+verifier interruption. #41 is closed not_planned following the explicit deferral. Later changes require their own Issue, verification and Team Lead
+merge decision. Frozen records are superseded through explicit change control,
+never rewritten in place.

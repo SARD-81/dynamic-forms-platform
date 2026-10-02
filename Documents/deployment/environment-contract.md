@@ -2,9 +2,9 @@
 
 **Historical origin:** Gate 2C — Settings & Environment Foundation  
 **Status:** ACTIVE FOUNDATION RECORD  
-**Target baseline:** BL-FOUNDATION-002  
-**Historical baseline:** BL-FOUNDATION-001  
-**Applied extensions:** CHG-0003 (Redis cache + Celery runtime) and CHG-0004 (production email configuration)
+**Active baseline:** BL-FOUNDATION-003  
+**Historical baselines:** BL-FOUNDATION-001 and BL-FOUNDATION-002  
+**Applied extensions:** CHG-0003 (Redis/Celery), CHG-0004 (production email), CHG-0006 (production topology, proxy trust and bounded dependency configuration)
 
 ## Rule
 
@@ -51,7 +51,8 @@ Optional in development and required in production where documented:
 
 Production security:
 
-- `DJANGO_SECURE_SSL_REDIRECT`
+- `DJANGO_SECURE_SSL_REDIRECT` — defaults to true; explicit false only for disposable HTTP smoke
+- `DJANGO_TRUST_NGINX_PROXY` — defaults to false; production Compose explicitly enables it because Nginx is the sole ingress and overwrites the protocol header
 
 Production email delivery (authorized by CHG-0004 and applied by Issue #26):
 
@@ -83,7 +84,7 @@ The current settings layer actively consumes:
 
 `CHANNEL_LAYER_URL` remains reserved in the environment contract and Docker/CI runtime for the
 optional Channels Redis wiring authorized by CHG-0003 if bonus Issue #41 is implemented later.
-Issue #41 is explicitly deferred from mandatory Gate 3 closure.
+Issue #41 is explicitly deferred optional BONUS scope for Gate 4 as well; HTTP reporting remains authoritative.
 
 Test settings replace the Redis cache backend with deterministic Django `LocMemCache`, so tests do
 not depend on Redis availability.
@@ -148,3 +149,51 @@ docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_
 ```
 
 Never commit the generated value.
+
+
+## Gate 4 dependency bounds
+
+Both base/development and production settings receive bounds through configuration;
+readiness/business code does not read host environment variables directly.
+Malformed or out-of-range values fail settings import without echoing the value.
+
+| Environment value | Default | Valid integer range | Applied boundary |
+| --- | --- | --- | --- |
+| POSTGRES_CONNECT_TIMEOUT_SECONDS | 2 seconds | 2–10 | Django PostgreSQL OPTIONS/connect_timeout |
+| READINESS_DB_QUERY_TIMEOUT_MS | 1000 ms | 100–5000 | Disposable readiness connection statement_timeout |
+| REDIS_CONNECT_TIMEOUT_SECONDS | 1 second | 1–5 | Configured Django Redis cache socket_connect_timeout |
+| REDIS_SOCKET_TIMEOUT_SECONDS | 1 second | 1–5 | Configured Django Redis cache socket_timeout |
+
+The probe connection also uses Linux TCP keepalive/user timeout settings. Business
+queries do not inherit its statement timeout. Cache timeout retries are disabled.
+PostgreSQL connect bounds apply per resolved host/address, not as a global DNS or
+multi-host deadline. The supported topology uses one internal dependency service;
+see [health and logging](health-and-logging.md) for verified failure behavior.
+
+## Separate production Compose configuration
+
+Use `.env.production.example` as the placeholder contract and untracked
+`.env.production` for operator values. `compose.production.yaml` explicitly sets
+`DJANGO_SETTINGS_MODULE=config.settings.production` for init/web/worker/Beat,
+internal PostgreSQL host/port, cache DB 0 and broker DB 1. The default image tag is
+`local`; optional `PRODUCTION_IMAGE_TAG` identifies the image built from repository
+files. No real .env file, credential or source bind mount belongs in the image.
+
+| Compose environment value | Default | Meaning |
+| --- | --- | --- |
+| NGINX_BIND_ADDRESS | 127.0.0.1 | Only published HTTP ingress address |
+| PRODUCTION_HTTP_PORT | 8080 | Nginx host port; change local origin values with it |
+| NGINX_PROXY_SCHEME | http | Validated constant protocol forwarded to Django |
+| PRODUCTION_IMAGE_TAG | local | Shared init/web/Celery image tag |
+
+In `https` mode the Nginx startup guard requires loopback ingress and a trusted,
+operator-managed TLS edge as its only caller. It does not infer HTTPS from a
+client-supplied header. Production settings enable secure cookies, explicit hosts
+and origins, DEBUG=False and STATIC_ROOT=/app/staticfiles inside the image.
+
+Static settings are derived from repository paths, not arbitrary business-code
+environment reads. The named static volume is writable in init and read-only in
+web/Nginx. SSL redirect is secure by default. HTTP smoke requires explicit false
+and retains secure cookies; it is not a complete HTTPS authentication test.
+Start/verify/update/cleanup commands and the TLS trust conditions are documented
+in [production deployment](production.md).
