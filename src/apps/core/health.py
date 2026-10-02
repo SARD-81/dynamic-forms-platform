@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ def check_redis() -> bool:
         return False
 
 
+@csrf_exempt  # Unsafe methods are rejected before any probe, even without a CSRF cookie.
 @require_safe
 def health_live(request):
     """
@@ -64,6 +66,7 @@ def health_live(request):
     return JsonResponse({"status": "ok"}, status=200)
 
 
+@csrf_exempt
 @require_safe
 def health_ready(request):
     """

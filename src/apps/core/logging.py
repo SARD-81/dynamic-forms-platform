@@ -3,15 +3,25 @@ import re
 import traceback
 
 SENSITIVE_KEY = (
-    r"(?:[\w-]*(?:password|passwd|secret|token|api[_-]?key|credential)[\w-]*|"
+    # The lookahead finds a sensitive label once; consuming the whole key then
+    # avoids repeatedly rescanning suffixes of long attacker-controlled words.
+    r"(?:(?=[\w-]*(?:password|passwd|secret|token|api[_-]?key|credential))[\w-]+|"
     r"smtp[_-]?(?:user|username)|django_email_host_user|"
     r"pass|otp|code|verification[_\s-]?code)"
 )
 
 SENSITIVE_PATTERNS = [
+    # Usernames can also be credentials, particularly in SMTP connection URIs.
+    (
+        re.compile(
+            r"(?<![\w+.-])([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s\"']+):"
+            r"([^\s\"']*)(@[^\"'\s,;]+)"
+        ),
+        r"\1[REDACTED]:[REDACTED]\4",
+    ),
     # Some API clients embed a token as URI userinfo without a password delimiter.
     (
-        re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+)(@)"),
+        re.compile(r"(?<![\w+.-])([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+)(@)"),
         r"\1[REDACTED]\3",
     ),
     # Quoted and bytes-rendered authorization values occur in exception/debug logs.
@@ -27,7 +37,8 @@ SENSITIVE_PATTERNS = [
     # 2. Quoted sensitive key-values (handles spaces e.g. password="secret phrase")
     (
         re.compile(
-            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*)(?:[bu])?([\"'])(.*?)\2",
+            rf"(?i)(?<![\w-])([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*)"
+            r"(?:[bu])?([\"'])(.*?)\2",
             re.DOTALL,
         ),
         r"\1\2[REDACTED]\2",
@@ -35,7 +46,7 @@ SENSITIVE_PATTERNS = [
     # 3. Connection URIs with or without user (e.g. redis://:pass@host)
     (
         re.compile(
-            r"([a-zA-Z][a-zA-Z0-9+.-]*://[^/@:\s]*:)"
+            r"(?<![\w+.-])([a-zA-Z][a-zA-Z0-9+.-]*://[^/@:\s]*:)"
             r"([^\s\"']+)"
             r"(@[^\"'\s,;]+)"
         ),
@@ -49,7 +60,7 @@ SENSITIVE_PATTERNS = [
     # 5. Unquoted sensitive key-values
     (
         re.compile(
-            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*(?:bearer\s+)?)"
+            rf"(?i)(?<![\w-])([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*(?:bearer\s+)?)"
             r"(?!\[REDACTED\])[^\"'\s,;&}]+"
         ),
         r"\1[REDACTED]",

@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
+from django.test import Client
 
 
 def test_liveness_get_and_head_ignore_dependencies(client, monkeypatch):
@@ -36,7 +37,8 @@ def test_readiness_head_matches_get(client, monkeypatch, database_ok, cache_ok, 
 
 @pytest.mark.parametrize("path", ["/health/live/", "/health/ready/"])
 @pytest.mark.parametrize("method", ["post", "put", "delete"])
-def test_health_rejects_unsafe_methods_without_probing(client, monkeypatch, path, method):
+def test_health_rejects_unsafe_methods_without_probing(monkeypatch, path, method):
+    client = Client(enforce_csrf_checks=True)
     database = Mock()
     cache = Mock()
     monkeypatch.setattr("apps.core.health.check_database", database)
