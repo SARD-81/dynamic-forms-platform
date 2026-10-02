@@ -174,3 +174,35 @@ session; PR #100 implements and verifies them before the final technical freeze.
 
 **Change-control classification:** Documentation/baseline activation of verified
 CHG-0006 runtime and CHG-0007 governance; no new application/domain semantics.
+
+
+## 2026-10-02 UTC / 2026-10-03 Asia/Tehran — Final brief audit and main promotion authorization
+
+**Context:** Gate 4 is CLOSED/FROZEN on dev. PR #101 activated the documentation
+at `d52426a123734b1b3df16a4b8ff8c9a2631b83cc`; technical acceptance remains
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. An ancestry-only synchronization at
+`241cc0f57f8e4a737a07f4384662ebb8c61dcb73` preserves the exact accepted tree.
+The initial instruction intentionally left milestone PR #103 open.
+
+**Subsequent Team Lead decision:** The owner explicitly requested a meticulous
+complete re-audit against the original mandatory project brief and initial/team
+contracts, excluding bonus requirements, then authorized the assistant to fix
+blockers if found and merge the final dev-to-main PR after green verification.
+This later instruction supersedes the prior main-merge prohibition for PR #103
+only. No auto-merge or general future main-merge authority is granted.
+
+**Evidence:** The final requirements audit maps the PDF requirements to code and
+regression tests. A separate 294-blob candidate snapshot was verified against live
+GitHub. Local Ruff, all three Django settings checks and 129 focused tests passed.
+Full PostgreSQL-backed tests plus both actual topologies are checked on fresh
+GitHub Actions runners. Final PR HEAD/run/results/expected SHA and the verified
+main merge commit belong in PR #103 and #84/#77; no future SHA is invented here.
+
+**Scope:** Promotion housekeeping and additional verification evidence only.
+No runtime, application, architecture/data semantic or existing frozen baseline
+is changed. Status documents link the live promotion evidence so they do not
+continue asserting that the milestone is unmerged after it is promoted.
+
+**Closure:** Squash merge only after synchronized behind_by=0, five completed
+SUCCESS checks, clean intended scope and no unresolved material review. Re-fetch
+the resulting commit/ref/tree, then close #84/#77 completed with evidence.

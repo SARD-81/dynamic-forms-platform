@@ -126,6 +126,7 @@ BL-FOUNDATION-003 and BL-RELEASE-001 freeze the implemented topology at
 the existing development job and verifies initialization, internal services,
 public routes/static, outages and proxy security. See the
 [acceptance record](../testing/gate4-acceptance-verification.md) for exact run IDs
-and limits of the evidence. Gate 4 is CLOSED/FROZEN on dev; main promotion remains
-a separate manual Team Lead action. TLS certificates, actual deployment secrets,
+and limits of the evidence. Gate 4 is CLOSED/FROZEN; milestone
+[PR #103](https://github.com/SARD-81/dynamic-forms-platform/pull/103) records the
+separately authorized main promotion and its final verification. TLS certificates, actual deployment secrets,
 backups and real SMTP/API destinations remain operator configuration.

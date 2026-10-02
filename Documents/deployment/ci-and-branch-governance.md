@@ -145,6 +145,12 @@ merge with that expected SHA, then re-fetch the merge commit and update the Issu
 and Tracker. This is a specific override, not a standing automation permission.
 It grants no dev-to-main merge or auto-merge authorization.
 
-The final milestone PR remains open for manual Team Lead review/merge with all
-five required checks green. #95/#96 final finishing tasks are completed through verified PR #100 under
+The initial instruction to leave the milestone open was subsequently superseded
+by the owner's explicit 2026-10-03 Asia/Tehran authorization: audit all mandatory
+brief/team-contract requirements, fix blockers if present, then merge PR #103
+with all five final-HEAD checks green. This is a specific promotion override,
+not standing permission to merge future main PRs. Capture the expected HEAD SHA,
+use Squash merge and verify the resulting main commit before closing #84/#77.
+No auto-merge is enabled. The [final audit](../testing/final-project-requirements-audit.md)
+and live milestone/control records provide the evidence. #95/#96 final finishing tasks are completed through verified PR #100 under
 the owner's subsequent explicit closeout instruction. #41 is explicitly deferred; HTTP reporting authoritative.

@@ -72,10 +72,11 @@ not override completed successful Actions Check Runs.
 
 ## GATE 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
-Status: **CLOSED / FROZEN ON DEV — MILESTONE PROMOTION PENDING**
+Status: **CLOSED / FROZEN — PROMOTION EVIDENCE IN PR #103**
 
-Tracker: [#77](https://github.com/SARD-81/dynamic-forms-platform/issues/77) — open  
-Closeout: [#84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) — open  
+Tracker: [#77](https://github.com/SARD-81/dynamic-forms-platform/issues/77) — closure after verified promotion  
+Closeout: [#84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) — closure after verified promotion  
+Milestone: [PR #103](https://github.com/SARD-81/dynamic-forms-platform/pull/103) — authoritative merge/CI/main evidence  
 [Execution record](gate4-execution-plan.md)  
 [Acceptance evidence](../testing/gate4-acceptance-verification.md)
 
@@ -84,7 +85,8 @@ Closeout: [#84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) —
 This is the verified final #102 acceptance correction, after #80/#81/#83/#95/#96.
 The subsequent documentation merge activates the freeze and does not replace
 this technical SHA. Gate 4 closure on dev is distinct from completing the full
-milestone DoD, which still requires manual promotion to main.
+milestone DoD, which also requires verified promotion to main. The PR and control
+Issues linked above record that live state without predicting a future merge SHA.
 
 ### Completed mandatory work
 
@@ -134,13 +136,17 @@ rewriting teammate history. No obsolete CHG blocker remains.
 
 CHG-0007 is effective through PR #90; CHG-0006 is effective through PR #91.
 Independent peer approval is optional. Material findings still require evidence
-and disposition. Explicit Team Lead authorization in this Work session applies
-only to verified Squash merges for #80/#81/#83/#84 into dev. It does not authorize
-main promotion. No auto-merge is enabled.
+and disposition. The initial Work-session override authorized the verified
+#80/#81/#83/#84 dev merges. On 2026-10-03 Asia/Tehran (2026-10-02 UTC), the owner
+subsequently explicitly authorized the assistant to merge milestone PR #103
+after a complete mandatory-brief/team-contract audit and resolution of blockers.
+That later instruction supersedes the earlier instruction to leave main promotion open.
+No auto-merge is enabled.
 
-The separate `dev → main` milestone must have all five checks completed SUCCESS
-and remain open for the Team Lead's manual review/merge. #84 and #77 close only
-following that promotion; their open state is intentional.
+The milestone requires all five checks completed SUCCESS on the final HEAD,
+current-base synchronization, clean scope and no unresolved material finding.
+Merge uses the captured expected HEAD SHA. The resulting main commit is re-fetched
+and verified before #84/#77 close. See the [final requirements audit](../testing/final-project-requirements-audit.md).
 
 ## Merge governance audit trail
 
@@ -168,9 +174,13 @@ Gate 4:
 - PR #100/#95/#96 — final CI 37064542544 SUCCESS, all five jobs, 502 tests;
 - PR #102 final acceptance correction — CI 37066499042 SUCCESS, all five jobs, 509 tests;
 - technical freeze dev CI 37066868098 — all five jobs SUCCESS, 509 tests;
-- #84 closure/freeze documentation — activation requires its own final green CI
-  and explicit authorized Squash merge; its PR/checks/merge evidence is recorded
-  in Issue #84 and Tracker #77.
+- #84 closure/freeze documentation — PR #101; final CI 37067154314 SUCCESS,
+  509 tests; verified Squash activation `d52426a123734b1b3df16a4b8ff8c9a2631b83cc`.
+- Main ancestry synchronization `241cc0f57f8e4a737a07f4384662ebb8c61dcb73` preserves
+  the exact accepted tree; no main-only change or frozen baseline is lost.
+- Final requirements audit and subsequent promotion authorization are recorded
+  in the decision log, the audit document and PR #103 / #84 / #77.
+  The live records contain final candidate/CI/promotion commit evidence.
 
 The earlier baseline documents are not updated to relabel their historical scope.
 Accidental Issue #73 remains closed not_planned from Gate 3 housekeeping.

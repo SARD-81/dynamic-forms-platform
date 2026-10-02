@@ -77,7 +77,9 @@ Verify as applicable:
 - #83 supplies the mandatory production-smoke job and reuses #79/#82 tooling.
 - #41 is deferred optional BONUS scope; HTTP reporting remains authoritative.
 - #95/#96 final finishing tasks are complete; no contributor task remains open.
-- Gate 4 is CLOSED/FROZEN on dev; #84 and #77 stay open until manual milestone promotion.
+- Gate 4 is CLOSED/FROZEN at the recorded technical SHA; PR #103 records milestone promotion.
+- The owner subsequently authorized the assistant to merge PR #103 only after a fresh complete requirements audit and all five green checks. No auto-merge is allowed.
+- #84 and #77 close only after the resulting main commit is verified.
 
 ## Environment rule
 

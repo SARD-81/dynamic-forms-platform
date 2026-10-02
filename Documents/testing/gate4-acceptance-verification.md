@@ -1,6 +1,6 @@
 # Gate 4 acceptance verification
 
-**Status:** ACCEPTED / FROZEN ON DEV — milestone promotion pending  
+**Status:** TECHNICAL ACCEPTANCE FROZEN — promotion evidence in PR #103  
 **Verified:** 2026-10-02 UTC  
 **Technical freeze point:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`  
 **Issues:** #77 / #84  
@@ -126,6 +126,9 @@ explicit authorized Squash merge. Activation evidence is recorded in #84/#77.
 status parity, empty HEAD bodies, unsupported methods under enforced CSRF, safe cancellation and real
 SIGINT/exit-130 tests. #41 is closed not_planned without claiming implementation.
 
-The separate dev-to-main milestone must have all five checks completed SUCCESS
-and remain open for manual Team Lead merge. This Work session does not authorize
-main promotion. #84 and Tracker #77 stay open until promotion satisfies their DoD.
+The separate dev-to-main milestone must have all five checks completed SUCCESS.
+The initial instruction to leave it open was subsequently superseded by the
+owner's explicit final-audit-and-merge instruction on 2026-10-03 Asia/Tehran.
+The [final requirements audit](final-project-requirements-audit.md), milestone
+PR #103 and control Issues #84/#77 record verification and the resulting main SHA.
+The control Issues close only after that promotion is verified; no auto-merge is used.
