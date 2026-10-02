@@ -285,9 +285,17 @@ def test_url_userinfo_token_without_password_delimiter_is_redacted():
     assert "https://[REDACTED]@example.test/api" in cleaned
 
 
-@pytest.mark.parametrize("scheme", ["postgres", "redis", "smtp"])
-def test_url_username_and_password_are_both_redacted(scheme):
-    cleaned = scrub_sensitive_text(f"{scheme}://private-user:private-password@example.test/service")
-    assert "private-user" not in cleaned
+@pytest.mark.parametrize(
+    ("scheme", "username"),
+    [
+        ("postgres", "private-user"),
+        ("redis", "private-user"),
+        ("smtp", "private-user"),
+        ("smtp", "private-user@example.invalid"),
+    ],
+)
+def test_url_username_and_password_are_both_redacted(scheme, username):
+    cleaned = scrub_sensitive_text(f"{scheme}://{username}:private-password@example.test/service")
+    assert username not in cleaned
     assert "private-password" not in cleaned
     assert cleaned == f"{scheme}://[REDACTED]:[REDACTED]@example.test/service"

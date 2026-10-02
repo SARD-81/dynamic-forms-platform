@@ -12,7 +12,7 @@ SENSITIVE_PATTERNS = [
     # Usernames can also be credentials, particularly in SMTP connection URIs.
     (
         re.compile(
-            r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+):"
+            r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s\"']+):"
             r"([^\s\"']+)(@[^\"'\s,;]+)"
         ),
         r"\1[REDACTED]:[REDACTED]\4",
