@@ -2,25 +2,30 @@ import logging
 import re
 import traceback
 
+SENSITIVE_KEY = (
+    r"(?:[\w-]*(?:password|passwd|secret|token|api[_-]?key|credential)[\w-]*|"
+    r"pass|otp|code|verification[_\s-]?code)"
+)
+
 SENSITIVE_PATTERNS = [
     # 1. Authorization header bearer tokens
     (
-        re.compile(r"(?i)\b(bearer\s+)([A-Za-z0-9_\-\.]+)"),
+        re.compile(r"(?i)\b(bearer\s+)([^\s,;\"'}]+)"),
         r"\1[REDACTED]",
     ),
     # 2. Quoted sensitive key-values (handles spaces e.g. password="secret phrase")
     (
         re.compile(
-            r"(?i)([\"']?(?:password|pass|secret|token|otp|code|api_key|"
-            r"delivery_secret|smtp_password)[\"']?\s*[:=]\s*)([\"'])(.*?)\2"
+            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*)([\"'])(.*?)\2",
+            re.DOTALL,
         ),
         r"\1\2[REDACTED]\2",
     ),
     # 3. Connection URIs with or without user (e.g. redis://:pass@host)
     (
         re.compile(
-            r"([a-zA-Z]+://[^/@:\s]*:)"
-            r"([^@\s\"']+)"
+            r"([a-zA-Z][a-zA-Z0-9+.-]*://[^/@:\s]*:)"
+            r"([^\s\"']+)"
             r"(@[^\"'\s,;]+)"
         ),
         r"\1[REDACTED]\3",
@@ -33,9 +38,8 @@ SENSITIVE_PATTERNS = [
     # 5. Unquoted sensitive key-values
     (
         re.compile(
-            r"(?i)([\"']?(?:password|pass|secret|token|otp|code|api_key|"
-            r"delivery_secret|smtp_password)[\"']?\s*[:=]\s*(?:bearer\s+)?)"
-            r"(?!\[REDACTED\])[^\"'\s,;]+"
+            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*(?:bearer\s+)?)"
+            r"(?!\[REDACTED\])[^\"'\s,;&}]+"
         ),
         r"\1[REDACTED]",
     ),
@@ -62,7 +66,7 @@ class SensitiveDataFilter(logging.Filter):
         try:
             rendered = record.getMessage()
         except Exception:
-            rendered = str(record.msg)
+            rendered = "Log message unavailable (formatting failed)"
 
         record.msg = scrub_sensitive_text(rendered)
         record.args = ()
@@ -71,10 +75,14 @@ class SensitiveDataFilter(logging.Filter):
             try:
                 record.exc_text = "".join(traceback.format_exception(*record.exc_info))
             except Exception:
-                pass
+                record.exc_text = "Exception details unavailable"
 
         if record.exc_text:
             record.exc_text = scrub_sensitive_text(record.exc_text)
+
+        # Every formatter must use the sanitized exception text, including later
+        # handlers that otherwise regenerate a traceback from exc_info.
+        record.exc_info = None
 
         if getattr(record, "stack_info", None):
             record.stack_info = scrub_sensitive_text(record.stack_info)

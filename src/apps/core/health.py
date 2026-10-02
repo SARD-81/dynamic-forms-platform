@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
@@ -12,17 +13,28 @@ logger = logging.getLogger(__name__)
 def check_database() -> bool:
     """
     Verifies PostgreSQL database connectivity with a lightweight query.
-    PostgreSQL connection timeouts are governed by the settings contract (#78).
+    Uses settings-owned timeouts and a disposable connection, so probe-only
+    statement/TCP bounds never mutate a business transaction's session.
     Returns True if healthy, False otherwise without leaking internal details.
     """
+    probe = None
     try:
-        with connection.cursor() as cursor:
+        probe = connection.copy(alias="readiness")
+        options = probe.settings_dict.get("OPTIONS", {}).copy()
+        existing_options = options.get("options", "")
+        options.update(settings.READINESS_DATABASE_OPTIONS)
+        options["options"] = f"{existing_options} {options['options']}".strip()
+        probe.settings_dict["OPTIONS"] = options
+        with probe.cursor() as cursor:
             cursor.execute("SELECT 1;")
             row = cursor.fetchone()
             return bool(row and row[0] == 1)
     except Exception:
         logger.warning("PostgreSQL readiness check failed", exc_info=False)
         return False
+    finally:
+        if probe is not None:
+            probe.close()
 
 
 def check_redis() -> bool:
@@ -59,11 +71,9 @@ def health_ready(request):
     are reachable and responsive within bounded timeouts.
     """
     try:
-        db_healthy = check_database()
-        redis_healthy = check_redis()
-        if db_healthy and redis_healthy:
+        if check_database() and check_redis():
             return JsonResponse({"status": "ok"}, status=200)
     except Exception:
-        logger.exception("Unexpected error in readiness check")
+        logger.warning("Unexpected error in readiness check", exc_info=False)
 
     return JsonResponse({"status": "not_ready"}, status=503)
