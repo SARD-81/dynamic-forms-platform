@@ -2,7 +2,6 @@ import argparse
 import hashlib
 import math
 import re
-import sys
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -254,13 +253,5 @@ def main(argv=None):
     return 0
 
 
-def cli(argv=None):
-    try:
-        return main(argv)
-    except KeyboardInterrupt:
-        print("Production verification interrupted.", file=sys.stderr)
-        return 130
-
-
 if __name__ == "__main__":
-    raise SystemExit(cli())
+    raise SystemExit(main())

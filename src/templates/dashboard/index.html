@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Workspace</p>
+        <h1>Dashboard</h1>
+        <p>Welcome, {{ user.get_username }}. Manage your forms, processes, and shared workspace.</p>
+    </div>
+</header>
+
+<section class="dashboard-grid" aria-label="Application areas">
+    <article class="feature-card" data-feature="categories">
+        <div class="feature-card__meta">Shared organization</div>
+        <h2>Categories</h2>
+        <p>Organize forms and processes under owner-scoped categories.</p>
+        <a class="button button--secondary" href="{% url 'core:category_list' %}">
+            Manage categories
+        </a>
+    </article>
+
+    <article class="feature-card" data-feature="forms">
+        <div class="feature-card__meta">Authoring</div>
+        <h2>Forms</h2>
+        <p>Create, configure, publish, and manage dynamic forms.</p>
+        <a class="button button--secondary" href="{% url 'forms:list' %}">
+            Manage forms
+        </a>
+    </article>
+
+    <article class="feature-card" data-feature="processes">
+        <div class="feature-card__meta">Workflow</div>
+        <h2>Processes</h2>
+        <p>Compose your forms into linear or free participant workflows.</p>
+        <a class="button button--secondary" href="{% url 'processes:list' %}">
+            Manage processes
+        </a>
+    </article>
+
+    <article class="feature-card" data-feature="reports">
+        <div class="feature-card__meta">Insights</div>
+        <h2>Reports</h2>
+        <p>Review views, submissions, process runs, and delivery summaries.</p>
+        <span class="status-badge">Integration pending</span>
+    </article>
+</section>
+{% endblock %}

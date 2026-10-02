@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ participant_form.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Published form · {{ participant_form.visibility|title }}</p>
+        <h1>{{ participant_form.title }}</h1>
+        <p>{{ participant_form.description|default:"No description provided." }}</p>
+    </div>
+</header>
+
+<form method="post" action="{% url 'forms_participant:submit' participant_form.public_id %}" novalidate>
+    {% csrf_token %}
+
+    {% if submission_errors %}
+        <section class="auth-card" role="alert">
+            <h2>Check your submission</h2>
+            {% for error in submission_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="dashboard-grid" aria-label="Form questions">
+        {% for question in participant_form.questions %}
+            <article class="feature-card">
+                <div class="feature-card__meta">
+                    Question {{ question.order }} · {{ question.question_type|title }}
+                    {% if question.is_required %} · Required{% endif %}
+                </div>
+                <h2>{{ question.text }}</h2>
+
+                {% if question.errors %}
+                    <div role="alert">
+                        {% for error in question.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if question.question_type == "TEXT" %}
+                    <label for="{{ question.field_name }}">Your answer</label>
+                    <textarea
+                        id="{{ question.field_name }}"
+                        name="{{ question.field_name }}"
+                        {% if question.max_length %}maxlength="{{ question.max_length }}"{% endif %}
+                        {% if question.is_required %}required{% endif %}
+                    >{{ question.value }}</textarea>
+                {% elif question.question_type == "NUMBER" %}
+                    <label for="{{ question.field_name }}">Your answer</label>
+                    <input
+                        id="{{ question.field_name }}"
+                        name="{{ question.field_name }}"
+                        type="number"
+                        step="any"
+                        value="{{ question.value }}"
+                        {% if question.min_value is not None %}min="{{ question.min_value }}"{% endif %}
+                        {% if question.max_value is not None %}max="{{ question.max_value }}"{% endif %}
+                        {% if question.is_required %}required{% endif %}
+                    >
+                {% elif question.question_type == "SELECT" %}
+                    <label for="{{ question.field_name }}">Choose one option</label>
+                    <select
+                        id="{{ question.field_name }}"
+                        name="{{ question.field_name }}"
+                        {% if question.is_required %}required{% endif %}
+                    >
+                        <option value="">Select an option</option>
+                        {% for option in question.options %}
+                            <option value="{{ option.id }}" {% if option.selected %}selected{% endif %}>
+                                {{ option.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% elif question.question_type == "CHECKBOX" %}
+                    <fieldset>
+                        <legend>Choose{% if question.is_required %} at least one{% endif %}</legend>
+                        {% for option in question.options %}
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    name="{{ question.field_name }}"
+                                    value="{{ option.id }}"
+                                    {% if option.selected %}checked{% endif %}
+                                >
+                                {{ option.label }}
+                            </label>
+                        {% endfor %}
+                    </fieldset>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </section>
+
+    <section class="auth-card">
+        <button class="button button--primary" type="submit">Submit form</button>
+    </section>
+</form>
+{% endblock %}

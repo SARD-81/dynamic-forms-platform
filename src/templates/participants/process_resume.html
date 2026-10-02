@@ -1,0 +1,49 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Resume {{ participant_process.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block public_kicker %}Resume process{% endblock %}
+{% block public_title %}{{ participant_process.title }}{% endblock %}
+{% block public_intro %}
+<p>Enter the resume token that was shown when the anonymous run was created.</p>
+{% endblock %}
+
+{% block public_content %}
+<section class="auth-card">
+    {% if participant_process.status == "CLOSED" %}
+        <div class="message message--warning">
+            This process is closed to new runs. Existing runs can still be resumed while their required forms remain available.
+        </div>
+    {% endif %}
+
+    {% if resume_error %}
+        <div class="message message--error" role="alert">{{ resume_error }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'processes_participant:resume' participant_process.public_id %}" novalidate>
+        {% csrf_token %}
+        <div class="form-field">
+            <label class="form-label" for="resume-token">Resume token</label>
+            <input
+                id="resume-token"
+                name="resume_token"
+                type="password"
+                autocomplete="off"
+                required
+                aria-describedby="resume-token-help"
+            >
+            <div class="form-help" id="resume-token-help">
+                The token is submitted in the request body and is never placed in the URL.
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="button button--primary" type="submit">Resume run</button>
+            {% if participant_process.status == "PUBLISHED" %}
+                <a class="button button--secondary" href="{% url 'processes_participant:detail' participant_process.public_id %}">
+                    Back to process
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

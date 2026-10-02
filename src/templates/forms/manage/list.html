@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Forms · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+{% url "forms:create" as create_url %}
+
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Authoring</p>
+        <h1>Forms</h1>
+        <p>Create and manage your form definitions and lifecycle.</p>
+    </div>
+    <a class="button button--primary" href="{{ create_url }}">Create form</a>
+</header>
+
+{% if forms %}
+    <section class="dashboard-grid" aria-label="Your forms">
+        {% for form in forms %}
+            <article class="feature-card">
+                <div class="feature-card__meta">{{ form.get_status_display }}</div>
+                <h2>{{ form.title }}</h2>
+                <p>
+                    {{ form.get_visibility_display }}
+                    {% if form.category %} · {{ form.category.name }}{% endif %}
+                </p>
+                <a class="button button--secondary" href="{% url 'forms:detail' form.id %}">
+                    Manage form
+                </a>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    {% include "includes/_state_empty.html" with state_title="No forms yet" state_message="Create your first draft form to begin authoring." state_action_url=create_url state_action_label="Create form" %}
+{% endif %}
+{% endblock %}

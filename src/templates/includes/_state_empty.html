@@ -1,0 +1,8 @@
+<section class="state-panel" aria-labelledby="empty-state-title">
+    <div class="state-panel__icon" aria-hidden="true">○</div>
+    <h2 id="empty-state-title">{{ state_title|default:"Nothing here yet" }}</h2>
+    <p>{{ state_message|default:"There is no content to show right now." }}</p>
+    {% if state_action_url and state_action_label %}
+        <a class="button button--primary" href="{{ state_action_url }}">{{ state_action_label }}</a>
+    {% endif %}
+</section>

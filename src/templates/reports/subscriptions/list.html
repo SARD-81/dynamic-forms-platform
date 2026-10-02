@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Report subscriptions · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Site administration</p>
+        <h1>Periodic report subscriptions</h1>
+        <p>Configure weekly or monthly delivery targets. Delivery itself is activated in the scheduled runtime step.</p>
+    </div>
+    <a class="button button--primary" href="{% url 'reports:create' %}">Create subscription</a>
+</header>
+
+<section class="feature-card" aria-label="Report preview">
+    <div class="feature-card__meta">Payload preview</div>
+    <h2>Inspect the delivery-neutral report</h2>
+    <p>The same summary payload will be consumed by both Email and API delivery.</p>
+    <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'reports:preview' %}?frequency=WEEKLY">Weekly preview</a>
+        <a class="button button--secondary" href="{% url 'reports:preview' %}?frequency=MONTHLY">Monthly preview</a>
+    </div>
+</section>
+
+{% if subscriptions %}
+<section class="table-card" aria-label="Report subscriptions">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Frequency</th><th>Delivery</th><th>Target</th><th>Status</th><th>Last sent</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for subscription in subscriptions %}
+                <tr>
+                    <td>{{ subscription.get_frequency_display }}</td>
+                    <td>{{ subscription.get_delivery_method_display }}</td>
+                    <td>{% if subscription.email %}{{ subscription.email }}{% else %}{{ subscription.endpoint_url }}{% endif %}</td>
+                    <td>{% if subscription.is_active %}Active{% else %}Inactive{% endif %}</td>
+                    <td>{{ subscription.last_sent_at|default:"Never" }}</td>
+                    <td>
+                        <div class="form-actions">
+                            <a class="button button--secondary" href="{% url 'reports:update' subscription.id %}">Edit</a>
+                            {% if subscription.is_active %}
+                            <form method="post" action="{% url 'reports:deactivate' subscription.id %}">
+                                {% csrf_token %}
+                                <button class="button button--ghost" type="submit">Deactivate</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% else %}
+    {% url 'reports:create' as create_url %}
+    {% include "includes/_state_empty.html" with state_title="No report subscriptions" state_message="Create the first weekly or monthly delivery target." state_action_url=create_url state_action_label="Create subscription" %}
+{% endif %}
+{% endblock %}

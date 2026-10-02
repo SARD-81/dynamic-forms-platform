@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}{{ managed_process.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Process · {{ managed_process.get_status_display }}</p>
+        <h1>{{ managed_process.title }}</h1>
+        <p>{{ managed_process.description|default:"No description provided." }}</p>
+    </div>
+    <a class="button button--secondary" href="{% url 'processes:list' %}">Back to processes</a>
+</header>
+
+<section class="auth-card account-summary">
+    <dl class="account-details">
+        <div>
+            <dt>Status</dt>
+            <dd>{{ managed_process.get_status_display }}</dd>
+        </div>
+        <div>
+            <dt>Execution type</dt>
+            <dd>{{ managed_process.get_process_type_display }}</dd>
+        </div>
+        <div>
+            <dt>Visibility</dt>
+            <dd>{{ managed_process.get_visibility_display }}</dd>
+        </div>
+        <div>
+            <dt>Category</dt>
+            <dd>{{ managed_process.category.name|default:"Uncategorized" }}</dd>
+        </div>
+        <div>
+            <dt>Steps</dt>
+            <dd>{{ managed_process.steps.all|length }}</dd>
+        </div>
+        <div>
+            <dt>Public ID</dt>
+            <dd>{{ managed_process.public_id }}</dd>
+        </div>
+    </dl>
+
+    <div class="form-actions">
+        <a class="button button--secondary" href="{% url 'processes:builder' managed_process.id %}">
+            {% if managed_process.status == "DRAFT" %}Build steps{% else %}View steps{% endif %}
+        </a>
+        <a class="button button--secondary" href="{% url 'processes:report' managed_process.id %}">
+            View report
+        </a>
+
+        {% if managed_process.status == "DRAFT" %}
+            <a class="button button--secondary" href="{% url 'processes:update' managed_process.id %}">
+                Edit draft
+            </a>
+            <form class="inline-form" method="post" action="{% url 'processes:publish' managed_process.id %}">
+                {% csrf_token %}
+                <button class="button button--primary" type="submit">Publish process</button>
+            </form>
+            <a class="button button--ghost" href="{% url 'processes:delete' managed_process.id %}">
+                Delete draft
+            </a>
+        {% elif managed_process.status == "PUBLISHED" %}
+            <form class="inline-form" method="post" action="{% url 'processes:close' managed_process.id %}">
+                {% csrf_token %}
+                <button class="button button--primary" type="submit">Close process</button>
+            </form>
+        {% else %}
+            <span class="status-badge">Lifecycle complete</span>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

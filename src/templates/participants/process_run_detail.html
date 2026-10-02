@@ -1,0 +1,72 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}Run · {{ participant_process.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block public_kicker %}Process run · {{ process_run.status|title }}{% endblock %}
+{% block public_title %}{{ participant_process.title }}{% endblock %}
+{% block public_intro %}
+<p>{{ completed_step_count }} of {{ total_step_count }} steps completed.</p>
+{% endblock %}
+
+{% block public_content %}
+{% if resume_token_once %}
+    <section class="auth-card" role="status">
+        <h2>Save your resume token</h2>
+        <p>This raw token is shown only once. It is held temporarily in your current session only until this first display, then removed from the session. Save it somewhere safe if you want to continue this anonymous run from another browser or session.</p>
+        <p><code id="resume-token-once">{{ resume_token_once }}</code></p>
+        <p>The ProcessRun stores only a one-way hash of this token. The raw token is never stored on the ProcessRun and is never placed in the URL.</p>
+    </section>
+{% endif %}
+
+{% if participant_process.status == "CLOSED" and process_run.status == "IN_PROGRESS" %}
+    <div class="message message--warning">
+        This process is closed to new runs, but this existing run may continue while its step forms remain available.
+    </div>
+{% endif %}
+
+{% if execution_error %}
+    <div class="message message--error" role="alert">{{ execution_error }}</div>
+{% endif %}
+
+{% if process_run.status == "COMPLETED" %}
+    <section class="auth-card">
+        <h2>Process completed</h2>
+        <p>All steps were completed successfully.</p>
+        <dl class="account-details">
+            <div><dt>Started</dt><dd>{{ process_run.started_at }}</dd></div>
+            <div><dt>Completed</dt><dd>{{ process_run.completed_at }}</dd></div>
+        </dl>
+    </section>
+{% endif %}
+
+<section class="dashboard-grid" aria-label="Run steps">
+    {% for step_run in step_runs %}
+        <article class="feature-card">
+            <div class="feature-card__meta">Step {{ step_run.process_step.order }}</div>
+            <h2>{{ step_run.process_step.form.title }}</h2>
+            <span class="status-badge">{{ step_run.status|title }}</span>
+
+            {% if step_run.status == "AVAILABLE" and process_run.status == "IN_PROGRESS" %}
+                <div class="form-actions">
+                    <a class="button button--primary"
+                       href="{% url 'processes_participant:step' participant_process.public_id process_run.public_id step_run.process_step_id %}">
+                        Complete step
+                    </a>
+                </div>
+            {% elif step_run.status == "LOCKED" %}
+                <p>Complete the required earlier step to unlock this one.</p>
+            {% else %}
+                <p>Completed{% if step_run.completed_at %} at {{ step_run.completed_at }}{% endif %}.</p>
+            {% endif %}
+        </article>
+    {% endfor %}
+</section>
+
+<div class="form-actions">
+    {% if participant_process.status == "PUBLISHED" %}
+        <a class="button button--secondary" href="{% url 'processes_participant:detail' participant_process.public_id %}">
+            Process overview
+        </a>
+    {% endif %}
+</div>
+{% endblock %}

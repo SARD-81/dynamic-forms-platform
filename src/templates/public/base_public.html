@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block body_class %}public-participation-page{% endblock %}
+
+{% block content %}
+<div class="public-shell">
+    <header class="public-shell__header">
+        <p class="eyebrow">{% block public_kicker %}Participation{% endblock %}</p>
+        <h1>{% block public_title %}Form or process{% endblock %}</h1>
+        <div class="public-shell__intro">
+            {% block public_intro %}{% endblock %}
+        </div>
+    </header>
+
+    <section class="public-shell__content">
+        {% block public_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

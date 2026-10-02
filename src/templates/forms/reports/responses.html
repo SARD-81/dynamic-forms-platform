@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Responses · {{ report.title }} · Dynamic Forms Platform{% endblock %}
+
+{% block content %}
+<header class="page-header">
+    <div>
+        <p class="eyebrow">Submitted responses</p>
+        <h1>{{ report.title }}</h1>
+        <p>{{ report.total_submissions }} total response{{ report.total_submissions|pluralize }}.</p>
+    </div>
+    <a class="button button--secondary" href="{% url 'forms:report' report.id %}">Back to report</a>
+</header>
+
+{% if response_items %}
+    <section class="dashboard-grid" aria-label="Submitted responses">
+        {% for submission in response_items %}
+            <article class="feature-card">
+                <div class="feature-card__meta">{{ submission.respondent_type|title }}</div>
+                <h2>{{ submission.submitted_at }}</h2>
+                <p>{{ submission.public_id }}</p>
+                <a
+                    class="button button--secondary"
+                    href="{% url 'forms:report_response_detail' report.id submission.public_id %}"
+                >
+                    Inspect response
+                </a>
+            </article>
+        {% endfor %}
+    </section>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <section class="auth-card">
+            <div class="form-actions">
+                {% if page_obj.has_previous %}
+                    <a class="button button--secondary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+                <span class="status-badge">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                    <a class="button button--secondary" href="?page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+{% else %}
+    <section class="auth-card">
+        <p>No submitted responses yet.</p>
+    </section>
+{% endif %}
+{% endblock %}
