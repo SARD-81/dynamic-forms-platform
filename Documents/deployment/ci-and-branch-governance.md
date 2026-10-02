@@ -7,16 +7,17 @@
 
 ## Active CI checks
 
-The current repository workflow defines four stable required jobs:
+The current repository workflow defines five stable required jobs:
 
 - `lint`
 - `test`
 - `migration-check`
 - `docker-smoke`
+- `production-smoke`
 
 The first three originated in Gate 2. `docker-smoke` was added in Gate 3 closure to verify the complete development runtime after CHG-0003 was applied.
 
-Gate 4 Issue #83 must add a stable `production-smoke` job (or an explicitly equivalent required name recorded by #83/#84). After introduction, `production-smoke` is mandatory for Gate 4 closure and `dev → main` promotion.
+Gate 4 Issue #83 adds `production-smoke`. All five jobs must complete successfully on the final PR HEAD for Gate 4 closure and `dev → main` promotion. Pending, skipped, cancelled or incomplete jobs do not count. GitHub Actions Check Runs are the evidence; a legacy combined status marked pending with zero status contexts is not a failed Actions job.
 
 ## Workflow triggers
 
@@ -52,6 +53,22 @@ docker compose --env-file .env.example config --quiet
 From a clean runner the job builds and starts the full five-service development topology, waits for Django readiness, verifies `web`, `postgres`, `redis`, `celery-worker`, and `celery-beat`, checks Celery worker/task registration, smoke-tests critical HTML/API/OpenAPI routes, and always tears down containers/volumes.
 
 This job validates the development topology. It does not replace the Gate 4 production-topology verification owned by #83.
+
+### production-smoke
+
+The required job validates/builds/starts the real seven-role production topology
+from a clean runner, checks one-shot init completion, production settings, applied
+migrations, collected project/admin assets, internal ports/dependency health,
+worker response/task registration and Beat state. It reuses #79 preflight and #82
+HTTP/static verification with `--require-all`; no competing HTTP verifier exists.
+
+Additional acceptance covers exact project CSS bytes, home/login/API/OpenAPI,
+private/source-file denial, separate PostgreSQL/Redis outages returning bounded
+503 while liveness remains 200, and secure redirects despite forged forwarded
+protocol input. The HTTP smoke override is explicit; secure cookies remain on.
+All waits and job execution are finite, CI-only credentials are disposable,
+no report delivery task is invoked, and teardown always removes this job's own
+containers/volumes. The temporary #81 production-candidate workflow is removed.
 
 ## Gate 4 governance — CHG-0007
 

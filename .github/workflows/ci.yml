@@ -238,3 +238,123 @@ jobs:
       - name: Tear down smoke topology
         if: always()
         run: docker compose --env-file .env down -v --remove-orphans
+
+  production-smoke:
+    name: production-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: gate4-production
+      DJANGO_SECRET_KEY: ci-only-production-smoke-placeholder
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+      DJANGO_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8080
+      DJANGO_SECURE_SSL_REDIRECT: "false"
+      POSTGRES_DB: gate4_smoke
+      POSTGRES_USER: gate4_smoke
+      POSTGRES_PASSWORD: ci-only-production-db-placeholder
+      DJANGO_EMAIL_HOST: smtp.invalid
+      DJANGO_EMAIL_PORT: "587"
+      DJANGO_EMAIL_HOST_USER: ci-placeholder
+      DJANGO_EMAIL_HOST_PASSWORD: ci-only-smtp-placeholder
+      DJANGO_EMAIL_TIMEOUT: "2"
+      DJANGO_DEFAULT_FROM_EMAIL: ci@example.invalid
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Prepare disposable production environment
+        run: cp .env.production.example .env.production
+      - name: Validate production Compose
+        run: docker compose --env-file .env.production -f compose.production.yaml config --quiet
+      - name: Build and start deterministic production topology
+        run: timeout 240 docker compose --env-file .env.production -f compose.production.yaml up --build -d
+      - name: Wait on public Nginx readiness boundary
+        run: |
+          for attempt in {1..45}; do
+            if curl --fail --silent --max-time 8 http://127.0.0.1:8080/health/ready/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Verify production settings, init, static, internal services and preflight
+        run: python scripts/verify_production_runtime.py --env-file .env.production --project-name gate4-production
+      - name: Verify public login, API, OpenAPI, health and exact static content
+        run: |
+          asset_sha="$(sha256sum src/apps/core/static/core/app.css | cut -d ' ' -f 1)"
+          python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+            --liveness-path /health/live/ --readiness-path /health/ready/ \
+            --static-path /static/core/app.css --static-sha256 "$asset_sha" --timeout 5 --require-all
+      - name: Verify home reachability and private/source file denial
+        run: |
+          for private_path in /static/.env /static/config/settings/production.py /.env /src/manage.py; do
+            python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+              --login-path / --liveness-path /health/live/ --readiness-path /health/ready/ \
+              --static-path "$private_path" --static-status 404 --timeout 5 --require-all
+          done
+      - name: Verify bounded readiness when PostgreSQL is unavailable
+        run: |
+          docker compose --env-file .env.production -f compose.production.yaml stop postgres
+          python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+            --liveness-path /health/live/ --readiness-path /health/ready/ --readiness-status 503 \
+            --static-path /static/core/app.css --timeout 5 --require-all
+          docker compose --env-file .env.production -f compose.production.yaml start postgres
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 8 http://127.0.0.1:8080/health/ready/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Verify bounded readiness when Redis is unavailable
+        run: |
+          docker compose --env-file .env.production -f compose.production.yaml stop redis
+          python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+            --liveness-path /health/live/ --readiness-path /health/ready/ --readiness-status 503 \
+            --static-path /static/core/app.css --timeout 5 --require-all
+          docker compose --env-file .env.production -f compose.production.yaml start redis
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 8 http://127.0.0.1:8080/health/ready/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Verify secure redirects and rejection of forged forwarded protocol
+        run: |
+          DJANGO_SECURE_SSL_REDIRECT=true docker compose --env-file .env.production -f compose.production.yaml up -d web
+          for attempt in {1..20}; do
+            if python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+              --header X-Forwarded-Proto:https --login-status 301 --api-status 301 --schema-status 301 \
+              --liveness-path /health/live/ --liveness-status 301 \
+              --readiness-path /health/ready/ --readiness-status 301 \
+              --static-path /static/core/app.css --timeout 5 --require-all; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Restore HTTP smoke override and reverify public readiness
+        run: |
+          docker compose --env-file .env.production -f compose.production.yaml up -d web
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 8 http://127.0.0.1:8080/health/ready/ > /dev/null; then
+              python scripts/verify_production.py --base-url http://127.0.0.1:8080 \
+                --liveness-path /health/live/ --readiness-path /health/ready/ \
+                --static-path /static/admin/css/base.css --timeout 5 --require-all
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Secret-safe production failure diagnostics
+        if: failure()
+        run: |
+          docker compose --env-file .env.production -f compose.production.yaml ps -a
+          docker compose --env-file .env.production -f compose.production.yaml logs --tail=80 app-init web nginx celery-worker celery-beat
+      - name: Always tear down production containers and volumes
+        if: always()
+        run: docker compose --env-file .env.production -f compose.production.yaml down -v --remove-orphans
