@@ -8,6 +8,11 @@ SENSITIVE_KEY = (
 )
 
 SENSITIVE_PATTERNS = [
+    # Quoted and bytes-rendered authorization values occur in exception/debug logs.
+    (
+        re.compile(r"(?i)(\bbearer\s+)(?:[bu])?([\"'])(.*?)\2", re.DOTALL),
+        r"\1\2[REDACTED]\2",
+    ),
     # 1. Authorization header bearer tokens
     (
         re.compile(r"(?i)\b(bearer\s+)([^\s,;\"'}]+)"),
@@ -16,7 +21,7 @@ SENSITIVE_PATTERNS = [
     # 2. Quoted sensitive key-values (handles spaces e.g. password="secret phrase")
     (
         re.compile(
-            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*)([\"'])(.*?)\2",
+            rf"(?i)([\"']?{SENSITIVE_KEY}[\"']?\s*[:=]\s*)(?:[bu])?([\"'])(.*?)\2",
             re.DOTALL,
         ),
         r"\1\2[REDACTED]\2",
