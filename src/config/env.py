@@ -63,3 +63,19 @@ def required_positive_int_env(name: str) -> int:
         raise ImproperlyConfigured(f"Environment variable {name!r} must be a positive integer.")
 
     return value
+
+
+def bounded_int_env(name: str, *, default: int, minimum: int, maximum: int) -> int:
+    """Read finite timeout configuration without including its value in errors."""
+    raw_value = os.getenv(name, str(default))
+    try:
+        value = int(raw_value)
+    except ValueError:
+        raise ImproperlyConfigured(
+            f"Environment variable {name!r} must be an integer in [{minimum}, {maximum}]."
+        ) from None
+    if not minimum <= value <= maximum:
+        raise ImproperlyConfigured(
+            f"Environment variable {name!r} must be an integer in [{minimum}, {maximum}]."
+        )
+    return value

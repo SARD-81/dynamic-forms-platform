@@ -2,7 +2,7 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-from config.env import required_env
+from config.env import bounded_int_env, required_env
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -60,6 +60,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+POSTGRES_CONNECT_TIMEOUT_SECONDS = bounded_int_env(
+    "POSTGRES_CONNECT_TIMEOUT_SECONDS", default=2, minimum=2, maximum=10
+)
+READINESS_DB_QUERY_TIMEOUT_MS = bounded_int_env(
+    "READINESS_DB_QUERY_TIMEOUT_MS", default=1000, minimum=100, maximum=5000
+)
+# A probe-only connection bounds queries and dead TCP peers without imposing a
+# statement timeout on business transactions. libpq's connect_timeout is per host.
+READINESS_DATABASE_OPTIONS = {
+    "options": f"-c statement_timeout={READINESS_DB_QUERY_TIMEOUT_MS}",
+    "keepalives": 1,
+    "keepalives_idle": 1,
+    "keepalives_interval": 1,
+    "keepalives_count": 2,
+    "tcp_user_timeout": 2000,
+}
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -68,6 +85,7 @@ DATABASES = {
         "PASSWORD": required_env("POSTGRES_PASSWORD"),
         "HOST": required_env("POSTGRES_HOST"),
         "PORT": required_env("POSTGRES_PORT"),
+        "OPTIONS": {"connect_timeout": POSTGRES_CONNECT_TIMEOUT_SECONDS},
     }
 }
 
@@ -106,19 +124,29 @@ ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 PARTICIPANT_UNLOCK_RATE_LIMIT_COUNT = 5
 PARTICIPANT_UNLOCK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 
+REDIS_CACHE_URL = required_env("REDIS_CACHE_URL")
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": required_env("REDIS_CACHE_URL"),
+        "LOCATION": REDIS_CACHE_URL,
         "OPTIONS": {
-            "socket_connect_timeout": 1,
-            "socket_timeout": 1,
+            "socket_connect_timeout": bounded_int_env(
+                "REDIS_CONNECT_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
+            ),
+            "socket_timeout": bounded_int_env(
+                "REDIS_SOCKET_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
+            ),
+            "retry_on_timeout": False,
+            "retry_on_error": [],
         },
     }
 }
 
 CELERY_BROKER_URL = required_env("CELERY_BROKER_URL")
 CELERY_TASK_IGNORE_RESULT = True
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+CELERY_WORKER_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
@@ -143,4 +171,72 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API Foundation and documentation for Gate 3",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "sensitive_data_filter": {
+            "()": "apps.core.logging.SensitiveDataFilter",
+        },
+    },
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+            "filters": ["sensitive_data_filter"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.server": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "celery.task": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "daphne": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "multiprocessing": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }
