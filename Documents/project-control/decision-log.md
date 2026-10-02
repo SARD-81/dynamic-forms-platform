@@ -122,3 +122,19 @@ Issue #41 real-time Channels/WebSocket reporting is explicitly deferred as BONUS
 **Change-control classification:** Documentation-only baseline freeze / Gate closure. No application/runtime behavior is introduced by the freeze PR.
 
 After the documentation-only freeze is merged to `dev`, the remaining milestone action is a separate `dev → main` PR with green required CI and Team Lead Verification.
+
+## 2026-10-02 — Gate 4 Team Lead Verification governance
+
+**Context:** Issue #92 / CHG-0007 during Gate 4 control-plane synchronization.
+
+**Decision:** Gate 4 uses an explicit Team Lead Verification governance record rather than silently extending Gate 3-only CHG-0005. Independent peer `APPROVED` review is optional, reviewer requests are not required merely to satisfy process, and merge still requires green applicable CI, scope/architecture/security verification, disposition of material findings and an explicit Team Lead decision.
+
+Automation/assistant work may prepare and verify PRs but does not merge Gate 4 PRs unless the repository owner gives an explicit per-merge override to the standing no-assistant-merge rule.
+
+PR #88 / Issue #79 is retained as a historical Gate 4 Governance Exception because it merged before CHG-0007 became effective without the independent peer approval required by the initial Gate 4 plan. PR #85 is superseded because its kickoff branch became stale after #79 merged. Draft PR #86 must be refreshed/re-scoped or superseded. PR #87 remains merge-blocked until #78 / CHG-0006 authorizes its runtime/foundation boundary.
+
+**Reason:** Gate 4 should preserve explicit Team Lead accountability and all technical verification controls without reintroducing reviewer-request churn that the repository owner explicitly rejected.
+
+**Change-control classification:** Structural repository-governance change for Gate 4 only.
+
+Tracked by CHG-0007. No frozen baseline, application behavior, runtime topology, model, migration or settings contract is changed by this governance record.
