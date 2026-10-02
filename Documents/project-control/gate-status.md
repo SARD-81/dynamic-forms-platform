@@ -63,154 +63,114 @@ Applied Gate 3 Change Records:
 - CHG-0004 — production email configuration contract;
 - CHG-0005 — Team Lead Verification governance for Gate 3.
 
-## Stable CI entering Gate 4
+## Active Gate 4 CI
 
-The active required jobs are:
-
-- `lint`;
-- `test`;
-- `migration-check`;
-- `docker-smoke`.
-
-Issue #83 must add stable `production-smoke` verification. Once introduced, it becomes mandatory for Gate 4 closure and milestone promotion.
+All five checks must complete successfully on the final PR HEAD:
+`lint`, `test`, `migration-check`, `docker-smoke`, `production-smoke`.
+Pending/cancelled/skipped checks do not count. Empty legacy status contexts do
+not override completed successful Actions Check Runs.
 
 ## GATE 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
-Status: **IN PROGRESS**
+Status: **CLOSED / FROZEN ON DEV — MILESTONE PROMOTION PENDING**
 
-Tracker: GitHub Issue #77  
-Execution plan: `Documents/project-control/gate4-execution-plan.md`  
-Current integration state at control-plane repair: `dev@e37edbe063e46cf8dac9f2e57ca8f4f555801384`  
-Gate 3 promoted baseline source: `main@419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
+Tracker: [#77](https://github.com/SARD-81/dynamic-forms-platform/issues/77) — open  
+Closeout: [#84](https://github.com/SARD-81/dynamic-forms-platform/issues/84) — open  
+[Execution record](gate4-execution-plan.md)  
+[Acceptance evidence](../testing/gate4-acceptance-verification.md)
 
-### Requirement framing
+**Technical freeze point:** `dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`
 
-The original project brief requires a production-mode path, production-oriented web serving, production settings/static collection, Dockerization and environment-owned configuration.
+This is the verified final #102 acceptance correction, after #80/#81/#83/#95/#96.
+The subsequent documentation merge activates the freeze and does not replace
+this technical SHA. Gate 4 closure on dev is distinct from completing the full
+milestone DoD, which still requires manual promotion to main.
 
-Reverse proxy usage such as Nginx is bonus/extra-credit scope in the brief. Gate 4 deliberately selects Nginx as the production reverse-proxy/static-serving boundary because it gives the release topology one coherent public ingress and supports later optional WebSocket proxying. This is a project topology decision, not a claim that the brief itself mandates Nginx.
+### Completed mandatory work
 
-### Authoritative Gate 4 inputs
+| Issue | PR | Verified Squash merge into dev |
+| --- | --- | --- |
+| #89 / CHG-0007 | #90 | `73edb696a1cfed4994462b6ce5d5105925658228` |
+| #78 / CHG-0006 | #91 | `655eb97f1fc75357462e706da52abe91319cc921` |
+| #79 preflight | #88 | `4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a` |
+| #82 public verifier | #94 | `e37edbe063e46cf8dac9f2e57ca8f4f555801384` |
+| #80 health/readiness/logging | #87 | `a8bd8649ef4e07fb4cc44bb9f07b1bae187b9506` |
+| #81 production runtime/static/proxy | #97 | `e4a563ae0f63a720f045178113a5a9a271da4465` |
+| #83 mandatory production-smoke | #98 | `2a5cea20f5cf3237645f35c8e89dab3665d77ac7` |
+| #95/#96 final code tasks | #100 | `df5609b17f8238661b7cc464228f5837ce7f4537` |
+| Final acceptance corrections | #102 | `f62cce74c67053ec2e2af06fb3ed75bd20a3ca00` |
 
-Gate 4 consumes the frozen Gate 3 baselines without rewriting them:
+#78/#79/#80/#81/#82/#83/#95/#96 are completed. PR #87 was audited and advanced without
+rewriting teammate history. No obsolete CHG blocker remains.
 
-- BL-ARCH-002;
-- BL-DATA-002;
-- BL-FOUNDATION-002;
-- BL-APPLICATION-001.
+### Verified release foundation
 
-Structural production-runtime changes require #78 / CHG-0006 before implementation is merged. Gate 4 governance is explicitly controlled by #89 / CHG-0007 rather than silently extending Gate 3 CHG-0005.
+- Separate seven-role production Compose uses production settings and Daphne;
+  the existing five-service development Compose and docker-smoke remain intact.
+- One-shot migrate/collectstatic/preflight gates application/worker/Beat startup.
+- Nginx alone publishes the HTTP boundary, serves only collected static and
+  overwrites trusted proxy headers. DB/cache/Daphne/Celery stay internal.
+- HTTPS redirect and secure cookies default on; explicit HTTP smoke does not
+  disable secure cookies. Real TLS termination is operator-managed with a
+  loopback-only trusted edge contract.
+- Readiness dependency behavior is bounded and generic; liveness is independent.
+  Python/Django/Celery logs redact named credentials/tokens and exception text.
+- #79/#82 tools are reused by production-smoke. Private/source paths are denied.
+- Full regression: 509 tests, Ruff, Django check, migration drift, development and
+  production topology checks pass. Evidence is linked in the acceptance record.
 
-### Current Wave 1 state
+### Baselines and optional scope
 
-- #79 — **COMPLETED** through PR #88; merge `4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a`; CI #200 SUCCESS;
-- #82 — **COMPLETED** through PR #94; merge `e37edbe063e46cf8dac9f2e57ca8f4f555801384`; CI #209 SUCCESS; reusable external verifier is now present on `dev`;
-- #80 — implementation exists in Draft PR #87; runtime/settings/URL changes remain **BLOCKED FROM MERGE** until #78 / CHG-0006 is approved/applied and the branch is synchronized with current `dev`;
-- #78 — next mandatory production-runtime authorization task owned by SARD-81; draft PR #91 exists and waits for the CHG-0007 transition;
-- #85 — stale Gate 4 kickoff PR, closed as superseded;
-- #86 — stale documentation draft, closed as superseded;
-- #89 / CHG-0007 — current Gate 4 governance transition.
+- [BL-FOUNDATION-003](baselines/BL-FOUNDATION-003.md) is FROZEN / AUTHORITATIVE.
+- [BL-RELEASE-001](baselines/BL-RELEASE-001.md) is FROZEN / ACCEPTED ON DEV.
+- BL-ARCH-002, BL-DATA-002 and BL-APPLICATION-001 remain authoritative.
+- All earlier baseline files remain byte-for-byte unchanged.
+- No BL-APPLICATION-002: no frozen domain/application semantics changed.
+- **#41 is deferred optional BONUS scope; HTTP reporting remains authoritative.**
+- #95/#96 final operational tasks are completed through PR #100.
+- #41 is closed not_planned following the explicit bonus deferral.
 
-### Team allocation
+### Governance and remaining promotion
 
-Mahsa-Alipour:
+CHG-0007 is effective through PR #90; CHG-0006 is effective through PR #91.
+Independent peer approval is optional. Material findings still require evidence
+and disposition. Explicit Team Lead authorization in this Work session applies
+only to verified Squash merges for #80/#81/#83/#84 into dev. It does not authorize
+main promotion. No auto-merge is enabled.
 
-- [x] #79 production preflight command + deployment-safety verification;
-- [x] #82 reusable production HTTP/static verifier.
-
-amirrezaparvaneh:
-
-- [ ] #80 operational health/readiness + runtime logging;
-- [ ] #83 mandatory production topology CI smoke/regression.
-
-SARD-81:
-
-- [ ] #89 CHG-0007 Gate 4 governance transition;
-- [ ] #78 CHG-0006 production-runtime authorization;
-- [ ] #81 production ASGI/Nginx/collectstatic topology;
-- [ ] #84 final integrated acceptance/baseline/promotion;
-- [ ] #41 optional real-time Channels/WebSockets bonus.
-
-All Django Template/HTML/presentation-specific JavaScript work remains owned by SARD-81.
-
-### Gate 4 execution order
-
-1. complete #89 / CHG-0007 control-plane transition;
-2. complete #78 / CHG-0006 production runtime authorization;
-3. after #78, start/merge #81 and allow #80 to resynchronize/finalize;
-4. consume completed #79/#82 tooling in the stable production runtime;
-5. #83 adds mandatory production-smoke CI by reusing #79/#82 rather than duplicating checks;
-6. optionally implement or explicitly defer #41;
-7. #84 performs integrated production/security acceptance, freezes verified Gate 4 baselines and prepares milestone promotion.
-
-### Gate 4 governance — CHG-0007
-
-CHG-0007 becomes effective only when its transition PR is merged to `dev` by explicit Team Lead decision.
-
-After it is effective, Gate 4 uses:
-
-```text
-Issue
-→ short-lived branch from current dev
-→ implementation + tests
-→ Pull Request
-→ required CI green
-→ Team Lead Verification
-→ explicit Team Lead merge decision
-```
-
-Independent peer `APPROVED` review is optional. Reviewers are not automatically requested merely to satisfy process. Material automated/manual findings remain mandatory verification input and must be resolved or explicitly accepted with evidence.
-
-The CHG-0007 transition PR itself is explicitly authorized to reach merge readiness through governance/documentation-only scope, green CI, material-finding disposition and Team Lead review without mandatory independent peer approval.
-
-### Gate 4 change-control / baseline target
-
-- CHG-0006 — production runtime/topology/security authorization owned by #78;
-- CHG-0007 — Gate 4 Team Lead Verification governance owned by #89;
-- `BL-FOUNDATION-003` — to be frozen only after the production foundation is actually implemented and verified;
-- `BL-RELEASE-001` — Gate 4 production/release acceptance baseline at closure;
-- `BL-APPLICATION-001` remains authoritative unless application semantics deliberately change through explicit control.
-
-### Gate 4 bonus
-
-Issue #41 remains optional/non-blocking. If implemented, it must remain additive to authoritative HTTP reporting and integrate WebSocket ingress through the stable Gate 4 public proxy topology.
+The separate `dev → main` milestone must have all five checks completed SUCCESS
+and remain open for the Team Lead's manual review/merge. #84 and #77 close only
+following that promotion; their open state is intentional.
 
 ## Merge governance audit trail
 
-Historical entries are never rewritten when governance changes later.
+Historical classifications remain those applicable when each PR merged.
 
-Important Gate 3 closeout records:
+Gate 3 closeout:
 
-- PR #69 / CHG-0005 — Gate 3 governance transition; CI #169; merge `179fd6ecee8cbd0904cdd4b6a5cfee402c1bc3cd`;
-- PR #70 / #38 — Team Lead Verification; CI #174; merge `cf10d45b357215b7e6f19cda9be8accadb33a926`;
-- PR #72 / #40 — Team Lead Verification; CI #179; merge `255d95b2150c89a07819d8a772cdc7742910d0fe`;
-- PR #74 / #42 closure candidate — CI #183, 365 tests + docker-smoke; squash merge `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`;
-- PR #75 — Gate 3 baseline freeze; CI #187; squash merge `53695eba20c39da8913bed27fdd16fd0efff6b4d`;
-- PR #76 — Gate 3 `dev → main` milestone; CI #189; squash merge `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
+- PR #69 / CHG-0005 — CI #169; merge `179fd6ecee8cbd0904cdd4b6a5cfee402c1bc3cd`;
+- PR #70 / #38 — CI #174; merge `cf10d45b357215b7e6f19cda9be8accadb33a926`;
+- PR #72 / #40 — CI #179; merge `255d95b2150c89a07819d8a772cdc7742910d0fe`;
+- PR #74 / #42 technical freeze — CI #183, 365 tests; merge `72d5af1b5f26d9d3b8ba67605d96a69605878dcc`;
+- PR #75 baseline activation — CI #187; merge `53695eba20c39da8913bed27fdd16fd0efff6b4d`;
+- PR #76 promotion — CI #189; merge `419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`.
 
-Gate 4 transition records:
+Gate 4:
 
-- PR #85 — stale kickoff/control-plane branch; closed unmerged as superseded;
-- PR #86 — stale documentation draft; closed unmerged as superseded;
-- PR #88 / #79 — merged before CHG-0007 became effective; CI #200 SUCCESS; no independent peer APPROVED review; historical Gate 4 Governance Exception;
-- PR #94 / #82 — merged before CHG-0007 became effective; CI #209 SUCCESS; no independent peer APPROVED review; historical Gate 4 Governance Exception;
-- PR #87 / #80 — held Draft pending #78 / CHG-0006 and synchronization with current `dev`.
+- PR #85/#86 — closed unmerged as superseded;
+- PR #88/#79 — CI #200 SUCCESS; historical Governance Exception before CHG-0007;
+- PR #94/#82 — CI #209 SUCCESS; historical Governance Exception before CHG-0007;
+- PR #90/#89 and PR #91/#78 — explicit Team Lead control transitions;
+- PR #87/#80 — final CI 37060313235 SUCCESS, 467 tests;
+- PR #97/#81 — final CI 37061108231 SUCCESS, 476 tests; actual production topology
+  candidate 37061108305 SUCCESS;
+- PR #98/#83 — final CI 37062061257 SUCCESS, all five jobs, 487 tests;
+- PR #100/#95/#96 — final CI 37064542544 SUCCESS, all five jobs, 502 tests;
+- PR #102 final acceptance correction — CI 37066499042 SUCCESS, all five jobs, 509 tests;
+- technical freeze dev CI 37066868098 — all five jobs SUCCESS, 509 tests;
+- #84 closure/freeze documentation — activation requires its own final green CI
+  and explicit authorized Squash merge; its PR/checks/merge evidence is recorded
+  in Issue #84 and Tracker #77.
 
-## Repository housekeeping
-
-Historical cleanup remains recorded in prior Gate documents and Git history. Accidental Issue #73 was closed `not_planned` during Gate 3. Stale Gate 4 PRs #85 and #86 are closed as superseded rather than merged.
-
-## Current control point
-
-**GATE 4 — IN PROGRESS.**
-
-#79 and #82 are complete. The current mandatory Team Lead path is:
-
-```text
-#89 / CHG-0007 governance transition
-→ #78 / CHG-0006 production runtime authorization
-→ #81 production topology + synchronized #80
-→ #83 production-smoke using #79/#82
-→ #84 final Gate 4 acceptance/freeze/promotion
-```
-
-#41 remains optional.
+The earlier baseline documents are not updated to relabel their historical scope.
+Accidental Issue #73 remains closed not_planned from Gate 3 housekeeping.

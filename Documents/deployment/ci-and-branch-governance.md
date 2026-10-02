@@ -2,7 +2,7 @@
 
 **Historical foundation:** Gate 2G / BL-FOUNDATION-001  
 **Gate 3 governance:** CHG-0005  
-**Gate 4 governance:** CHG-0007 (effective only after its transition PR merges)  
+**Gate 4 governance:** CHG-0007 (effective through PR #90)  
 **Current Gate:** Gate 4 — Production Readiness, Release Hardening & Bonus Enhancements
 
 ## Active CI checks
@@ -17,7 +17,7 @@ The current repository workflow defines five stable required jobs:
 
 The first three originated in Gate 2. `docker-smoke` was added in Gate 3 closure to verify the complete development runtime after CHG-0003 was applied.
 
-Gate 4 Issue #83 adds `production-smoke`. All five jobs must complete successfully on the final PR HEAD for Gate 4 closure and `dev → main` promotion. Pending, skipped, cancelled or incomplete jobs do not count. GitHub Actions Check Runs are the evidence; a legacy combined status marked pending with zero status contexts is not a failed Actions job.
+Gate 4 Issue #83 added `production-smoke` through PR #98. All five jobs must complete successfully on the final PR HEAD for Gate 4 closure and `dev → main` promotion. Pending, skipped, cancelled or incomplete jobs do not count. GitHub Actions Check Runs are the evidence; a legacy combined status marked pending with zero status contexts is not a failed Actions job.
 
 ## Workflow triggers
 
@@ -62,7 +62,8 @@ migrations, collected project/admin assets, internal ports/dependency health,
 worker response/task registration and Beat state. It reuses #79 preflight and #82
 HTTP/static verification with `--require-all`; no competing HTTP verifier exists.
 
-Additional acceptance covers exact project CSS bytes, home/login/API/OpenAPI,
+Additional acceptance covers exact project CSS bytes, replacement of stale/future-
+dated CSS and removal of obsolete assets on a retained static volume, home/login/API/OpenAPI,
 private/source-file denial, separate PostgreSQL/Redis outages returning bounded
 503 while liveness remains 200, and secure redirects despite forged forwarded
 protocol input. The HTTP smoke override is explicit; secure cookies remain on.
@@ -74,7 +75,7 @@ containers/volumes. The temporary #81 production-candidate workflow is removed.
 
 CHG-0005 remains a historical Gate 3 governance record and is not silently extended to Gate 4.
 
-After the CHG-0007 transition PR is explicitly reviewed and merged by the Team Lead, normal Gate 4 work uses:
+CHG-0007 is effective after the explicit Team Lead merge of PR #90. Normal Gate 4 work uses:
 
 ```text
 Issue
@@ -104,7 +105,7 @@ Team Lead Verification remains mandatory and must consider scope, integration st
 
 The CHG-0007 PR is the one-time transition from the provisional Gate 4 peer-review rule to Team Lead Verification.
 
-It may reach merge readiness without independent peer approval because the Team Lead explicitly authorized the governance transition. CHG-0007 becomes effective only after that PR is merged to `dev` by the Team Lead.
+It may reach merge readiness without independent peer approval because the Team Lead explicitly authorized the governance transition. PR #90 activated CHG-0007 on dev at `73edb696a1cfed4994462b6ce5d5105925658228`. This is an applied historical transition, not a pending blocker.
 
 PR #88 / Issue #79 merged before CHG-0007 became effective and had no independent peer `APPROVED` review. Under the provisional Gate 4 rule it remains a one-time historical Governance Exception; history is not rewritten retroactively.
 
@@ -112,11 +113,10 @@ PR #88 / Issue #79 merged before CHG-0007 became effective and had no independen
 
 Gate 4 governance approval is separate from runtime/foundation authorization.
 
-- #78 / CHG-0006 must authorize production topology/runtime/security changes before #81 is merged;
-- the runtime/settings portion of #80 must not merge before #78 / CHG-0006;
+- #78 / CHG-0006 is effective through PR #91 at `655eb97f1fc75357462e706da52abe91319cc921`; it authorized #80/#81 before their verified merges;
 - #79 production preflight is already complete because it adds verification tooling rather than topology;
-- #82 may develop reusable external verification tooling independently and finalize against stable #80/#81 public contracts;
-- #83 must reuse #79/#82 tooling rather than duplicating equivalent checks in workflow YAML.
+- #82 supplies the reusable public verifier; #83 consumes the finalized #80/#81 routes/static contract;
+- #83 reuses #79/#82 tooling; all five required jobs are now active and mandatory.
 
 ## Native branch protection
 
@@ -129,3 +129,22 @@ That platform limitation does not waive Issue → PR → CI → Team Lead Verifi
 Historical PRs retain the classification applicable at their merge time. Governance changes are prospective and never rewrite history.
 
 Detailed current gate/audit status is maintained in `Documents/project-control/gate-status.md`.
+
+## Gate 4 freeze and authorized closeout
+
+Gate 4 is CLOSED/FROZEN on dev at technical freeze point
+`f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`; [acceptance evidence](../testing/gate4-acceptance-verification.md)
+records the verified CI and security/runtime checks. Documentation activation is
+a separate dev merge. Issue #84 and Tracker #77 remain open until main promotion.
+
+The owner's explicit Work-session Team Lead override authorizes Squash merges of
+verified #80/#81/#83/#84 scopes into dev. Before each merge: re-fetch dev, require
+behind_by=0, completed SUCCESS checks, clean Issue scope, resolved/dispositioned
+material findings and no material unresolved thread; capture current PR HEAD,
+merge with that expected SHA, then re-fetch the merge commit and update the Issue
+and Tracker. This is a specific override, not a standing automation permission.
+It grants no dev-to-main merge or auto-merge authorization.
+
+The final milestone PR remains open for manual Team Lead review/merge with all
+five required checks green. #95/#96 final finishing tasks are completed through verified PR #100 under
+the owner's subsequent explicit closeout instruction. #41 is explicitly deferred; HTTP reporting authoritative.

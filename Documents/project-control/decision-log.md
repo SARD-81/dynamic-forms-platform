@@ -140,3 +140,37 @@ PR #88 / Issue #79 remains a historical Gate 4 Governance Exception because it m
 **Change-control classification:** Structural repository-governance change for Gate 4 only.
 
 Tracked by CHG-0007. No architecture, data, application, runtime or settings baseline is changed by this decision.
+
+
+## 2026-10-02 UTC — Gate 4 applied runtime acceptance and freeze on dev
+
+**Context:** #78 / CHG-0006 and #89 / CHG-0007 are effective through PR #91/#90.
+Remaining technical implementation was completed through #80 PR #87, #81 PR #97
+and #83 PR #98 under the owner's explicit Team Lead Work-session override.
+
+**Decision:** Freeze the actual verified implementation at
+`dev@f62cce74c67053ec2e2af06fb3ed75bd20a3ca00`. BL-FOUNDATION-003 supersedes the
+active engineering/runtime foundation only; BL-RELEASE-001 accepts the same SHA.
+Earlier baselines remain immutable and BL-APPLICATION-001 stays authoritative.
+Operational health/runtime changes do not warrant BL-APPLICATION-002.
+
+**Evidence:** Final #83 CI 37062061257, #95/#96 CI 37064542544, final correction CI 37066499042 and fresh integrated dev CI 37066868098
+completed all five required jobs SUCCESS; final corrected dev has 509 passing
+tests and actual production
+bootstrap/static/internal/public/outage/proxy acceptance. See the Gate 4
+acceptance record for precise findings, evidence and operating limits.
+
+**Activation:** The documentation-only #84 freeze PR requires its own green CI
+and authorized Squash merge into synchronized dev. Its merge SHA activates the
+documentation and is not the technical freeze point. Gate 4 becomes CLOSED/FROZEN
+on dev; #84/#77 remain open pending separately reviewed manual main promotion.
+No auto-merge or main merge is authorized in this Work session.
+
+**Optional scope:** #41 is deferred optional BONUS scope; HTTP reporting remains
+authoritative. #95/#96 were initially reserved as small optional code tasks for AmirReza.
+The Team Lead's subsequent instruction requested their completion in this Work
+session; PR #100 implements and verifies them before the final technical freeze.
+#41 is closed not_planned after the explicit optional-scope deferral.
+
+**Change-control classification:** Documentation/baseline activation of verified
+CHG-0006 runtime and CHG-0007 governance; no new application/domain semantics.

@@ -22,7 +22,9 @@ The active development topology now contains five services:
 - `celery-worker`
 - `celery-beat`
 
-Nginx and production orchestration remain out of scope.
+Nginx and production orchestration are outside this development Compose contract.
+Gate 4 supplies a separate [production topology](production.md) through
+`compose.production.yaml`; development behavior remains unchanged.
 
 ## Images and runtime
 
@@ -214,3 +216,4 @@ docker compose --env-file .env exec celery-worker \
 ### Bake/buildx warning
 
 A warning that Docker Compose is configured to build using Bake while buildx is unavailable is non-blocking when the ordinary Docker builder completes successfully. The project does not require buildx.
+
