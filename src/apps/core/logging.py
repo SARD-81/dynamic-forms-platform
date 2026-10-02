@@ -4,10 +4,16 @@ import traceback
 
 SENSITIVE_KEY = (
     r"(?:[\w-]*(?:password|passwd|secret|token|api[_-]?key|credential)[\w-]*|"
+    r"smtp[_-]?(?:user|username)|django_email_host_user|"
     r"pass|otp|code|verification[_\s-]?code)"
 )
 
 SENSITIVE_PATTERNS = [
+    # Some API clients embed a token as URI userinfo without a password delimiter.
+    (
+        re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+)(@)"),
+        r"\1[REDACTED]\3",
+    ),
     # Quoted and bytes-rendered authorization values occur in exception/debug logs.
     (
         re.compile(r"(?i)(\bbearer\s+)(?:[bu])?([\"'])(.*?)\2", re.DOTALL),
