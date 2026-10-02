@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS  
 **Tracker:** GitHub Issue #77  
-**Current integration state at control-plane repair:** `dev@4b232c41cbbc45b58dbb468b63bcdcfbde0ea76a`  
+**Current integration state at control-plane repair:** `dev@e37edbe063e46cf8dac9f2e57ca8f4f555801384`  
 **Gate 3 promotion:** `main@419e71961ad68a7cca9b0ef04a13501ef6c4b8cd`
 
 ## Purpose
@@ -29,22 +29,22 @@ Structural production-runtime changes require explicit Change Control. Issue #78
 
 ## Current Wave 1 state
 
-- #79 — **COMPLETED** through PR #88; production preflight interface is now available on `dev`;
+- #79 — **COMPLETED** through PR #88; production preflight interface is available on `dev`;
+- #82 — **COMPLETED** through PR #94; reusable external HTTP/static verifier is available on `dev` and final production route/static inputs are supplied by #80/#81/#83;
 - #80 — implementation exists in Draft PR #87 but runtime/settings changes are **BLOCKED FROM MERGE** until #78 / CHG-0006 is approved/applied and the branch is synchronized with current `dev`;
 - #78 — current primary Team Lead task; authorizes the production runtime/topology boundary;
-- #82 — may begin from the stable #79 interface and finalize against stable #80/#81 public contracts;
 - #85 — superseded stale kickoff PR;
-- #86 — superseded stale #79 documentation draft;
-- #89 / CHG-0007 — Gate 4 governance transition; becomes effective only when its transition PR is merged.
+- #86 — superseded stale documentation draft;
+- #89 / CHG-0007 — Gate 4 governance transition; becomes effective only when its transition PR is manually merged.
 
 ## Team ownership
 
 ### Mahsa-Alipour
 
 - [x] #79 — production preflight management command and deployment-safety tests;
-- [ ] #82 — reusable production HTTP/static smoke verifier.
+- [x] #82 — reusable production HTTP/static smoke verifier.
 
-Mahsa owns development tooling that directly supports #81, #83 and #84. Her work should remain mostly in new/self-contained files to minimize overlap with production topology work.
+Mahsa's two Gate 4 tooling interfaces are now present on `dev` and become inputs to #81/#83/#84. The verifier deliberately remains topology-agnostic and configurable so #83 can invoke it with the final login/API/OpenAPI/health/static paths after #80/#81 are stable.
 
 She does not own Nginx/Compose architecture, proxy/security decisions or Django Template/HTML work.
 
@@ -68,11 +68,10 @@ SARD-81 owns production architecture/security/change control, all Django Templat
 ## Parallel-work principle
 
 - #78 is the mandatory authorization blocker for #81 and the runtime portion of #80.
-- #79 is complete and its stable command interface may be consumed immediately.
-- #82 can proceed using #79 and remain independent from Nginx/Compose internals; final route/static assertions synchronize with stable #80/#81 interfaces.
+- #79 internal preflight and #82 external verifier are complete and reusable immediately.
 - #81 starts only after #78 is merged.
 - #80 returns from Draft only after #78 is merged and its branch is synchronized with current `dev`.
-- #83 reuses #79/#82 tooling instead of duplicating those checks in workflow YAML.
+- #83 reuses #79/#82 tooling instead of duplicating those checks in workflow YAML; it supplies the final required route/static arguments to #82's verifier.
 - #41 is optional and should wait until production proxy topology is stable if selected.
 
 ## WAVE 1 — Authorization + operational interfaces
@@ -80,12 +79,12 @@ SARD-81 owns production architecture/security/change control, all Django Templat
 - #89 — SARD-81 — Gate 4 governance transition / CHG-0007
 - #78 — SARD-81 — production runtime authorization / CHG-0006
 - #79 — Mahsa — **DONE** production preflight command/tests
+- #82 — Mahsa — **DONE** reusable production HTTP/static verifier
 - #80 — AmirReza — Draft implementation held pending #78
 
-## WAVE 2 — Production implementation + verification tooling
+## WAVE 2 — Production implementation
 
 - #81 — SARD-81 — production ASGI/Nginx/collectstatic; requires #78
-- #82 — Mahsa — reusable production HTTP/static verifier
 - #80 — AmirReza — synchronize/finalize runtime health/readiness/logging after #78 authorization
 
 ## WAVE 3 — Automated production verification
@@ -108,7 +107,8 @@ Mandatory dependency for Gate 4 closure: #78–#83 complete. #41 is optional.
        │                                                                  │
        └────────→ #80 runtime application [AmirReza] ─────────────────────┤
                                                                             ↓
-#79 Preflight [Mahsa] DONE ─→ #82 HTTP/static verifier [Mahsa] ─────→ #83 production-smoke [AmirReza]
+#79 Preflight [Mahsa] DONE ────────────────────────────────────────────────┤
+#82 HTTP/static verifier [Mahsa] DONE ─────────────────────────────→ #83 production-smoke [AmirReza]
                                                                             │
 #81 ──→ optional #41 Real-time [SARD-81]                                    │
                                                                             ↓
@@ -134,8 +134,8 @@ Before Gate 4 closes, verify:
 11. proxy/HTTPS/security handling is explicit and regression-tested;
 12. liveness/readiness and production-safe logging exist;
 13. #79 `production_preflight` is reused rather than reimplemented;
-14. #82 external verifier validates public HTTP/static behavior;
-15. #83 provides deterministic automated production-topology verification;
+14. #82 external verifier validates public HTTP/static behavior with bounded timeout, deterministic non-zero failure and no response-body leakage;
+15. #83 provides deterministic automated production-topology verification and invokes #82 with all mandatory production checks;
 16. Gate 3 application semantics remain regression-green.
 
 ## Required CI
@@ -158,6 +158,8 @@ Owned by #78. It authorizes the exact topology/runtime/security boundary before 
 ### CHG-0007 — Gate 4 governance
 
 Owned by #89. It adopts Team Lead Verification for Gate 4 without silently extending Gate 3 CHG-0005. Independent peer approval becomes optional after CHG-0007 is merged; Team Lead review/explicit merge authorization remains mandatory.
+
+PR #88/#79 and PR #94/#82 merged before CHG-0007 became effective and therefore remain historical Gate 4 Governance Exceptions under the provisional rule active at their merge time.
 
 ### Gate 4 baselines
 
@@ -191,7 +193,7 @@ The CHG-0007 transition PR itself is a one-time Team Lead-authorized governance 
 - [x] #79 complete
 - [ ] #80 complete
 - [ ] #81 complete
-- [ ] #82 complete
+- [x] #82 complete
 - [ ] #83 complete
 - [ ] clean production-oriented bootstrap verified
 - [ ] production ASGI serving verified without `runserver`
@@ -199,7 +201,7 @@ The CHG-0007 transition PR itself is a one-time Team Lead-authorized governance 
 - [ ] proxy/security/environment boundaries verified
 - [ ] health/readiness/logging verified
 - [ ] #79 preflight reused and verified
-- [ ] #82 external HTTP/static verifier verified
+- [ ] #82 external HTTP/static verifier invoked against the complete production route/static set
 - [ ] PostgreSQL/Redis/Celery runtime verified
 - [ ] full pytest green
 - [ ] migration drift green
