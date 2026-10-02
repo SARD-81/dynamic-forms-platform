@@ -24,7 +24,7 @@ Use short-lived Issue-linked branches created from current `dev`.
 9. Complete Team Lead Verification.
 10. Merge only after explicit Team Lead authorization.
 
-Independent peer review is welcome but, after CHG-0007 becomes effective for Gate 4, it is optional rather than a mandatory merge/Definition-of-Done gate. Reviewers must not be auto-requested merely to satisfy process.
+Independent peer review is welcome but, under effective CHG-0007 for Gate 4, it is optional rather than a mandatory merge/Definition-of-Done gate. Reviewers must not be auto-requested merely to satisfy process.
 
 ## Milestone promotion
 
@@ -39,7 +39,7 @@ At an approved milestone:
 5. complete Team Lead Verification;
 6. merge only after explicit Team Lead authorization.
 
-Gate 4 promotion additionally requires the stable `production-smoke` verification introduced by #83 before closure/promotion.
+Gate 4 promotion requires all five active checks, including `production-smoke` introduced by #83.
 
 ## Current required CI checks
 
@@ -47,8 +47,9 @@ Gate 4 promotion additionally requires the stable `production-smoke` verificatio
 - `test`
 - `migration-check`
 - `docker-smoke`
+- `production-smoke`
 
-`production-smoke` becomes required for Gate 4 closure/promotion after #83 introduces it.
+All five must complete successfully on the final PR HEAD. Pending, cancelled or skipped checks are insufficient.
 
 ## Review / Team Lead Verification rules
 
@@ -70,11 +71,13 @@ Verify as applicable:
 
 ## Gate 4 control boundaries
 
-- #78 / CHG-0006 authorizes production runtime/topology/security changes before #81 and the runtime portion of #80 may merge.
+- #78 / CHG-0006 is effective through PR #91 and authorized the verified #80/#81 runtime changes.
 - #79 production preflight is complete and supplies a reusable internal verification interface.
 - #82 owns reusable external HTTP/static verification without defining Nginx/Compose architecture.
-- #83 owns production-smoke CI and should reuse #79/#82 tooling.
-- #41 real-time reporting remains optional/non-blocking.
+- #83 supplies the mandatory production-smoke job and reuses #79/#82 tooling.
+- #41 is deferred optional BONUS scope; HTTP reporting remains authoritative.
+- #95/#96 final finishing tasks are complete; no contributor task remains open.
+- Gate 4 is CLOSED/FROZEN on dev; #84 and #77 stay open until manual milestone promotion.
 
 ## Environment rule
 
@@ -95,3 +98,4 @@ A frozen decision may change only through:
 3. approval;
 4. applied/verified implementation;
 5. a superseding baseline when required.
+

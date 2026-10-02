@@ -115,3 +115,14 @@ docker compose --project-name dynamic-forms-production --env-file .env.productio
 
 `-v` deletes the database, broker and static volumes. Never use it as a production
 update/rollback command. CI always tears down its own isolated smoke project.
+
+## Frozen acceptance and release status
+
+BL-FOUNDATION-003 and BL-RELEASE-001 freeze the implemented topology at
+`df5609b17f8238661b7cc464228f5837ce7f4537`. Mandatory production-smoke runs alongside
+the existing development job and verifies initialization, internal services,
+public routes/static, outages and proxy security. See the
+[acceptance record](../testing/gate4-acceptance-verification.md) for exact run IDs
+and limits of the evidence. Gate 4 is CLOSED/FROZEN on dev; main promotion remains
+a separate manual Team Lead action. TLS certificates, actual deployment secrets,
+backups and real SMTP/API destinations remain operator configuration.

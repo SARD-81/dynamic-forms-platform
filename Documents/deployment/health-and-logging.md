@@ -1,10 +1,12 @@
 # Operational health and logging
 
-`GET /health/live/` returns `200 {"status":"ok"}` when Django can answer a request.
-It does not consult PostgreSQL or Redis. `GET /health/ready/` returns the same
+`GET`/`HEAD /health/live/` returns `200 {"status":"ok"}` when Django can answer a request.
+It does not consult PostgreSQL or Redis. `GET`/`HEAD /health/ready/` returns the same
 success shape only when a fresh PostgreSQL `SELECT 1` and a unique cache
 set/get/delete probe succeed. Failure returns a generic `503 {"status":"not_ready"}`.
-These routes require no login and reveal no host, URL, password or exception.
+HEAD follows the same status decision as GET and sends no response body. Other
+methods return 405 without probing dependencies. These routes require no login
+and reveal no host, URL, password or exception.
 
 The database probe uses a disposable Django connection. Its query timeout and TCP
 keepalive options never change a business connection's session. Connections are

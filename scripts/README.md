@@ -33,7 +33,7 @@ Invalid header/digest arguments do not expose their supplied values in diagnosti
 CI and final acceptance should use --require-all.
 
 Each check expects HTTP 200 by default. Override an expected status only to match
-the agreed endpoint contract, for example --readiness-status 204.
+the agreed endpoint contract, for example --readiness-status 503 during a dependency-outage acceptance check.
 
 Login, API and schema paths are also configurable. See --help.
 
@@ -42,6 +42,7 @@ Login, API and schema paths are also configurable. See --help.
 - 0: all selected checks passed; inspect the summary for partial coverage.
 - 1: at least one HTTP check failed.
 - 2: invalid command-line arguments.
+- 130: interrupted by Ctrl+C; one fixed safe stderr message, no traceback or later requests.
 
 Redirects are not followed. Response bodies, full URLs and exception messages
 are not printed. TLS certificate verification remains enabled.
@@ -70,7 +71,7 @@ statuses.
 ### Tests
 
 ```bash
-python -m pytest tests/test_verify_production.py -q
+python -m pytest tests/test_verify_production.py tests/test_verify_production_extensions.py tests/test_verifier_interrupt.py -q
 ```
 
 The tests include a local HTTP server and standalone CLI execution. They do not
