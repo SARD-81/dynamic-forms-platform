@@ -13,7 +13,7 @@ SENSITIVE_PATTERNS = [
     (
         re.compile(
             r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s\"']+):"
-            r"([^\s\"']+)(@[^\"'\s,;]+)"
+            r"([^\s\"']*)(@[^\"'\s,;]+)"
         ),
         r"\1[REDACTED]:[REDACTED]\4",
     ),
