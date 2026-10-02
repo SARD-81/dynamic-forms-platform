@@ -16,15 +16,19 @@ SKIP, and the summary explicitly identifies incomplete coverage.
 ```bash
 python scripts/verify_production.py \
   --base-url https://your-host.example \
-  --liveness-path /REPLACE_WITH_CONFIRMED_LIVENESS_PATH \
-  --readiness-path /REPLACE_WITH_CONFIRMED_READINESS_PATH \
-  --static-path /REPLACE_WITH_CONFIRMED_STATIC_ASSET_PATH \
+  --liveness-path /health/live/ \
+  --readiness-path /health/ready/ \
+  --static-path /static/core/app.css \
   --timeout 5 \
   --require-all
 ```
 
-The paths above are placeholders. Obtain the final public routes from Issue #80
-and the collected static asset path/public origin from Issue #81.
+These are the stable #80/#81 public routes. Set the base URL to your deployed
+origin. `--static-sha256 <64-hex-digest>` optionally checks that the selected asset
+has the expected bytes (at most 2 MiB); only this opt-in check reads a response body,
+and that body is never printed. `--header Name:value` supplies an optional request
+header, used by CI to test that forged forwarded protocol is overwritten by Nginx.
+Invalid header/digest arguments do not expose their supplied values in diagnostics.
 
 CI and final acceptance should use --require-all.
 
@@ -71,4 +75,18 @@ python -m pytest tests/test_verify_production.py -q
 
 The tests include a local HTTP server and standalone CLI execution. They do not
 prove that the final production proxy, health routes or static deployment work;
-those require the stable #80/#81 interfaces.
+those require the production-smoke job against the real #80/#81 topology.
+
+## Production runtime verifier
+
+`verify_production_runtime.py` checks only Compose/container/runtime internals and
+calls the existing production_preflight command. It leaves every public HTTP
+assertion in verify_production.py. Raw config/inspect output is withheld because
+it includes environment secrets.
+
+```bash
+python scripts/verify_production_runtime.py --env-file .env.production --project-name dynamic-forms-production
+```
+
+See the [production guide](../Documents/deployment/production.md) for start/stop,
+static volumes, TLS-edge trust, safe local smoke and destructive smoke-only cleanup.

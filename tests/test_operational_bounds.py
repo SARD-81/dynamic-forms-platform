@@ -158,6 +158,8 @@ def test_timeout_configuration_rejects_invalid_values_without_echo(monkeypatch, 
         "otp",
         "SMTP_PASSWORD",
         "DJANGO_EMAIL_HOST_PASSWORD",
+        "DJANGO_EMAIL_HOST_USER",
+        "smtp_username",
         "access_secret",
         "resume_token",
         "delivery_secret",
@@ -275,3 +277,9 @@ def test_bytes_and_quoted_authorization_values_are_redacted(value):
     assert "bytes-private" not in cleaned
     assert "quoted-private" not in cleaned
     assert "[REDACTED]" in cleaned
+
+
+def test_url_userinfo_token_without_password_delimiter_is_redacted():
+    cleaned = scrub_sensitive_text("https://userinfo-private@example.test/api")
+    assert "userinfo-private" not in cleaned
+    assert "https://[REDACTED]@example.test/api" in cleaned

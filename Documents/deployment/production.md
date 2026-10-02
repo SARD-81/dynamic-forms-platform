@@ -51,7 +51,9 @@ SSL redirect is required and applies only to that disposable smoke environment.
 
 Nginx overwrites `X-Forwarded-Proto` with the configured validated `http`/`https`
 mode; it never copies the incoming header. Proxy connect/read/send timeouts are
-3/15/15 seconds. Upgrade headers are compatible with future #41 work, but no
+3/15/15 seconds. Docker DNS is re-resolved on a finite cache interval, so a web
+container replacement does not leave Nginx pointing permanently at an old IP.
+Upgrade headers are compatible with future #41 work, but no
 WebSocket report implementation is claimed. HTTP reporting remains authoritative.
 
 Nginx access logs omit query strings/referers. Per-request Nginx error logs and
