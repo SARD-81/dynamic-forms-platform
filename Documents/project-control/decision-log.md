@@ -133,7 +133,7 @@ The mandatory human merge gate remains Team Lead Verification backed by green ap
 
 Automation/assistant work may prepare and verify Gate 4 PRs but does not merge them unless the repository owner gives an explicit per-merge override to the standing no-assistant-merge rule.
 
-PR #88 / Issue #79 remains a historical Gate 4 Governance Exception because it merged before CHG-0007 became effective without the independent peer approval required by the provisional Gate 4 rule. PR #85 and PR #86 are superseded. PR #87 remains Draft/merge-blocked until #78 / CHG-0006 authorizes its runtime/foundation boundary.
+PR #88 / Issue #79 remains a historical Gate 4 Governance Exception because it merged before CHG-0007 became effective without the independent peer approval required by the provisional Gate 4 rule. PR #94 / Issue #82 subsequently merged under the same still-provisional rule before CHG-0007 became effective and is likewise retained as a historical Gate 4 Governance Exception. Both technical interfaces remain accepted inputs to downstream Gate 4 integration after their green CI evidence. PR #85 and PR #86 are superseded. PR #87 remains Draft/merge-blocked until #78 / CHG-0006 authorizes its runtime/foundation boundary.
 
 **Reason:** Preserve explicit Team Lead accountability and all technical verification controls without reintroducing mandatory reviewer-request churn that the repository owner rejected.
 
