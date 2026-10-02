@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_safe
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def check_redis() -> bool:
         return False
 
 
-@require_GET
+@require_safe
 def health_live(request):
     """
     Liveness probe: verifies that the web process is running and responding.
@@ -64,7 +64,7 @@ def health_live(request):
     return JsonResponse({"status": "ok"}, status=200)
 
 
-@require_GET
+@require_safe
 def health_ready(request):
     """
     Readiness probe: verifies that critical backing services (PostgreSQL, Redis)
