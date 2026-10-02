@@ -9,6 +9,14 @@ SENSITIVE_KEY = (
 )
 
 SENSITIVE_PATTERNS = [
+    # Usernames can also be credentials, particularly in SMTP connection URIs.
+    (
+        re.compile(
+            r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+):"
+            r"([^\s\"']+)(@[^\"'\s,;]+)"
+        ),
+        r"\1[REDACTED]:[REDACTED]\4",
+    ),
     # Some API clients embed a token as URI userinfo without a password delimiter.
     (
         re.compile(r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^/:\s@\"']+)(@)"),
