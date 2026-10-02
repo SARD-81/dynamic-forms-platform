@@ -1,7 +1,6 @@
 import logging
 
-import redis
-from django.conf import settings
+from django.core.cache import cache
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
@@ -11,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 def check_database() -> bool:
     """
-    Verifies PostgreSQL database connectivity with a lightweight bounded query.
+    Verifies PostgreSQL database connectivity with a lightweight query.
+    PostgreSQL connection timeouts are governed by the settings contract (#78).
     Returns True if healthy, False otherwise without leaking internal details.
     """
     try:
@@ -26,40 +26,20 @@ def check_database() -> bool:
 
 def check_redis() -> bool:
     """
-    Verifies Redis connectivity with bounded connection and socket timeouts.
-    Returns True if healthy, False otherwise without leaking credentials or URLs.
+    Verifies Redis connectivity via Django Cache abstraction.
+    Performs a lightweight, non-destructive probe (set, get, delete)
+    on DB0 without creating direct Redis client instances.
     """
-    redis_url = getattr(settings, "REDIS_CACHE_URL", None)
-    if not redis_url:
-        cache_conf = settings.CACHES.get("default", {})
-        if "redis" in cache_conf.get("BACKEND", "").lower():
-            redis_url = cache_conf.get("LOCATION")
-
-    if not redis_url:
-        broker_url = getattr(settings, "CELERY_BROKER_URL", None)
-        if broker_url and str(broker_url).startswith(("redis://", "rediss://")):
-            redis_url = broker_url
-
-    if not redis_url or not str(redis_url).startswith(("redis://", "rediss://")):
-        return False
-
-    client = None
+    probe_key = "health:ready:probe"
+    probe_val = "1"
     try:
-        client = redis.Redis.from_url(
-            redis_url,
-            socket_connect_timeout=2.0,
-            socket_timeout=2.0,
-        )
-        return bool(client.ping())
+        cache.set(probe_key, probe_val, timeout=5)
+        val = cache.get(probe_key)
+        cache.delete(probe_key)
+        return val == probe_val
     except Exception:
         logger.warning("Redis readiness check failed", exc_info=False)
         return False
-    finally:
-        if client is not None:
-            try:
-                client.close()
-            except Exception:
-                pass
 
 
 @require_GET

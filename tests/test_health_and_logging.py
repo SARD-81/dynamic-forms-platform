@@ -1,5 +1,6 @@
 import importlib
 import logging
+import sys
 
 import pytest
 from django.urls import reverse
@@ -81,29 +82,16 @@ def test_check_database_unit_failure(monkeypatch):
     assert check_database() is False
 
 
-def test_check_redis_unit(monkeypatch):
-    class MockRedisClient:
-        def __init__(self, should_fail=False):
-            self.should_fail = should_fail
-
-        def ping(self):
-            if self.should_fail:
-                raise ConnectionError("Redis server refused connection")
-            return True
-
-        def close(self):
-            pass
-
-    monkeypatch.setattr(
-        "redis.Redis.from_url",
-        lambda *args, **kwargs: MockRedisClient(should_fail=False),
-    )
+def test_check_redis_unit_healthy():
     assert check_redis() is True
 
-    monkeypatch.setattr(
-        "redis.Redis.from_url",
-        lambda *args, **kwargs: MockRedisClient(should_fail=True),
-    )
+
+def test_check_redis_unit_failure(monkeypatch):
+    class FailingCache:
+        def set(self, *args, **kwargs):
+            raise ConnectionError("Redis cache unavailable")
+
+    monkeypatch.setattr("apps.core.health.cache", FailingCache())
     assert check_redis() is False
 
 
@@ -122,6 +110,46 @@ def test_sensitive_data_filter_redacts_credentials():
     assert "super_secret_password" not in record.msg
     assert "tok_abc123456" not in record.msg
     assert "[REDACTED]" in record.msg
+
+
+def test_sensitive_data_filter_redacts_parameterized_logging():
+    log_filter = SensitiveDataFilter()
+    secret_value = "super_secret_cleartext_password"
+    record = logging.LogRecord(
+        name="test_logger",
+        level=logging.INFO,
+        pathname="test.py",
+        lineno=12,
+        msg="Login attempt with password=%s and token=%s",
+        args=(secret_value, "Bearer secret_api_token_123"),
+        exc_info=None,
+    )
+    assert log_filter.filter(record) is True
+    assert secret_value not in record.msg
+    assert "secret_api_token_123" not in record.msg
+    assert record.args == ()
+    assert "[REDACTED]" in record.msg
+
+
+def test_sensitive_data_filter_redacts_exception_traceback():
+    log_filter = SensitiveDataFilter()
+    try:
+        raise ValueError("Failed connecting to redis://user:hidden_auth_pwd@redis:6379/0")
+    except ValueError:
+        exc_info = sys.exc_info()
+
+    record = logging.LogRecord(
+        name="test_logger",
+        level=logging.ERROR,
+        pathname="test.py",
+        lineno=20,
+        msg="Unexpected error occurred",
+        args=(),
+        exc_info=exc_info,
+    )
+    assert log_filter.filter(record) is True
+    assert "hidden_auth_pwd" not in record.exc_text
+    assert "[REDACTED]" in record.exc_text
 
 
 def test_sensitive_data_scrubbing_functions():

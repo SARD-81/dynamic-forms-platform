@@ -1,29 +1,29 @@
 import logging
 import re
+import traceback
 
-# Masking patterns for sensitive data
 SENSITIVE_PATTERNS = [
-    # Key-value assignments for sensitive terms (password, secret, token, otp, key)
+    # 1. Authorization header bearer tokens (must run before general key-values)
     (
-        re.compile(
-            r"""(?i)(["']?(?:password|pass|secret|token|otp|code|api_key|delivery_secret|smtp_password)["']?\s*[:=]\s*["']?)([^"'\s,;]+)"""
-        ),
+        re.compile(r"(?i)\b(bearer\s+)([A-Za-z0-9_\-\.]+)"),
         r"\1[REDACTED]",
     ),
-    # Authorization header bearer tokens
-    (
-        re.compile(r"(?i)(bearer\s+)([A-Za-z0-9_\-\.]+)"),
-        r"\1[REDACTED]",
-    ),
-    # Credentials inside connection URIs (postgres://user:pass@host or redis://:pass@host)
+    # 2. Credentials inside connection URIs (postgres://user:pass@host or redis://:pass@host)
     (
         re.compile(r"([a-zA-Z]+://[^:]+:)([^@]+)(@.+)"),
         r"\1[REDACTED]\3",
     ),
-    # Standalone numeric OTP codes (4 to 8 digits) when preceded by otp/code keywords
+    # 3. Standalone numeric OTP codes (4 to 8 digits) when preceded by otp/code keywords
     (
         re.compile(r"(?i)(otp|verification[_\s-]?code)\s*[:=]?\s*(\b\d{4,8}\b)"),
         r"\1: [REDACTED]",
+    ),
+    # 4. Key-value assignments for sensitive terms (password, secret, token, api_key, etc.)
+    (
+        re.compile(
+            r"""(?i)(["']?(?:password|pass|secret|token|otp|code|api_key|delivery_secret|smtp_password)["']?\s*[:=]\s*["']?(?:bearer\s+)?)(?!\[REDACTED\])([^"'\s,;]+)"""
+        ),
+        r"\1[REDACTED]",
     ),
 ]
 
@@ -41,22 +41,28 @@ class SensitiveDataFilter(logging.Filter):
     """
     Logging filter that sanitizes log records to prevent leaking passwords,
     OTP codes, tokens, and infrastructure secrets in production logs.
+    Handles parameterized logging messages and exception tracebacks safely.
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
-        if isinstance(record.msg, str):
-            record.msg = scrub_sensitive_text(record.msg)
+        try:
+            rendered = record.getMessage()
+        except Exception:
+            rendered = str(record.msg)
 
-        if record.args:
-            if isinstance(record.args, dict):
-                record.args = {
-                    k: (scrub_sensitive_text(v) if isinstance(v, str) else v)
-                    for k, v in record.args.items()
-                }
-            elif isinstance(record.args, tuple):
-                record.args = tuple(
-                    scrub_sensitive_text(arg) if isinstance(arg, str) else arg
-                    for arg in record.args
-                )
+        record.msg = scrub_sensitive_text(rendered)
+        record.args = ()
+
+        if record.exc_info and not record.exc_text:
+            try:
+                record.exc_text = "".join(traceback.format_exception(*record.exc_info))
+            except Exception:
+                pass
+
+        if record.exc_text:
+            record.exc_text = scrub_sensitive_text(record.exc_text)
+
+        if getattr(record, "stack_info", None):
+            record.stack_info = scrub_sensitive_text(record.stack_info)
 
         return True
