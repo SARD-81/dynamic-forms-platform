@@ -24,6 +24,8 @@ DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True  # noqa: F405
 READINESS_DATABASE_HOST = required_env("POSTGRES_DIRECT_HOST")
 
 STATIC_URL = "/static/"
+# Native Django discovery resolves entrypoint paths from the repository root.
+ASGI_APPLICATION = "vercel_app.application"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"},
