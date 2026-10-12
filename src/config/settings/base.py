@@ -182,7 +182,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Dynamic Forms Platform API",
-    "DESCRIPTION": "API Foundation and documentation for Gate 3",
+    "DESCRIPTION": "Forms, processes, participant submissions and reporting API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
