@@ -3,11 +3,13 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.core.health import health_live, health_ready
+from apps.reports.cron import dispatch_reports
 
 handler403 = "apps.core.views.permission_denied"
 handler404 = "apps.core.views.page_not_found"
 
 urlpatterns = [
+    path("internal/cron/reports/", dispatch_reports, name="report_cron"),
     # Operational health endpoints
     path("health/live/", health_live, name="health_live"),
     path("health/ready/", health_ready, name="health_ready"),

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "django",
+  "regions": ["fra1"],
+  "functions": {
+    "vercel_app.py": {"maxDuration": 300},
+    "worker.py": {"maxDuration": 300}
+  },
+  "crons": [
+    {"path": "/internal/cron/reports/", "schedule": "0 3 * * *"}
+  ]
+}

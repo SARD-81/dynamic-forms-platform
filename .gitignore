@@ -15,6 +15,8 @@ env/
 .env.*
 !.env.example
 !.env.production.example
+!.env.vercel.example
+.vercel/
 
 # Django
 *.log

@@ -8,6 +8,11 @@ This is a Django application with both a browser interface and a REST API.
 PostgreSQL stores the data; Redis supports caching and the Celery report-delivery
 runtime. Development and production have separate Docker Compose entrypoints.
 
+An additional [Vercel deployment profile](Documents/deployment/vercel.md) uses
+Neon PostgreSQL, a shared atomic database cache, Vercel Queues and daily Cron.
+This profile is tracked separately by
+[CHG-0008](Documents/project-control/change-records/CHG-0008.md).
+
 ## Project status
 
 Gate 3's mandatory application behavior is complete and frozen. Gate 4 is
