@@ -8,6 +8,8 @@ The existing [Docker production guide](production.md) remains supported.
 - Vercel project: `dynamic-forms-platform`, team `sard-81s-projects`, region `fra1`.
 - Neon project: `dynamic-forms-production`, PostgreSQL 16, Frankfurt.
 - Runtime uses the pooled Neon hostname, TLS and no persistent Django connections.
+  The bounded disposable readiness probe uses POSTGRES_DIRECT_HOST, because
+  PgBouncer rejects statement_timeout in connection startup options.
 - `config.cache.AtomicDatabaseCache` stores shared cache data in `dynamic_forms_cache`.
 - Vercel builds the ASGI entrypoint and private Celery subscriber in `pyproject.toml`.
 - Daily Cron calls `/internal/cron/reports/` at 03:00 UTC (06:30 Tehran).
@@ -47,7 +49,7 @@ before making the production deployment public.
 
 ```bash
 python scripts/verify_production.py \
-  --base-url https://dynamic-forms-platform.vercel.app \
+  --base-url https://dynamic-forms-platform-tan.vercel.app \
   --liveness-path /health/live/ --readiness-path /health/ready/ \
   --static-path /static/core/app.css --timeout 20 --require-all
 ```

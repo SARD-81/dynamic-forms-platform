@@ -21,6 +21,8 @@ def check_database() -> bool:
     probe = None
     try:
         probe = connection.copy(alias="readiness")
+        if getattr(settings, "READINESS_DATABASE_HOST", None):
+            probe.settings_dict["HOST"] = settings.READINESS_DATABASE_HOST
         options = probe.settings_dict.get("OPTIONS", {}).copy()
         existing_options = options.get("options", "")
         options.update(settings.READINESS_DATABASE_OPTIONS)

@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 
@@ -36,6 +37,7 @@ class ParticipantFormSerializer(serializers.Serializer):
     questions = ParticipantQuestionSerializer(many=True)
 
 
+@extend_schema_serializer(component_name="FormParticipantUnlock")
 class ParticipantUnlockSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False, write_only=True)
 

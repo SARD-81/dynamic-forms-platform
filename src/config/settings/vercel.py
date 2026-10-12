@@ -19,6 +19,9 @@ for platform_variable in ("VERCEL_URL", "VERCEL_BRANCH_URL"):
 DATABASES["default"]["OPTIONS"]["sslmode"] = "require"  # noqa: F405
 DATABASES["default"]["CONN_MAX_AGE"] = 0  # noqa: F405
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True  # noqa: F405
+# PgBouncer rejects statement_timeout as a startup parameter. The disposable
+# readiness connection uses the direct endpoint while business traffic is pooled.
+READINESS_DATABASE_HOST = required_env("POSTGRES_DIRECT_HOST")
 
 STATIC_URL = "/static/"
 STORAGES = {
