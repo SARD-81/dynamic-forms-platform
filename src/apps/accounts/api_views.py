@@ -1,6 +1,7 @@
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -14,6 +15,10 @@ from .exceptions import (
     OTPThrottleError,
 )
 from .serializers import (
+    AccountDetailSerializer,
+    AccountErrorSerializer,
+    AccountResponseSerializer,
+    CSRFTokenSerializer,
     CurrentUserSerializer,
     LoginSerializer,
     OTPResendSerializer,
@@ -65,6 +70,7 @@ class CSRFApiView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(responses=CSRFTokenSerializer)
     def get(self, request):
         return Response({"csrf_token": get_token(request)})
 
@@ -74,6 +80,15 @@ class RegisterAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=RegistrationSerializer,
+        responses={
+            201: AccountResponseSerializer,
+            400: AccountErrorSerializer,
+            403: AccountErrorSerializer,
+            503: AccountErrorSerializer,
+        },
+    )
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -101,6 +116,14 @@ class VerifyOTPAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=OTPVerificationSerializer,
+        responses={
+            200: AccountResponseSerializer,
+            400: AccountErrorSerializer,
+            403: AccountErrorSerializer,
+        },
+    )
     def post(self, request):
         serializer = OTPVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -123,6 +146,16 @@ class ResendOTPAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=OTPResendSerializer,
+        responses={
+            200: AccountDetailSerializer,
+            400: AccountErrorSerializer,
+            403: AccountErrorSerializer,
+            429: AccountErrorSerializer,
+            503: AccountErrorSerializer,
+        },
+    )
     def post(self, request):
         serializer = OTPResendSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -142,6 +175,14 @@ class LoginAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        request=LoginSerializer,
+        responses={
+            200: AccountResponseSerializer,
+            400: AccountErrorSerializer,
+            403: AccountErrorSerializer,
+        },
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -163,6 +204,7 @@ class LogoutAPIView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(request=None, responses={204: None, 403: AccountErrorSerializer})
     def post(self, request):
         logout_user(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -172,5 +214,6 @@ class CurrentUserAPIView(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(responses={200: CurrentUserSerializer, 403: AccountErrorSerializer})
     def get(self, request):
         return Response(CurrentUserSerializer(request.user).data)

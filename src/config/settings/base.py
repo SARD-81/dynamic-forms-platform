@@ -2,7 +2,7 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-from config.env import bounded_int_env, required_env
+from config.env import bounded_int_env, env_value, required_env
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -124,24 +124,38 @@ ACCOUNT_OTP_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 PARTICIPANT_UNLOCK_RATE_LIMIT_COUNT = 5
 PARTICIPANT_UNLOCK_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 
-REDIS_CACHE_URL = required_env("REDIS_CACHE_URL")
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_CACHE_URL,
-        "OPTIONS": {
-            "socket_connect_timeout": bounded_int_env(
-                "REDIS_CONNECT_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
-            ),
-            "socket_timeout": bounded_int_env(
-                "REDIS_SOCKET_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
-            ),
-            "retry_on_timeout": False,
-            "retry_on_error": [],
-        },
+# Vercel can use the durable PostgreSQL cache when no Redis is provisioned.
+# Atomic add/incr remain mandatory for shared participant throttling.
+CACHE_BACKEND = env_value("DJANGO_CACHE_BACKEND", default="redis")
+if CACHE_BACKEND == "postgresql":
+    CACHES = {
+        "default": {
+            "BACKEND": "config.cache.AtomicDatabaseCache",
+            "LOCATION": "dynamic_forms_cache",
+            "OPTIONS": {"MAX_ENTRIES": 10000},
+        }
     }
-}
+elif CACHE_BACKEND == "redis":
+    REDIS_CACHE_URL = required_env("REDIS_CACHE_URL")
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_CACHE_URL,
+            "OPTIONS": {
+                "socket_connect_timeout": bounded_int_env(
+                    "REDIS_CONNECT_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
+                ),
+                "socket_timeout": bounded_int_env(
+                    "REDIS_SOCKET_TIMEOUT_SECONDS", default=1, minimum=1, maximum=5
+                ),
+                "retry_on_timeout": False,
+                "retry_on_error": [],
+            },
+        }
+    }
+else:
+    raise ValueError("DJANGO_CACHE_BACKEND must be redis or postgresql.")
 
 CELERY_BROKER_URL = required_env("CELERY_BROKER_URL")
 CELERY_TASK_IGNORE_RESULT = True
@@ -168,7 +182,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Dynamic Forms Platform API",
-    "DESCRIPTION": "API Foundation and documentation for Gate 3",
+    "DESCRIPTION": "Forms, processes, participant submissions and reporting API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }

@@ -78,6 +78,12 @@ def dispatch_due_report_subscriptions(as_of_iso=None):
             continue
         scheduled += 1
 
+    logger.info(
+        "Periodic report dispatch completed due=%s scheduled=%s failed=%s",
+        len(due),
+        scheduled,
+        failed_to_schedule,
+    )
     return {
         "due": len(due),
         "scheduled": scheduled,

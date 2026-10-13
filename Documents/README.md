@@ -39,6 +39,8 @@ runtime hardening do not change frozen form/process/report semantics.
 
 - [Environment contract](deployment/environment-contract.md)
 - [Production deployment, HTTPS trust, start/update/cleanup](deployment/production.md)
+- [Vercel deployment profile](deployment/vercel.md)
+- [CHG-0008: Vercel profile authorization](project-control/change-records/CHG-0008.md)
 - [Health, dependency bounds and logging](deployment/health-and-logging.md)
 - [Docker development](deployment/docker-development.md)
 - [CI and branch governance](deployment/ci-and-branch-governance.md)

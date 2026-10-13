@@ -33,3 +33,24 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("id", "username", "email")
         read_only_fields = fields
+
+
+class CSRFTokenSerializer(serializers.Serializer):
+    csrf_token = serializers.CharField()
+
+
+class AccountResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+    user = CurrentUserSerializer()
+
+
+class AccountErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField(required=False)
+    errors = serializers.DictField(required=False)
+    retry_after = serializers.IntegerField(required=False)
+    account_created = serializers.BooleanField(required=False)
+    email = serializers.EmailField(required=False)
+
+
+class AccountDetailSerializer(serializers.Serializer):
+    detail = serializers.CharField()

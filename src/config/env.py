@@ -79,3 +79,7 @@ def bounded_int_env(name: str, *, default: int, minimum: int, maximum: int) -> i
             f"Environment variable {name!r} must be an integer in [{minimum}, {maximum}]."
         )
     return value
+
+
+def env_value(name: str, *, default: str = "") -> str:
+    return os.getenv(name, default)

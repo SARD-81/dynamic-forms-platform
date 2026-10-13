@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
 
 from apps.forms.participant_serializers import ParticipantSubmissionAnswerSerializer
@@ -19,6 +20,7 @@ class ParticipantProcessSerializer(serializers.Serializer):
     steps = ParticipantProcessStepSerializer(many=True)
 
 
+@extend_schema_serializer(component_name="ProcessParticipantUnlock")
 class ParticipantUnlockSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False, write_only=True)
 
@@ -40,11 +42,13 @@ class ParticipantProcessRunDetailSerializer(serializers.Serializer):
     resume_token = serializers.SerializerMethodField()
     steps = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_resume_token(self, obj):
         if isinstance(obj, dict):
             return obj.get("resume_token")
         return getattr(obj, "resume_token", None)
 
+    @extend_schema_field(ParticipantStepRunSerializer(many=True))
     def get_steps(self, obj):
         if isinstance(obj, dict):
             return obj.get("steps", [])

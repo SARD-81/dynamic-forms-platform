@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import Http404
-from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
@@ -30,6 +30,17 @@ def _category_validation_response(errors):
     )
 
 
+@extend_schema(
+    responses=inline_serializer(
+        name="APIRoot",
+        fields={
+            "name": serializers.CharField(),
+            "version": serializers.CharField(),
+            "docs": serializers.CharField(),
+            "categories": serializers.CharField(),
+        },
+    )
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def api_root(request):
