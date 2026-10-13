@@ -9,6 +9,7 @@ from tests.test_production_security import production_env
 
 pytest.importorskip("vercel.integrations.celery")
 
+
 def vercel_env(**overrides):
     env = production_env(
         DJANGO_SETTINGS_MODULE="config.settings.vercel",
@@ -82,3 +83,15 @@ def test_vercel_retry_publish_keeps_original_task_id_without_deduplication():
         "for c in send.call_args_list]))'''; exec(code)"
     )
     assert calls == [["same-task", 0, None], ["same-task", 1, None]]
+
+
+def test_vercel_root_manage_collectstatic_discovers_static_command():
+    result = subprocess.run(
+        [sys.executable, "manage.py", "collectstatic", "--noinput", "--dry-run"],
+        env=vercel_env(VERCEL="1"),
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
