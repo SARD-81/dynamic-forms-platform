@@ -1,0 +1,6 @@
+-r base.txt
+
+# Keep in sync with the deployment dependencies in pyproject.toml.
+anyio>=4.12,<5
+vercel==0.11.6
+vercel-celery==0.7.8

@@ -12,6 +12,8 @@ dependencies = [
     "drf-spectacular==0.27.1",
     # Vercel's queue adapter dynamically imports the AnyIO asyncio backend.
     "anyio>=4.12,<5",
+    "vercel==0.11.6",
+    "vercel-celery==0.7.8",
 ]
 
 [tool.vercel]

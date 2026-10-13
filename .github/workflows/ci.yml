@@ -32,6 +32,21 @@ env:
   CHANNEL_LAYER_URL: "redis://127.0.0.1:6379/2"
 
 jobs:
+  vercel-profile:
+    name: vercel-profile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the actual Vercel transport dependencies
+        run: python -m pip install -r requirements/dev.txt -r requirements/vercel.txt
+      - name: Verify platform aliases and real transport retry publication
+        run: pytest tests/test_vercel_settings.py -q
+
   lint:
     name: lint
     runs-on: ubuntu-latest

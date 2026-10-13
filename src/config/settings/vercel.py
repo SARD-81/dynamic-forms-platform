@@ -10,7 +10,7 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-for platform_variable in ("VERCEL_URL", "VERCEL_BRANCH_URL"):
+for platform_variable in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
     platform_host = env_value(platform_variable)
     if platform_host and platform_host.endswith(".vercel.app") and "/" not in platform_host:
         ALLOWED_HOSTS.append(platform_host)  # noqa: F405
@@ -35,6 +35,8 @@ VERCEL_CRON_ENABLED = True
 CRON_SECRET = required_env("CRON_SECRET")
 CELERY_TASK_DEFAULT_QUEUE = "reports"
 CELERY_TASK_ACKS_LATE = True
-CELERY_BROKER_TRANSPORT_OPTIONS = {"use_task_id_as_idempotency_key": True}
+# Celery republishes retries with the original task ID. Deduplicating by that
+# ID discards retry messages; delivery's database locks handle redelivery.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"use_task_id_as_idempotency_key": False}
 # Vercel Cron enqueues the existing due-report task instead of Celery Beat.
 CELERY_BEAT_SCHEDULE = {}
