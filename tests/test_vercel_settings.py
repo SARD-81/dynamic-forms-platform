@@ -7,6 +7,7 @@ import pytest
 
 from tests.test_production_security import production_env
 
+pytest.importorskip("vercel.integrations.celery")
 
 def vercel_env(**overrides):
     env = production_env(
@@ -67,9 +68,8 @@ def test_vercel_platform_url_does_not_admit_invalid_hosts(host):
 
 
 def test_vercel_retry_publish_keeps_original_task_id_without_deduplication():
-    pytest.importorskip("vercel.integrations.celery")
     calls = run_profile(
-        "import django; django.setup(); import json; from unittest.mock import patch; "
+        "import vercel_app; import json; from unittest.mock import patch; "
         "from config.celery import app; "
         "from vercel.queue.sync import QueueClient; "
         "code = '''with patch.object(QueueClient, 'send') as send:\n"
