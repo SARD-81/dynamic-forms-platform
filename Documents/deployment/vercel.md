@@ -12,6 +12,9 @@ The existing [Docker production guide](production.md) remains supported.
   PgBouncer rejects statement_timeout in connection startup options.
 - `config.cache.AtomicDatabaseCache` stores shared cache data in `dynamic_forms_cache`.
 - Vercel builds the ASGI entrypoint and private Celery subscriber in `pyproject.toml`.
+- The Vercel Celery worker uses a thread pool so Django ORM work and task cleanup
+  signals execute outside the async queue callback. Django's async safety checks
+  remain enabled; Docker retains its normal worker configuration.
 - Daily Cron calls `/internal/cron/reports/` at 03:00 UTC (06:30 Tehran).
 - SMTP uses Gmail with a Google App Password over STARTTLS on port 587.
 

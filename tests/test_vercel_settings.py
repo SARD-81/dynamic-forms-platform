@@ -95,3 +95,20 @@ def test_vercel_root_manage_collectstatic_discovers_static_command():
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_vercel_worker_runs_django_guarded_code_outside_async_loop():
+    result = run_profile(
+        "import asyncio, json, vercel_app; from config.celery import app; "
+        "from django.utils.asyncio import async_unsafe; "
+        "worker=app.WorkController(app=app, pool='solo', concurrency=1, "
+        "without_gossip=True, without_heartbeat=True, without_mingle=True); "
+        "code='''@async_unsafe\ndef guarded():\n    return 'sync-safe'\n"
+        "async def check():\n"
+        "    values=[]\n"
+        "    result = worker.pool.apply_async(guarded, callback=values.append)\n"
+        "    await asyncio.to_thread(result.get, timeout=5)\n"
+        "    return values\n"
+        "print(json.dumps(asyncio.run(check())))\nworker.pool.stop()'''; exec(code)"
+    )
+    assert result == ["sync-safe"]
